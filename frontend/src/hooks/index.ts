@@ -23,4 +23,6 @@ export {
   useTerminalWebSocket,
   type UseTerminalWebSocketOptions,
   type UseTerminalWebSocketReturn,
+  type AskUserQuestionEvent,
+  type ClaudeProgressEvent,
 } from "./useTerminalWebSocket";

@@ -8,7 +8,7 @@ import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
@@ -21,6 +21,20 @@ from wxcode.models.terminal_messages import (
     TerminalStatusMessage,
     TerminalOutputMessage,
     TerminalErrorMessage,
+    TerminalAskUserQuestionMessage,
+    TerminalTaskCreateMessage,
+    TerminalTaskUpdateMessage,
+    TerminalFileWriteMessage,
+    TerminalFileEditMessage,
+    TerminalSummaryMessage,
+    TerminalBashMessage,
+    TerminalFileReadMessage,
+    TerminalTaskSpawnMessage,
+    TerminalGlobMessage,
+    TerminalGrepMessage,
+    TerminalBannerMessage,
+    AskUserQuestionItem,
+    AskUserQuestionOption,
 )
 from wxcode.services.bidirectional_pty import BidirectionalPTY
 from wxcode.services.gsd_invoker import GSDInvoker
@@ -33,6 +47,7 @@ from wxcode.services.schema_extractor import (
 )
 from wxcode.services.terminal_handler import TerminalHandler
 from wxcode.services.workspace_manager import WorkspaceManager
+from wxcode.services.session_file_watcher import session_watcher_manager, get_active_session_id, get_most_recent_session_file
 
 
 router = APIRouter()
@@ -345,10 +360,9 @@ async def prepare_initialization(id: str):
         global_state=global_state,
     )
 
-    # Update status to INITIALIZED
-    output_project.status = OutputProjectStatus.INITIALIZED
-    output_project.updated_at = datetime.utcnow()
-    await output_project.save()
+    # NOTE: Status change moved to _capture_and_save_session_id()
+    # Only change to INITIALIZED when Claude actually starts processing
+    # This ensures the button stays visible if command sending fails
 
     # Return relative path for terminal command
     relative_path = context_path.relative_to(workspace_path)
@@ -542,26 +556,93 @@ async def initialize_output_project(
             pass
 
 
+async def _capture_and_save_session_id(
+    output_project: OutputProject,
+    websocket: WebSocket,
+    on_event: Optional[Callable] = None,
+    max_attempts: int = 600,  # 600 * 0.5s = 5 minutes max (user may take time to click button)
+    delay: float = 0.5,
+) -> Optional[str]:
+    """
+    Capture session_id from sessions-index.json and save to MongoDB.
+
+    Polls sessions-index.json until a new session appears, then saves it.
+    Also starts the file watcher once session is captured.
+
+    Args:
+        output_project: The OutputProject to update
+        websocket: WebSocket for status messages
+        on_event: Callback for Claude events (for watcher)
+        max_attempts: Max polling attempts
+        delay: Delay between attempts in seconds
+
+    Returns:
+        The captured session_id or None
+    """
+    import logging
+    log = logging.getLogger(__name__)
+
+    for attempt in range(max_attempts):
+        await asyncio.sleep(delay)
+
+        # Try sessions-index.json first, then fallback to most recent file
+        session_id = get_active_session_id(output_project.workspace_path)
+        if not session_id:
+            # Fallback: find most recent .jsonl file directly
+            result = get_most_recent_session_file(output_project.workspace_path)
+            if result:
+                _, session_id = result
+
+        if session_id:
+            # Save session_id and update status to INITIALIZED
+            # This confirms Claude is actually running and processing input
+            output_project.claude_session_id = session_id
+            if output_project.status == OutputProjectStatus.CREATED:
+                output_project.status = OutputProjectStatus.INITIALIZED
+            output_project.updated_at = datetime.utcnow()
+            await output_project.save()
+
+            log.info(f"Captured and saved session_id: {session_id[:8]}...")
+            await websocket.send_json(
+                TerminalOutputMessage(
+                    data=f"\x1b[32mSessao Claude capturada: {session_id[:8]}...\x1b[0m\r\n"
+                ).model_dump()
+            )
+
+            # Start file watcher now that we have a session
+            if on_event:
+                log.info(f"Starting watcher for newly captured session: {session_id[:8]}...")
+                await session_watcher_manager.start_watching(
+                    session_key=str(output_project.id),
+                    workspace_path=output_project.workspace_path,
+                    on_event=on_event,
+                    session_id=session_id,
+                )
+
+            return session_id
+
+    log.warning("Failed to capture session_id after max attempts")
+    return None
+
+
 async def _create_project_interactive_session(
     output_project: OutputProject,
     websocket: WebSocket,
-) -> PTYSession:
+) -> tuple[PTYSession, bool]:
     """
     Create interactive PTY session for output project.
 
     Session behavior:
     - If session exists and alive: reconnect and replay buffer
-    - If no session: start Claude in interactive mode (no skill command)
-
-    Initialization is manual via button that calls /prepare-initialization endpoint
-    and then sends /wxcode:new-project command to terminal.
+    - If claude_session_id exists: start with --resume
+    - If no session_id: start fresh, flag for session capture
 
     Args:
         output_project: The OutputProject
         websocket: WebSocket for status messages
 
     Returns:
-        PTYSession registered with session manager
+        Tuple of (PTYSession, needs_session_capture)
     """
     # Check for existing session first (keyed by output_project_id)
     session_manager = get_session_manager()
@@ -574,19 +655,18 @@ async def _create_project_interactive_session(
                 data="\x1b[36mReconectando a sessao existente...\x1b[0m\r\n"
             ).model_dump()
         )
-        return existing_session
+        return existing_session, False  # No capture needed - session exists
 
     workspace_path = Path(output_project.workspace_path)
 
-    # Build Claude command with stream-json for structured event parsing
+    # Build Claude command (no stream-json - doesn't work in PTY mode)
     cmd = [
         "claude",
         "--dangerously-skip-permissions",
-        "--allowedTools", "Read,Write,Edit,Bash,Glob,Grep,Task,TodoWrite",
-        "--output-format", "stream-json",
     ]
 
     # Resume existing Claude session if available
+    needs_session_capture = False
     if output_project.claude_session_id:
         cmd.extend(["--resume", output_project.claude_session_id])
         await websocket.send_json(
@@ -595,9 +675,10 @@ async def _create_project_interactive_session(
             ).model_dump()
         )
     else:
+        needs_session_capture = True
         await websocket.send_json(
             TerminalOutputMessage(
-                data="\x1b[36mIniciando Claude Code...\x1b[0m\r\n\r\n"
+                data="\x1b[36mIniciando nova sessao Claude...\x1b[0m\r\n\r\n"
             ).model_dump()
         )
 
@@ -624,7 +705,10 @@ async def _create_project_interactive_session(
     )
 
     session = session_manager.get_session(session_id)
-    return session
+
+    # Return session and whether capture is needed
+    # (capture will be done by caller who has access to on_event callback)
+    return session, needs_session_capture
 
 
 @router.websocket("/{id}/terminal")
@@ -685,6 +769,7 @@ async def terminal_websocket(websocket: WebSocket, id: str):
     # Lookup existing session by output_project_id
     session_manager = get_session_manager()
     session = session_manager.get_session_by_output_project(str(output_project.id))
+    needs_session_capture = False  # Track if we need to capture session_id later
 
     if not session or session.pty.returncode is not None:
         # No session or session died - need to create one
@@ -698,7 +783,7 @@ async def terminal_websocket(websocket: WebSocket, id: str):
         )
 
         try:
-            session = await _create_project_interactive_session(
+            session, needs_session_capture = await _create_project_interactive_session(
                 output_project, websocket
             )
         except Exception as e:
@@ -721,6 +806,140 @@ async def terminal_websocket(websocket: WebSocket, id: str):
             TerminalOutputMessage(data=text).model_dump()
         )
 
+    # Callback to send Claude events to WebSocket for chat display
+    async def on_claude_event(event: dict) -> None:
+        """Send Claude event to WebSocket for chat display."""
+        import logging
+        log = logging.getLogger(__name__)
+        log.info(f"on_claude_event called with type: {event.get('type')}")
+        try:
+            event_type = event.get("type")
+
+            if event_type == "ask_user_question":
+                questions = [
+                    AskUserQuestionItem(
+                        question=q.get("question", ""),
+                        header=q.get("header"),
+                        options=[
+                            AskUserQuestionOption(
+                                label=opt.get("label", ""),
+                                description=opt.get("description"),
+                            )
+                            for opt in q.get("options", [])
+                        ],
+                        multiSelect=q.get("multiSelect", False),
+                    )
+                    for q in event.get("questions", [])
+                ]
+                msg = TerminalAskUserQuestionMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    questions=questions,
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_create":
+                msg = TerminalTaskCreateMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    subject=event.get("subject", ""),
+                    description=event.get("description", ""),
+                    active_form=event.get("active_form", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_update":
+                msg = TerminalTaskUpdateMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    task_id=event.get("task_id", ""),
+                    status=event.get("status", ""),
+                    subject=event.get("subject", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_write":
+                msg = TerminalFileWriteMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_edit":
+                msg = TerminalFileEditMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "summary":
+                msg = TerminalSummaryMessage(
+                    summary=event.get("summary", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "bash":
+                msg = TerminalBashMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    command=event.get("command", ""),
+                    description=event.get("description", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_read":
+                msg = TerminalFileReadMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_spawn":
+                msg = TerminalTaskSpawnMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    description=event.get("description", ""),
+                    subagent_type=event.get("subagent_type", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "glob":
+                msg = TerminalGlobMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    pattern=event.get("pattern", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "grep":
+                msg = TerminalGrepMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    pattern=event.get("pattern", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "assistant_banner":
+                msg = TerminalBannerMessage(
+                    text=event.get("text", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            else:
+                log.warning(f"Unhandled event type: {event_type}")
+
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error sending Claude event: {e}")
+
     # Create callback to save session_id when captured
     async def on_session_id_captured(claude_session_id: str) -> None:
         """Save captured session_id to MongoDB and update in-memory session."""
@@ -732,6 +951,37 @@ async def terminal_websocket(websocket: WebSocket, id: str):
             session.claude_session_id = claude_session_id
             session_manager.update_claude_session_id(session.session_id, claude_session_id)
 
+        # Start file watcher NOW that we have a session
+        # This ensures watcher only starts after Claude creates a session
+        await session_watcher_manager.start_watching(
+            session_key=str(output_project.id),
+            workspace_path=output_project.workspace_path,
+            on_event=on_claude_event,
+            session_id=claude_session_id,  # Pass the captured session_id
+        )
+
+    # Start file watcher for Claude events
+    # If we already have a session_id, start watching immediately
+    # Otherwise, the watcher will be started after session capture
+    if output_project.claude_session_id:
+        await session_watcher_manager.start_watching(
+            session_key=str(output_project.id),
+            workspace_path=output_project.workspace_path,
+            on_event=on_claude_event,
+            session_id=output_project.claude_session_id,
+        )
+
+    # Start session capture in background if needed
+    # This runs independently and starts the watcher once session is captured
+    if needs_session_capture:
+        asyncio.create_task(
+            _capture_and_save_session_id(
+                output_project,
+                websocket,
+                on_event=on_claude_event,  # Pass callback so watcher can be started
+            )
+        )
+
     # Handle bidirectional communication with session_id capture
     handler = TerminalHandler(
         session,
@@ -742,5 +992,7 @@ async def terminal_websocket(websocket: WebSocket, id: str):
     except WebSocketDisconnect:
         pass  # Normal disconnect - session persists for reconnection
     finally:
+        # Stop file watcher for this session
+        await session_watcher_manager.stop_watching(str(output_project.id))
         # Update session activity for timeout tracking
         session_manager.update_activity(session.session_id)

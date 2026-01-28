@@ -52,6 +52,10 @@ class Milestone(Document):
 
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: Optional[datetime] = Field(
+        default=None,
+        description="When milestone was last updated"
+    )
     completed_at: Optional[datetime] = Field(
         default=None,
         description="When milestone completed (success or failure)"

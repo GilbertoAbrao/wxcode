@@ -20,6 +20,22 @@ __all__ = [
     "TerminalStatusMessage",
     "TerminalErrorMessage",
     "TerminalClosedMessage",
+    "TerminalAskUserQuestionMessage",
+    # Progress messages (for chat display)
+    "TerminalTaskCreateMessage",
+    "TerminalTaskUpdateMessage",
+    "TerminalFileWriteMessage",
+    "TerminalFileEditMessage",
+    "TerminalSummaryMessage",
+    "TerminalBashMessage",
+    "TerminalFileReadMessage",
+    "TerminalTaskSpawnMessage",
+    "TerminalGlobMessage",
+    "TerminalGrepMessage",
+    "TerminalBannerMessage",
+    # Helper models
+    "AskUserQuestionItem",
+    "AskUserQuestionOption",
     # Union types
     "IncomingMessage",
     "OutgoingMessage",
@@ -160,6 +176,218 @@ class TerminalClosedMessage(BaseModel):
     )
 
 
+class AskUserQuestionOption(BaseModel):
+    """Opcao para uma pergunta AskUserQuestion."""
+
+    label: str = Field(..., description="Texto da opcao")
+    description: str | None = Field(default=None, description="Descricao da opcao")
+
+
+class AskUserQuestionItem(BaseModel):
+    """Uma pergunta individual do AskUserQuestion."""
+
+    question: str = Field(..., description="Texto da pergunta")
+    header: str | None = Field(default=None, description="Header/titulo da pergunta")
+    options: list[AskUserQuestionOption] = Field(
+        default_factory=list,
+        description="Opcoes disponiveis",
+    )
+    multiSelect: bool = Field(
+        default=False,
+        description="Se permite selecao multipla",
+    )
+
+
+class TerminalAskUserQuestionMessage(BaseModel):
+    """
+    Mensagem de pergunta do Claude para o usuario.
+
+    Enviada quando o Claude usa a ferramenta AskUserQuestion.
+    O frontend deve exibir no chat e permitir que o usuario responda.
+    """
+
+    type: Literal["ask_user_question"] = "ask_user_question"
+    tool_use_id: str = Field(
+        ...,
+        description="ID do tool_use para correlacionar a resposta",
+    )
+    questions: list[AskUserQuestionItem] = Field(
+        ...,
+        description="Lista de perguntas a serem exibidas",
+    )
+    timestamp: str | None = Field(
+        default=None,
+        description="Timestamp do evento",
+    )
+
+
+# =============================================================================
+# Progress Messages (for chat display)
+# =============================================================================
+
+
+class TerminalTaskCreateMessage(BaseModel):
+    """
+    Mensagem de criacao de tarefa.
+
+    Enviada quando o Claude cria uma nova tarefa via TaskCreate.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["task_create"] = "task_create"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    subject: str = Field(..., description="Titulo da tarefa")
+    description: str = Field(default="", description="Descricao da tarefa")
+    active_form: str = Field(default="", description="Forma ativa (ex: 'Criando...')")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalTaskUpdateMessage(BaseModel):
+    """
+    Mensagem de atualizacao de tarefa.
+
+    Enviada quando o Claude atualiza o status de uma tarefa via TaskUpdate.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["task_update"] = "task_update"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    task_id: str = Field(..., description="ID da tarefa")
+    status: str = Field(..., description="Novo status (in_progress, completed)")
+    subject: str = Field(default="", description="Titulo da tarefa (se disponivel)")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalFileWriteMessage(BaseModel):
+    """
+    Mensagem de criacao de arquivo.
+
+    Enviada quando o Claude cria um novo arquivo via Write.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["file_write"] = "file_write"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    file_path: str = Field(..., description="Caminho completo do arquivo")
+    file_name: str = Field(..., description="Nome do arquivo (sem caminho)")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalFileEditMessage(BaseModel):
+    """
+    Mensagem de edicao de arquivo.
+
+    Enviada quando o Claude edita um arquivo via Edit.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["file_edit"] = "file_edit"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    file_path: str = Field(..., description="Caminho completo do arquivo")
+    file_name: str = Field(..., description="Nome do arquivo (sem caminho)")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalSummaryMessage(BaseModel):
+    """
+    Mensagem de resumo da sessao.
+
+    Enviada quando ha um resumo da sessao no arquivo JSONL.
+    O frontend exibe no chat como destaque.
+    """
+
+    type: Literal["summary"] = "summary"
+    summary: str = Field(..., description="Texto do resumo")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalBashMessage(BaseModel):
+    """
+    Mensagem de execucao de comando Bash.
+
+    Enviada quando o Claude executa um comando via Bash.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["bash"] = "bash"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    command: str = Field(..., description="Comando executado")
+    description: str = Field(default="", description="Descricao do comando")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalFileReadMessage(BaseModel):
+    """
+    Mensagem de leitura de arquivo.
+
+    Enviada quando o Claude le um arquivo via Read.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["file_read"] = "file_read"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    file_path: str = Field(..., description="Caminho completo do arquivo")
+    file_name: str = Field(..., description="Nome do arquivo (sem caminho)")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalTaskSpawnMessage(BaseModel):
+    """
+    Mensagem de spawn de agente.
+
+    Enviada quando o Claude cria um subagente via Task.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["task_spawn"] = "task_spawn"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    description: str = Field(..., description="Descricao da tarefa")
+    subagent_type: str = Field(default="", description="Tipo do subagente")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalGlobMessage(BaseModel):
+    """
+    Mensagem de busca de arquivos.
+
+    Enviada quando o Claude busca arquivos via Glob.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["glob"] = "glob"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    pattern: str = Field(..., description="Padrao de busca")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalGrepMessage(BaseModel):
+    """
+    Mensagem de busca de conteudo.
+
+    Enviada quando o Claude busca conteudo via Grep.
+    O frontend exibe no chat para mostrar progresso.
+    """
+
+    type: Literal["grep"] = "grep"
+    tool_use_id: str = Field(..., description="ID do tool_use")
+    pattern: str = Field(..., description="Padrao de busca")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
+class TerminalBannerMessage(BaseModel):
+    """
+    Mensagem de banner/status do Claude.
+
+    Enviada quando o Claude exibe um banner importante como
+    PROJECT INITIALIZED, PHASE COMPLETE, etc.
+    O frontend exibe no chat como destaque.
+    """
+
+    type: Literal["assistant_banner"] = "assistant_banner"
+    text: str = Field(..., description="Texto do banner")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
 # =============================================================================
 # Discriminated Unions
 # =============================================================================
@@ -182,6 +410,19 @@ OutgoingMessage = Union[
     TerminalStatusMessage,
     TerminalErrorMessage,
     TerminalClosedMessage,
+    TerminalAskUserQuestionMessage,
+    # Progress messages
+    TerminalTaskCreateMessage,
+    TerminalTaskUpdateMessage,
+    TerminalFileWriteMessage,
+    TerminalFileEditMessage,
+    TerminalSummaryMessage,
+    TerminalBashMessage,
+    TerminalFileReadMessage,
+    TerminalTaskSpawnMessage,
+    TerminalGlobMessage,
+    TerminalGrepMessage,
+    TerminalBannerMessage,
 ]
 """
 Uniao discriminada de mensagens enviadas pelo servidor.

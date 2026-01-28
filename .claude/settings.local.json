@@ -161,7 +161,8 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "mongodb"
+    "mongodb",
+    "wxcode-kb"
   ],
   "disabledMcpjsonServers": [
     "playwright"

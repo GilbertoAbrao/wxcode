@@ -23,6 +23,7 @@ import { TokenUsageCard } from "@/components/project";
 import { OutputProjectStatus, FileTree } from "@/components/output-project";
 import { ChatDisplay, type ChatDisplayMessage } from "@/components/chat";
 import { InteractiveTerminal, type InteractiveTerminalHandle } from "@/components/terminal";
+import type { AskUserQuestionEvent, ClaudeProgressEvent } from "@/hooks/useTerminalWebSocket";
 import {
   MilestonesTree,
   CreateMilestoneModal,
@@ -104,6 +105,101 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       refetch();
     }
   }, [isComplete, refetch]);
+
+  // Handle AskUserQuestion events from WebSocket (session file watcher)
+  const handleAskUserQuestion = useCallback((event: AskUserQuestionEvent) => {
+    // Convert questions to chat messages
+    for (const q of event.questions) {
+      const options = q.options.map((opt, idx) => ({
+        label: `${idx + 1}. ${opt.label}`,
+        value: String(idx + 1), // Send the number as response
+        description: opt.description || undefined,
+      }));
+
+      const assistantMsg: ChatDisplayMessage = {
+        id: `assistant_${++messageIdCounter.current}`,
+        role: "assistant",
+        content: q.question,
+        timestamp: new Date(),
+        messageType: options.length > 0 ? "multi_question" : "question",
+        options: options.length > 0 ? options : undefined,
+      };
+      setChatMessages((prev) => [...prev, assistantMsg]);
+    }
+  }, []);
+
+  // Handle progress events from WebSocket (tasks, file operations, summaries)
+  const handleProgress = useCallback((event: ClaudeProgressEvent) => {
+    let content = "";
+    let icon = "";
+
+    switch (event.type) {
+      case "task_create":
+        icon = "\u{1F4CB}"; // 📋
+        content = `${icon} **Tarefa:** ${event.subject}`;
+        break;
+      case "task_update":
+        if (event.status === "completed") {
+          icon = "\u{2705}"; // ✅
+          content = `${icon} **Concluído:** ${event.subject || `Tarefa #${event.task_id}`}`;
+        } else if (event.status === "in_progress") {
+          icon = "\u{23F3}"; // ⏳
+          content = `${icon} **Em progresso:** ${event.subject || `Tarefa #${event.task_id}`}`;
+        } else {
+          return; // Ignore other status updates
+        }
+        break;
+      case "file_write":
+        icon = "\u{1F4C4}"; // 📄
+        content = `${icon} **Criado:** \`${event.file_name}\``;
+        break;
+      case "file_edit":
+        icon = "\u{270F}\u{FE0F}"; // ✏️
+        content = `${icon} **Editado:** \`${event.file_name}\``;
+        break;
+      case "file_read":
+        icon = "\u{1F4D6}"; // 📖
+        content = `${icon} **Lendo:** \`${event.file_name}\``;
+        break;
+      case "bash":
+        icon = "\u{1F4BB}"; // 💻
+        // Show description if available, otherwise truncated command
+        const cmdDisplay = event.description || event.command;
+        content = `${icon} **Comando:** ${cmdDisplay}`;
+        break;
+      case "task_spawn":
+        icon = "\u{1F916}"; // 🤖
+        content = `${icon} **Agente:** ${event.description}`;
+        break;
+      case "glob":
+        icon = "\u{1F50D}"; // 🔍
+        content = `${icon} **Busca:** \`${event.pattern}\``;
+        break;
+      case "grep":
+        icon = "\u{1F50E}"; // 🔎
+        content = `${icon} **Grep:** \`${event.pattern}\``;
+        break;
+      case "summary":
+        icon = "\u{1F4CA}"; // 📊
+        content = `${icon} **${event.summary}**`;
+        break;
+      case "assistant_banner":
+        // Display the banner as-is (it's already formatted)
+        content = event.text;
+        break;
+      default:
+        return;
+    }
+
+    const progressMsg: ChatDisplayMessage = {
+      id: `progress_${++messageIdCounter.current}`,
+      role: "assistant",
+      content,
+      timestamp: new Date(),
+      messageType: "info",
+    };
+    setChatMessages((prev) => [...prev, progressMsg]);
+  }, []);
 
   // Simulate typing character by character (like real user input)
   const simulateTyping = useCallback(async (text: string) => {
@@ -367,6 +463,19 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                 isProcessing={false}
                 title="Botfy WX"
                 inputDisabled={!terminalRef.current?.isConnected()}
+                onOptionSelect={async (option) => {
+                  // Add user selection to chat display
+                  const userMsg: ChatDisplayMessage = {
+                    id: `user_${++messageIdCounter.current}`,
+                    role: "user",
+                    content: option.label,
+                    timestamp: new Date(),
+                  };
+                  setChatMessages((prev) => [...prev, userMsg]);
+
+                  // Send option as input to terminal
+                  await simulateTyping(option.value);
+                }}
                 onSendMessage={async (message) => {
                   // Add user message to chat display
                   const userMsg: ChatDisplayMessage = {
@@ -401,6 +510,8 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                 outputProjectId={projectId}
                 className="h-full"
                 onError={(msg) => console.error("Terminal error:", msg)}
+                onAskUserQuestion={handleAskUserQuestion}
+                onProgress={handleProgress}
               />
             </div>
           </div>

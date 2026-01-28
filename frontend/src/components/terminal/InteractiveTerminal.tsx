@@ -18,6 +18,7 @@ import "@xterm/xterm/css/xterm.css";
 import { useTerminalWebSocket } from "../../hooks/useTerminalWebSocket";
 import { ConnectionStatus } from "./ConnectionStatus";
 import { useTerminalSessionOptional } from "@/contexts";
+import type { AskUserQuestionEvent, ClaudeProgressEvent } from "@/hooks/useTerminalWebSocket";
 
 export interface InteractiveTerminalHandle {
   /** Send input to the terminal PTY */
@@ -39,6 +40,10 @@ export interface InteractiveTerminalProps {
   onError?: (message: string) => void;
   /** Called when the terminal process closes */
   onProcessClosed?: (exitCode: number | null) => void;
+  /** Called when AskUserQuestion event is received via WebSocket */
+  onAskUserQuestion?: (event: AskUserQuestionEvent) => void;
+  /** Called when progress events are received (tasks, file operations, summaries) */
+  onProgress?: (event: ClaudeProgressEvent) => void;
   /** Additional CSS classes */
   className?: string;
 }
@@ -52,6 +57,8 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       onDisconnected,
       onError,
       onProcessClosed,
+      onAskUserQuestion,
+      onProgress,
       className,
     },
     ref
@@ -84,6 +91,8 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       // PTY output -> terminal display
       xtermRef.current?.write(data);
     },
+    onAskUserQuestion,
+    onProgress,
     onStatus: (connected, sessionId) => {
       if (connected && sessionId) {
         onConnected?.();

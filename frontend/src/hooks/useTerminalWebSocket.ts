@@ -17,6 +17,44 @@ import type {
   TerminalConnectionState,
 } from "../types/terminal";
 
+import type {
+  AskUserQuestionItem,
+  AskUserQuestionOption,
+  TerminalTaskCreateMessage,
+  TerminalTaskUpdateMessage,
+  TerminalFileWriteMessage,
+  TerminalFileEditMessage,
+  TerminalFileReadMessage,
+  TerminalSummaryMessage,
+  TerminalBashMessage,
+  TerminalTaskSpawnMessage,
+  TerminalGlobMessage,
+  TerminalGrepMessage,
+} from "../types/terminal";
+
+/** AskUserQuestion event from session file watcher */
+export interface AskUserQuestionEvent {
+  tool_use_id: string;
+  questions: AskUserQuestionItem[];
+  timestamp?: string | null;
+}
+
+/** Claude progress event union type */
+export type ClaudeProgressEvent =
+  | { type: "task_create"; subject: string; description: string; active_form: string; timestamp?: string | null }
+  | { type: "task_update"; task_id: string; status: string; subject: string; timestamp?: string | null }
+  | { type: "file_write"; file_path: string; file_name: string; timestamp?: string | null }
+  | { type: "file_edit"; file_path: string; file_name: string; timestamp?: string | null }
+  | { type: "file_read"; file_path: string; file_name: string; timestamp?: string | null }
+  | { type: "bash"; command: string; description: string; timestamp?: string | null }
+  | { type: "task_spawn"; description: string; subagent_type: string; timestamp?: string | null }
+  | { type: "glob"; pattern: string; timestamp?: string | null }
+  | { type: "grep"; pattern: string; timestamp?: string | null }
+  | { type: "summary"; summary: string; timestamp?: string | null }
+  | { type: "assistant_banner"; text: string; timestamp?: string | null };
+
+export { type AskUserQuestionItem, type AskUserQuestionOption };
+
 export interface UseTerminalWebSocketOptions {
   /** Called when terminal output is received */
   onOutput?: (data: string) => void;
@@ -26,6 +64,10 @@ export interface UseTerminalWebSocketOptions {
   onError?: (message: string, code: string | null) => void;
   /** Called when the terminal session closes */
   onClosed?: (exitCode: number | null) => void;
+  /** Called when AskUserQuestion event is received */
+  onAskUserQuestion?: (event: AskUserQuestionEvent) => void;
+  /** Called when progress events are received (tasks, file operations, summaries) */
+  onProgress?: (event: ClaudeProgressEvent) => void;
   /** Auto-connect when ID is provided (default: false) */
   autoConnect?: boolean;
 }
@@ -181,6 +223,111 @@ export function useTerminalWebSocket(
           case "closed":
             console.log("[useTerminalWebSocket] Session closed, exit_code:", msg.exit_code);
             callbacksRef.current.onClosed?.(msg.exit_code);
+            break;
+          case "ask_user_question":
+            console.log("[useTerminalWebSocket] AskUserQuestion received:", msg.tool_use_id);
+            callbacksRef.current.onAskUserQuestion?.({
+              tool_use_id: msg.tool_use_id,
+              questions: msg.questions,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "task_create":
+            console.log("[useTerminalWebSocket] TaskCreate received:", msg.subject);
+            callbacksRef.current.onProgress?.({
+              type: "task_create",
+              subject: msg.subject,
+              description: msg.description,
+              active_form: msg.active_form,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "task_update":
+            console.log("[useTerminalWebSocket] TaskUpdate received:", msg.status);
+            callbacksRef.current.onProgress?.({
+              type: "task_update",
+              task_id: msg.task_id,
+              status: msg.status,
+              subject: msg.subject,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "file_write":
+            console.log("[useTerminalWebSocket] FileWrite received:", msg.file_name);
+            callbacksRef.current.onProgress?.({
+              type: "file_write",
+              file_path: msg.file_path,
+              file_name: msg.file_name,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "file_edit":
+            console.log("[useTerminalWebSocket] FileEdit received:", msg.file_name);
+            callbacksRef.current.onProgress?.({
+              type: "file_edit",
+              file_path: msg.file_path,
+              file_name: msg.file_name,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "summary":
+            console.log("[useTerminalWebSocket] Summary received:", msg.summary);
+            callbacksRef.current.onProgress?.({
+              type: "summary",
+              summary: msg.summary,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "bash":
+            console.log("[useTerminalWebSocket] Bash received:", msg.command?.substring(0, 50));
+            callbacksRef.current.onProgress?.({
+              type: "bash",
+              command: msg.command,
+              description: msg.description,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "file_read":
+            console.log("[useTerminalWebSocket] FileRead received:", msg.file_name);
+            callbacksRef.current.onProgress?.({
+              type: "file_read",
+              file_path: msg.file_path,
+              file_name: msg.file_name,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "task_spawn":
+            console.log("[useTerminalWebSocket] TaskSpawn received:", msg.description);
+            callbacksRef.current.onProgress?.({
+              type: "task_spawn",
+              description: msg.description,
+              subagent_type: msg.subagent_type,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "glob":
+            console.log("[useTerminalWebSocket] Glob received:", msg.pattern);
+            callbacksRef.current.onProgress?.({
+              type: "glob",
+              pattern: msg.pattern,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "grep":
+            console.log("[useTerminalWebSocket] Grep received:", msg.pattern);
+            callbacksRef.current.onProgress?.({
+              type: "grep",
+              pattern: msg.pattern,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "assistant_banner":
+            console.log("[useTerminalWebSocket] Banner received:", msg.text?.substring(0, 50));
+            callbacksRef.current.onProgress?.({
+              type: "assistant_banner",
+              text: msg.text,
+              timestamp: msg.timestamp,
+            });
             break;
         }
       } catch (e) {

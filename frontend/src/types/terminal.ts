@@ -89,13 +89,187 @@ export interface TerminalClosedMessage {
 }
 
 /**
+ * Option for AskUserQuestion.
+ */
+export interface AskUserQuestionOption {
+  label: string;
+  description?: string | null;
+}
+
+/**
+ * Individual question from AskUserQuestion.
+ */
+export interface AskUserQuestionItem {
+  question: string;
+  header?: string | null;
+  options: AskUserQuestionOption[];
+  multiSelect?: boolean;
+}
+
+/**
+ * AskUserQuestion message from Claude.
+ * Sent when Claude uses the AskUserQuestion tool.
+ * The frontend should display in chat and allow user to respond.
+ */
+export interface TerminalAskUserQuestionMessage {
+  type: "ask_user_question";
+  tool_use_id: string;
+  questions: AskUserQuestionItem[];
+  timestamp?: string | null;
+}
+
+// =============================================================================
+// Progress Messages (for chat display)
+// =============================================================================
+
+/**
+ * TaskCreate message from Claude.
+ * Sent when Claude creates a new task via TaskCreate tool.
+ */
+export interface TerminalTaskCreateMessage {
+  type: "task_create";
+  tool_use_id: string;
+  subject: string;
+  description: string;
+  active_form: string;
+  timestamp?: string | null;
+}
+
+/**
+ * TaskUpdate message from Claude.
+ * Sent when Claude updates task status via TaskUpdate tool.
+ */
+export interface TerminalTaskUpdateMessage {
+  type: "task_update";
+  tool_use_id: string;
+  task_id: string;
+  status: string;
+  subject: string;
+  timestamp?: string | null;
+}
+
+/**
+ * FileWrite message from Claude.
+ * Sent when Claude creates a new file via Write tool.
+ */
+export interface TerminalFileWriteMessage {
+  type: "file_write";
+  tool_use_id: string;
+  file_path: string;
+  file_name: string;
+  timestamp?: string | null;
+}
+
+/**
+ * FileEdit message from Claude.
+ * Sent when Claude edits a file via Edit tool.
+ */
+export interface TerminalFileEditMessage {
+  type: "file_edit";
+  tool_use_id: string;
+  file_path: string;
+  file_name: string;
+  timestamp?: string | null;
+}
+
+/**
+ * Summary message from Claude session.
+ * Sent when there's a summary entry in the JSONL file.
+ */
+export interface TerminalSummaryMessage {
+  type: "summary";
+  summary: string;
+  timestamp?: string | null;
+}
+
+/**
+ * Bash message from Claude.
+ * Sent when Claude executes a command via Bash tool.
+ */
+export interface TerminalBashMessage {
+  type: "bash";
+  tool_use_id: string;
+  command: string;
+  description: string;
+  timestamp?: string | null;
+}
+
+/**
+ * FileRead message from Claude.
+ * Sent when Claude reads a file via Read tool.
+ */
+export interface TerminalFileReadMessage {
+  type: "file_read";
+  tool_use_id: string;
+  file_path: string;
+  file_name: string;
+  timestamp?: string | null;
+}
+
+/**
+ * TaskSpawn message from Claude.
+ * Sent when Claude spawns a subagent via Task tool.
+ */
+export interface TerminalTaskSpawnMessage {
+  type: "task_spawn";
+  tool_use_id: string;
+  description: string;
+  subagent_type: string;
+  timestamp?: string | null;
+}
+
+/**
+ * Glob message from Claude.
+ * Sent when Claude searches for files via Glob tool.
+ */
+export interface TerminalGlobMessage {
+  type: "glob";
+  tool_use_id: string;
+  pattern: string;
+  timestamp?: string | null;
+}
+
+/**
+ * Grep message from Claude.
+ * Sent when Claude searches content via Grep tool.
+ */
+export interface TerminalGrepMessage {
+  type: "grep";
+  tool_use_id: string;
+  pattern: string;
+  timestamp?: string | null;
+}
+
+/**
+ * Banner message from Claude.
+ * Sent when Claude displays an important status banner.
+ */
+export interface TerminalBannerMessage {
+  type: "assistant_banner";
+  text: string;
+  timestamp?: string | null;
+}
+
+/**
  * Union of all messages that can be received from server.
  */
 export type IncomingTerminalMessage =
   | TerminalOutputMessage
   | TerminalStatusMessage
   | TerminalErrorMessage
-  | TerminalClosedMessage;
+  | TerminalClosedMessage
+  | TerminalAskUserQuestionMessage
+  | TerminalTaskCreateMessage
+  | TerminalTaskUpdateMessage
+  | TerminalFileWriteMessage
+  | TerminalFileEditMessage
+  | TerminalSummaryMessage
+  | TerminalBashMessage
+  | TerminalFileReadMessage
+  | TerminalTaskSpawnMessage
+  | TerminalGlobMessage
+  | TerminalGrepMessage
+  | TerminalBannerMessage;
 
 // =============================================================================
 // Connection State Types (for UI rendering)
