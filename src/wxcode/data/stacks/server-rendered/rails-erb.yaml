@@ -1,0 +1,91 @@
+# Rails + ERB Stack Configuration
+# Server-rendered Ruby stack with ActiveRecord ORM
+
+stack_id: "rails-erb"
+name: "Rails + ERB"
+group: "server-rendered"
+language: "ruby"
+framework: "rails"
+orm: "active-record"
+orm_pattern: "active-record"
+template_engine: "erb"
+
+file_structure:
+  models: "app/models/"
+  controllers: "app/controllers/"
+  views: "app/views/"
+  helpers: "app/helpers/"
+  services: "app/services/"
+  jobs: "app/jobs/"
+  mailers: "app/mailers/"
+  channels: "app/channels/"
+  routes: "config/routes.rb"
+  migrations: "db/migrate/"
+  seeds: "db/seeds.rb"
+  config: "config/"
+  public: "public/"
+  assets: "app/assets/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "snake_case"
+  variable: "snake_case"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  route: "snake_case"
+  view: "snake_case"
+
+# HyperFile type codes (1-28) to Ruby/Rails migration types
+type_mappings:
+  "1": "binary"             # Binary
+  "2": "string"             # String
+  "3": "text"               # Text/Memo
+  "4": "integer"            # Integer 4 bytes
+  "5": "integer"            # Integer 2 bytes (short)
+  "6": "integer"            # Integer 1 byte (tiny)
+  "7": "bigint"             # Integer 8 bytes (bigint)
+  "8": "float"              # Real 4 bytes
+  "9": "decimal"            # Real 8 bytes
+  "10": "datetime"          # DateTime
+  "11": "date"              # Date
+  "12": "time"              # Time
+  "13": "boolean"           # Boolean
+  "14": "decimal"           # Currency
+  "15": "text"              # Memo text
+  "16": "string"            # Character
+  "17": "binary"            # Sound/Image (binary)
+  "18": "string"            # Enumeration
+  "19": "integer"           # Duration (seconds)
+  "20": "string"            # Composite key
+  "21": "primary_key"       # Automatic ID
+  "22": "string"            # Radio button
+  "23": "json"              # JSON
+  "24": "integer"           # Unsigned integer
+  "25": "bigint"            # Unsigned bigint
+  "26": "uuid"              # UUID
+  "27": "string"            # Scientific notation
+  "28": "string"            # Password (hashed)
+
+imports_template: |
+  # No explicit imports needed in Ruby
+  # ApplicationRecord is the base class
+
+model_template: |
+  # frozen_string_literal: true
+
+  class {{ class_name }} < ApplicationRecord
+    # Table name (if different from convention)
+    self.table_name = '{{ table_name }}'
+
+    # Validations
+    {% for field in fields %}{% if field.required %}
+    validates :{{ field.name }}, presence: true{% endif %}{% endfor %}
+
+    # Associations
+    {% for association in associations %}
+    {{ association.type }} :{{ association.name }}{% if association.options %}, {{ association.options }}{% endif %}
+    {% endfor %}
+
+    # Scopes
+    scope :recent, -> { order(created_at: :desc) }
+  end

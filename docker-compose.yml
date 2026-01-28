@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - wx-network
+    restart: unless-stopped
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/wxcode
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password
+    depends_on:
+      - mongodb
+      - neo4j
+    volumes:
+      - ./project-refs:/app/project-refs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - wx-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - wx-network
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/password
+    volumes:
+      - neo4j_data:/data
+    networks:
+      - wx-network
+    restart: unless-stopped
+
+  # Claude Code worker para execução de comandos
+  # Requer: ./scripts/setup-auth.sh para criar volume com credenciais
+  claude-worker:
+    image: node:22-slim
+    volumes:
+      - claude-credentials:/home/node/.claude:ro
+      - ./workspace:/workspace
+    working_dir: /workspace
+    environment:
+      - HOME=/home/node
+      # NÃO definir ANTHROPIC_API_KEY - usar OAuth da assinatura
+    networks:
+      - wx-network
+    # Container fica em standby, executado via docker exec
+    command: tail -f /dev/null
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+  neo4j_data:
+  claude-credentials:
+    external: true  # Criado por ./scripts/setup-auth.sh
+
+networks:
+  wx-network:
+    driver: bridge

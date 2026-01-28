@@ -1,0 +1,33 @@
+{# Image Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - src: Image source URL
+    - alt: Alt text
+    - width: Image width
+    - height: Image height
+    - responsive: Boolean for responsive image
+    - thumbnail: Boolean for thumbnail style
+    - rounded: Boolean for rounded corners
+    - css_classes: Additional CSS classes
+    - clickable: Boolean for clickable image
+    - click_url: URL for click action
+#}
+{% if clickable and click_url %}
+<a href="{{ click_url }}" id="{{ name }}-link">
+{% endif %}
+
+<img
+    id="{{ name }}"
+    src="{{ src | default('#') }}"
+    alt="{{ alt | default('Image') }}"
+    class="{% if responsive %}img-fluid{% endif %}{% if thumbnail %} img-thumbnail{% endif %}{% if rounded %} rounded{% endif %} control-image {{ css_classes | default('') }}"
+    {% if width %}width="{{ width }}"{% endif %}
+    {% if height %}height="{{ height }}"{% endif %}
+    loading="lazy"
+>
+
+{% if clickable and click_url %}
+</a>
+{% endif %}

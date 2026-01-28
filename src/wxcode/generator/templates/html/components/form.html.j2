@@ -1,0 +1,62 @@
+{# Form Component Template #}
+{#
+    Context variables:
+    - form_id: Form ID
+    - action: Form action URL
+    - method: HTTP method (GET, POST)
+    - enctype: Form encoding type
+    - controls: List of control HTML strings
+    - submit_label: Submit button label
+    - cancel_url: URL for cancel action
+    - htmx_attrs: HTMX attributes dict
+    - css_classes: Additional CSS classes
+#}
+<form
+    id="{{ form_id }}"
+    action="{{ action | default('#') }}"
+    method="{{ method | default('POST') }}"
+    {% if enctype %}enctype="{{ enctype }}"{% endif %}
+    class="needs-validation {{ css_classes | default('') }}"
+    {% if htmx_attrs %}
+    {% for attr, value in htmx_attrs.items() %}{{ attr }}="{{ value }}" {% endfor %}
+    {% endif %}
+    novalidate
+>
+    {# CSRF Token #}
+    {% raw %}{% if csrf_token %}
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    {% endif %}{% endraw %}
+
+    {# Form controls #}
+    {% for control in controls | default([]) %}
+    {{ control | safe }}
+    {% endfor %}
+
+    {# Form actions #}
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        {% if cancel_url %}
+        <a href="{{ cancel_url }}" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary">
+            {{ submit_label | default('Salvar') }}
+        </button>
+    </div>
+</form>
+
+<script>
+// Form validation
+(function() {
+    'use strict';
+    var form = document.getElementById('{{ form_id }}');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    }, false);
+})();
+</script>

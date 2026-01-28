@@ -1,0 +1,5 @@
+{
+  "name": "wxcode",
+  "private": true,
+  "workspaces": ["frontend"]
+}

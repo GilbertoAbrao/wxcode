@@ -1,0 +1,36 @@
+{# Radio Button Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case) - shared by all options in group
+    - original_name: Original WinDev control name
+    - label: Group label
+    - options: List of {value, label} dicts
+    - selected: Currently selected value
+    - inline: Boolean for inline display
+    - disabled: Boolean
+    - css_classes: Additional CSS classes
+    - htmx_attrs: HTMX attributes dict
+#}
+<div class="mb-3 control-radio" id="{{ name }}-group">
+    {% if label %}
+    <label class="form-label d-block">{{ label }}</label>
+    {% endif %}
+
+    {% for option in options | default([]) %}
+    <div class="form-check{% if inline %} form-check-inline{% endif %}">
+        <input
+            type="radio"
+            id="{{ name }}_{{ loop.index }}"
+            name="{{ name }}"
+            class="form-check-input {{ css_classes | default('') }}"
+            value="{{ option.value }}"
+            {% if option.value == selected %}checked{% endif %}
+            {% if disabled %}disabled{% endif %}
+            {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+        >
+        <label class="form-check-label" for="{{ name }}_{{ loop.index }}">
+            {{ option.label }}
+        </label>
+    </div>
+    {% endfor %}
+</div>

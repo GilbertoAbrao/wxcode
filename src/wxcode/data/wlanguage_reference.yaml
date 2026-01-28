@@ -1,0 +1,955 @@
+# WLanguage H* Functions Reference
+# This file maps WinDev/WebDev HyperFile functions to modern stack equivalents.
+# Used by the get_wlanguage_reference MCP tool during code conversion.
+
+# Categories of H* functions:
+# - navigation: Cursor positioning and iteration
+# - crud: Create, Read, Update, Delete operations
+# - search: Key and filter-based searches
+# - transaction: Transaction management
+# - status: State checking functions
+# - locking: Record locking functions
+# - aggregate: Count, sum, etc.
+
+functions:
+
+  # ====================
+  # NAVIGATION FUNCTIONS
+  # ====================
+
+  HReadFirst:
+    category: navigation
+    description: Positions on the first record of a data file according to a key
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+        description: Name of the data file (table)
+      - name: key_name
+        type: string
+        required: false
+        description: Name of the key (index) to use
+    returns: boolean
+    returns_description: True if a record was found, False otherwise
+    related: [HReadLast, HReadNext, HReadPrevious, HOut, HFound]
+    notes: |
+      Sets cursor to first record. Use HOut() after to check if cursor is valid.
+      In a loop, follow with HReadNext() until HOut() returns True.
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Using SQLAlchemy
+        record = db.query(Model).order_by(Model.key_field).first()
+      django: |
+        # Using Django ORM
+        record = Model.objects.order_by('key_field').first()
+      prisma: |
+        // Using Prisma
+        const record = await prisma.model.findFirst({ orderBy: { keyField: 'asc' } })
+      drizzle: |
+        // Using Drizzle
+        const record = await db.select().from(model).orderBy(model.keyField).limit(1)
+
+  HReadLast:
+    category: navigation
+    description: Positions on the last record of a data file according to a key
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: key_name
+        type: string
+        required: false
+    returns: boolean
+    related: [HReadFirst, HReadNext, HReadPrevious, HOut]
+    equivalents:
+      fastapi-sqlalchemy: |
+        record = db.query(Model).order_by(Model.key_field.desc()).first()
+      django: |
+        record = Model.objects.order_by('-key_field').first()
+      prisma: |
+        const record = await prisma.model.findFirst({ orderBy: { keyField: 'desc' } })
+      drizzle: |
+        const record = await db.select().from(model).orderBy(desc(model.keyField)).limit(1)
+
+  HReadNext:
+    category: navigation
+    description: Reads the next record according to the current key
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+    returns: boolean
+    related: [HReadFirst, HReadPrevious, HOut]
+    notes: Use after HReadFirst or HReadSeek in a loop
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Typically replaced with a query that returns all records
+        records = db.query(Model).order_by(Model.key_field).all()
+        for record in records:
+            # process record
+      django: |
+        for record in Model.objects.order_by('key_field'):
+            # process record
+      prisma: |
+        const records = await prisma.model.findMany({ orderBy: { keyField: 'asc' } })
+        for (const record of records) { /* process */ }
+      drizzle: |
+        const records = await db.select().from(model).orderBy(model.keyField)
+        for (const record of records) { /* process */ }
+
+  HReadPrevious:
+    category: navigation
+    description: Reads the previous record according to the current key
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+    returns: boolean
+    related: [HReadLast, HReadNext, HOut]
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Use reverse iteration or store records in memory
+        records = db.query(Model).order_by(Model.key_field.desc()).all()
+      django: |
+        records = Model.objects.order_by('-key_field')
+      prisma: |
+        const records = await prisma.model.findMany({ orderBy: { keyField: 'desc' } })
+      drizzle: |
+        const records = await db.select().from(model).orderBy(desc(model.keyField))
+
+  # ====================
+  # SEARCH FUNCTIONS
+  # ====================
+
+  HReadSeek:
+    category: search
+    description: Positions on a record whose key value equals or approaches a given value
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: key_name
+        type: string
+        required: true
+      - name: search_value
+        type: any
+        required: true
+        description: Value to search for
+      - name: options
+        type: integer
+        required: false
+        description: Search mode (hIdentical, hGeneric, hLimitParsing, hForUpdate)
+    returns: boolean
+    related: [HReadSeekFirst, HReadSeekLast, HFound, HOut]
+    notes: |
+      hIdentical - exact match only
+      hGeneric - starts with (for strings)
+      Default is generic search (approaches the value)
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Exact match (hIdentical)
+        record = db.query(Model).filter(Model.key_field == search_value).first()
+        # Generic/starts with
+        record = db.query(Model).filter(Model.key_field.startswith(search_value)).first()
+      django: |
+        # Exact match
+        record = Model.objects.filter(key_field=search_value).first()
+        # Starts with
+        record = Model.objects.filter(key_field__startswith=search_value).first()
+      prisma: |
+        // Exact match
+        const record = await prisma.model.findFirst({ where: { keyField: searchValue } })
+        // Starts with
+        const record = await prisma.model.findFirst({ where: { keyField: { startsWith: searchValue } } })
+      drizzle: |
+        // Exact match
+        const record = await db.select().from(model).where(eq(model.keyField, searchValue)).limit(1)
+        // Starts with
+        const record = await db.select().from(model).where(like(model.keyField, `${searchValue}%`)).limit(1)
+
+  HReadSeekFirst:
+    category: search
+    description: Positions on the first record whose key value equals or approaches a given value
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: key_name
+        type: string
+        required: true
+      - name: search_value
+        type: any
+        required: true
+      - name: options
+        type: integer
+        required: false
+    returns: boolean
+    related: [HReadSeek, HReadSeekLast, HFound]
+    equivalents:
+      fastapi-sqlalchemy: |
+        record = db.query(Model).filter(Model.key_field == value).order_by(Model.key_field).first()
+      django: |
+        record = Model.objects.filter(key_field=value).order_by('key_field').first()
+      prisma: |
+        const record = await prisma.model.findFirst({ where: { keyField: value }, orderBy: { keyField: 'asc' } })
+      drizzle: |
+        const record = await db.select().from(model).where(eq(model.keyField, value)).orderBy(model.keyField).limit(1)
+
+  HReadSeekLast:
+    category: search
+    description: Positions on the last record whose key value equals or approaches a given value
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: key_name
+        type: string
+        required: true
+      - name: search_value
+        type: any
+        required: true
+    returns: boolean
+    related: [HReadSeek, HReadSeekFirst]
+    equivalents:
+      fastapi-sqlalchemy: |
+        record = db.query(Model).filter(Model.key_field == value).order_by(Model.key_field.desc()).first()
+      django: |
+        record = Model.objects.filter(key_field=value).order_by('-key_field').first()
+      prisma: |
+        const record = await prisma.model.findFirst({ where: { keyField: value }, orderBy: { keyField: 'desc' } })
+      drizzle: |
+        const record = await db.select().from(model).where(eq(model.keyField, value)).orderBy(desc(model.keyField)).limit(1)
+
+  HFilter:
+    category: search
+    description: Defines and activates a filter on a data file
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: key_name
+        type: string
+        required: false
+      - name: min_value
+        type: any
+        required: false
+      - name: max_value
+        type: any
+        required: false
+      - name: condition
+        type: string
+        required: false
+        description: SQL-like condition string
+    returns: string
+    returns_description: Key to use with HReadFirst/HReadNext
+    related: [HDeactivateFilter, HActivateFilter]
+    notes: |
+      Can use bounded range or SQL-like condition.
+      Example: HFilter(Customer, Name, "A", "B" + hMaxVal)
+      Example: HFilter(Customer, , "City = 'Paris'")
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Range filter
+        records = db.query(Model).filter(Model.key_field.between(min_val, max_val)).all()
+        # Condition filter
+        records = db.query(Model).filter(Model.city == 'Paris').all()
+      django: |
+        # Range filter
+        records = Model.objects.filter(key_field__range=(min_val, max_val))
+        # Condition filter
+        records = Model.objects.filter(city='Paris')
+      prisma: |
+        // Range filter
+        const records = await prisma.model.findMany({ where: { keyField: { gte: minVal, lte: maxVal } } })
+        // Condition filter
+        const records = await prisma.model.findMany({ where: { city: 'Paris' } })
+      drizzle: |
+        // Range filter
+        const records = await db.select().from(model).where(and(gte(model.keyField, minVal), lte(model.keyField, maxVal)))
+
+  # ====================
+  # CRUD FUNCTIONS
+  # ====================
+
+  HAdd:
+    category: crud
+    description: Adds a new record to a data file
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: options
+        type: integer
+        required: false
+        description: hWriteDefault, hSetIDAuto, etc.
+    returns: boolean
+    related: [HModify, HDelete, HReset]
+    notes: |
+      Record values must be set in the file buffer before calling.
+      Auto-increment IDs are set automatically.
+    equivalents:
+      fastapi-sqlalchemy: |
+        record = Model(field1=value1, field2=value2)
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+      django: |
+        record = Model.objects.create(field1=value1, field2=value2)
+        # or
+        record = Model(field1=value1, field2=value2)
+        record.save()
+      prisma: |
+        const record = await prisma.model.create({
+          data: { field1: value1, field2: value2 }
+        })
+      drizzle: |
+        const result = await db.insert(model).values({ field1: value1, field2: value2 }).returning()
+
+  HModify:
+    category: crud
+    description: Modifies the current record in a data file
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: options
+        type: integer
+        required: false
+        description: hWriteDefault, hForceIdAuto, etc.
+    returns: boolean
+    related: [HAdd, HDelete, HRead]
+    notes: Must position on record first with HRead* or HSeek functions
+    equivalents:
+      fastapi-sqlalchemy: |
+        record = db.query(Model).filter(Model.id == record_id).first()
+        record.field1 = new_value
+        db.commit()
+      django: |
+        Model.objects.filter(id=record_id).update(field1=new_value)
+        # or
+        record = Model.objects.get(id=record_id)
+        record.field1 = new_value
+        record.save()
+      prisma: |
+        const record = await prisma.model.update({
+          where: { id: recordId },
+          data: { field1: newValue }
+        })
+      drizzle: |
+        await db.update(model).set({ field1: newValue }).where(eq(model.id, recordId))
+
+  HDelete:
+    category: crud
+    description: Deletes the current record from a data file
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: record_number
+        type: integer
+        required: false
+        description: Optional specific record number
+    returns: boolean
+    related: [HAdd, HModify, HCross]
+    equivalents:
+      fastapi-sqlalchemy: |
+        db.query(Model).filter(Model.id == record_id).delete()
+        db.commit()
+      django: |
+        Model.objects.filter(id=record_id).delete()
+      prisma: |
+        await prisma.model.delete({ where: { id: recordId } })
+      drizzle: |
+        await db.delete(model).where(eq(model.id, recordId))
+
+  HSave:
+    category: crud
+    description: Modifies current record or adds a new record if not exists
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: options
+        type: integer
+        required: false
+    returns: boolean
+    related: [HAdd, HModify]
+    notes: Upsert operation - inserts if record doesn't exist, updates if it does
+    equivalents:
+      fastapi-sqlalchemy: |
+        from sqlalchemy.dialects.postgresql import insert
+        stmt = insert(Model).values(**data).on_conflict_do_update(
+          index_elements=['id'],
+          set_=data
+        )
+        db.execute(stmt)
+      django: |
+        record, created = Model.objects.update_or_create(
+          id=record_id,
+          defaults={'field1': value1, 'field2': value2}
+        )
+      prisma: |
+        const record = await prisma.model.upsert({
+          where: { id: recordId },
+          update: { field1: value1 },
+          create: { field1: value1 }
+        })
+      drizzle: |
+        await db.insert(model).values(data).onConflictDoUpdate({ target: model.id, set: data })
+
+  HReset:
+    category: crud
+    description: Resets (clears) all variables of the file buffer
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+    returns: void
+    related: [HAdd]
+    notes: Used before HAdd to ensure clean state
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Create new instance with defaults
+        record = Model()
+      django: |
+        record = Model()
+      prisma: |
+        // Create new object with defaults
+        const record = {}
+      drizzle: |
+        // Create new object
+        const record = {}
+
+  # ====================
+  # STATUS FUNCTIONS
+  # ====================
+
+  HFound:
+    category: status
+    description: Checks if the record matches the search criteria
+    parameters:
+      - name: file_name
+        type: string
+        required: false
+    returns: boolean
+    related: [HOut, HReadSeek]
+    notes: |
+      Use after HReadSeek to verify exact match.
+      HOut() checks if cursor is valid; HFound() checks if value matches exactly.
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Check if record was found
+        record = db.query(Model).filter(Model.field == value).first()
+        found = record is not None
+      django: |
+        found = Model.objects.filter(field=value).exists()
+      prisma: |
+        const record = await prisma.model.findFirst({ where: { field: value } })
+        const found = record !== null
+      drizzle: |
+        const records = await db.select().from(model).where(eq(model.field, value)).limit(1)
+        const found = records.length > 0
+
+  HOut:
+    category: status
+    description: Checks if cursor is outside the data file (no more records)
+    parameters:
+      - name: file_name
+        type: string
+        required: false
+    returns: boolean
+    related: [HFound, HReadFirst, HReadNext]
+    notes: Returns True when iteration is complete (no more records)
+    equivalents:
+      fastapi-sqlalchemy: |
+        # In Python, use None check or empty list
+        records = db.query(Model).all()
+        is_empty = len(records) == 0
+      django: |
+        is_empty = not Model.objects.exists()
+      prisma: |
+        const records = await prisma.model.findMany()
+        const isEmpty = records.length === 0
+      drizzle: |
+        const records = await db.select().from(model)
+        const isEmpty = records.length === 0
+
+  HError:
+    category: status
+    description: Returns the error number of the last H* function
+    parameters: []
+    returns: integer
+    returns_description: Error code (0 = no error)
+    related: [HErrorInfo]
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Use try/except for error handling
+        try:
+            db.query(Model).first()
+        except SQLAlchemyError as e:
+            error_code = e.code
+      django: |
+        try:
+            Model.objects.get(id=id)
+        except Model.DoesNotExist:
+            # handle not found
+      prisma: |
+        try {
+          await prisma.model.findUnique({ where: { id } })
+        } catch (e) {
+          // handle error
+        }
+      drizzle: |
+        try {
+          await db.select().from(model)
+        } catch (e) {
+          // handle error
+        }
+
+  HErrorInfo:
+    category: status
+    description: Returns detailed information about the last error
+    parameters:
+      - name: info_type
+        type: integer
+        required: false
+        description: hErrMessage, hErrSystemMessage, etc.
+    returns: string
+    related: [HError]
+    equivalents:
+      fastapi-sqlalchemy: |
+        except SQLAlchemyError as e:
+            error_message = str(e)
+      django: |
+        except Exception as e:
+            error_message = str(e)
+      prisma: |
+        catch (e) {
+          const errorMessage = e.message
+        }
+      drizzle: |
+        catch (e) {
+          const errorMessage = e.message
+        }
+
+  # ====================
+  # TRANSACTION FUNCTIONS
+  # ====================
+
+  HTransactionStart:
+    category: transaction
+    description: Starts a transaction
+    parameters:
+      - name: connection
+        type: string
+        required: false
+        description: Database connection name
+    returns: boolean
+    related: [HTransactionEnd, HTransactionCancel]
+    equivalents:
+      fastapi-sqlalchemy: |
+        # SQLAlchemy uses implicit transactions with sessions
+        with db.begin():
+            # operations here
+      django: |
+        from django.db import transaction
+        with transaction.atomic():
+            # operations here
+      prisma: |
+        await prisma.$transaction(async (tx) => {
+          // operations here
+        })
+      drizzle: |
+        await db.transaction(async (tx) => {
+          // operations here
+        })
+
+  HTransactionEnd:
+    category: transaction
+    description: Commits and ends the current transaction
+    parameters: []
+    returns: boolean
+    related: [HTransactionStart, HTransactionCancel]
+    equivalents:
+      fastapi-sqlalchemy: |
+        db.commit()
+      django: |
+        # Automatic with transaction.atomic() context
+        # Or explicit: transaction.commit()
+      prisma: |
+        // Automatic in $transaction block
+      drizzle: |
+        // Automatic in transaction block
+
+  HTransactionCancel:
+    category: transaction
+    description: Cancels (rolls back) the current transaction
+    parameters: []
+    returns: boolean
+    related: [HTransactionStart, HTransactionEnd]
+    equivalents:
+      fastapi-sqlalchemy: |
+        db.rollback()
+      django: |
+        transaction.rollback()
+      prisma: |
+        // Throw error in $transaction to rollback
+        throw new Error('Rollback')
+      drizzle: |
+        // Throw error in transaction to rollback
+        throw new Error('Rollback')
+
+  # ====================
+  # AGGREGATE FUNCTIONS
+  # ====================
+
+  HNbRec:
+    category: aggregate
+    description: Returns the number of records in a data file
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: options
+        type: integer
+        required: false
+        description: hNonBlocking, hBrowsableRecords, etc.
+    returns: integer
+    equivalents:
+      fastapi-sqlalchemy: |
+        count = db.query(Model).count()
+      django: |
+        count = Model.objects.count()
+      prisma: |
+        const count = await prisma.model.count()
+      drizzle: |
+        const result = await db.select({ count: count() }).from(model)
+
+  HSum:
+    category: aggregate
+    description: Calculates the sum of a field for all records
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: field_name
+        type: string
+        required: true
+    returns: numeric
+    related: [HMean, HMin, HMax]
+    equivalents:
+      fastapi-sqlalchemy: |
+        from sqlalchemy import func
+        total = db.query(func.sum(Model.field)).scalar()
+      django: |
+        from django.db.models import Sum
+        total = Model.objects.aggregate(Sum('field'))['field__sum']
+      prisma: |
+        const result = await prisma.model.aggregate({ _sum: { field: true } })
+        const total = result._sum.field
+      drizzle: |
+        const result = await db.select({ total: sum(model.field) }).from(model)
+
+  HMean:
+    category: aggregate
+    description: Calculates the average of a field
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: field_name
+        type: string
+        required: true
+    returns: numeric
+    related: [HSum, HMin, HMax]
+    equivalents:
+      fastapi-sqlalchemy: |
+        from sqlalchemy import func
+        average = db.query(func.avg(Model.field)).scalar()
+      django: |
+        from django.db.models import Avg
+        average = Model.objects.aggregate(Avg('field'))['field__avg']
+      prisma: |
+        const result = await prisma.model.aggregate({ _avg: { field: true } })
+      drizzle: |
+        const result = await db.select({ average: avg(model.field) }).from(model)
+
+  HMin:
+    category: aggregate
+    description: Returns the minimum value of a field
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: field_name
+        type: string
+        required: true
+    returns: any
+    related: [HMax, HSum, HMean]
+    equivalents:
+      fastapi-sqlalchemy: |
+        from sqlalchemy import func
+        minimum = db.query(func.min(Model.field)).scalar()
+      django: |
+        from django.db.models import Min
+        minimum = Model.objects.aggregate(Min('field'))['field__min']
+      prisma: |
+        const result = await prisma.model.aggregate({ _min: { field: true } })
+      drizzle: |
+        const result = await db.select({ minimum: min(model.field) }).from(model)
+
+  HMax:
+    category: aggregate
+    description: Returns the maximum value of a field
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: field_name
+        type: string
+        required: true
+    returns: any
+    related: [HMin, HSum, HMean]
+    equivalents:
+      fastapi-sqlalchemy: |
+        from sqlalchemy import func
+        maximum = db.query(func.max(Model.field)).scalar()
+      django: |
+        from django.db.models import Max
+        maximum = Model.objects.aggregate(Max('field'))['field__max']
+      prisma: |
+        const result = await prisma.model.aggregate({ _max: { field: true } })
+      drizzle: |
+        const result = await db.select({ maximum: max(model.field) }).from(model)
+
+  # ====================
+  # LOCKING FUNCTIONS
+  # ====================
+
+  HLockRecNum:
+    category: locking
+    description: Locks a specific record by record number
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: record_number
+        type: integer
+        required: true
+    returns: boolean
+    related: [HUnlockRecNum]
+    notes: Used for pessimistic locking - lock before edit
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Use FOR UPDATE for pessimistic locking
+        record = db.query(Model).filter(Model.id == record_id).with_for_update().first()
+      django: |
+        record = Model.objects.select_for_update().get(id=record_id)
+      prisma: |
+        // Use transactions with serializable isolation
+        await prisma.$transaction(async (tx) => {
+          const record = await tx.model.findUnique({ where: { id: recordId } })
+          // Prisma doesn't have native row locking; use transactions
+        })
+      drizzle: |
+        // Use FOR UPDATE in raw SQL or transaction isolation
+        await db.select().from(model).where(eq(model.id, recordId)).for('update')
+
+  HUnlockRecNum:
+    category: locking
+    description: Unlocks a previously locked record
+    parameters:
+      - name: file_name
+        type: string
+        required: true
+      - name: record_number
+        type: integer
+        required: true
+    returns: boolean
+    related: [HLockRecNum]
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Locks are released when transaction commits
+        db.commit()
+      django: |
+        # Locks are released when transaction ends
+      prisma: |
+        // Locks released when transaction completes
+      drizzle: |
+        // Locks released when transaction completes
+
+  # ====================
+  # UTILITY FUNCTIONS
+  # ====================
+
+  HExecuteQuery:
+    category: utility
+    description: Executes a predefined query
+    parameters:
+      - name: query_name
+        type: string
+        required: true
+      - name: parameters
+        type: any
+        required: false
+        description: Parameters for the query (varargs)
+    returns: boolean
+    related: [HReadFirst, HReadNext]
+    notes: After execution, use HReadFirst/HReadNext to iterate results
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Execute named query or build with ORM
+        results = db.execute(text("SELECT * FROM table WHERE field = :param"), {"param": value}).fetchall()
+      django: |
+        results = Model.objects.raw('SELECT * FROM table WHERE field = %s', [param])
+      prisma: |
+        const results = await prisma.$queryRaw`SELECT * FROM table WHERE field = ${param}`
+      drizzle: |
+        const results = await db.execute(sql`SELECT * FROM table WHERE field = ${param}`)
+
+  HExecuteSQLQuery:
+    category: utility
+    description: Executes a SQL query directly
+    parameters:
+      - name: query_name
+        type: string
+        required: true
+        description: Name to reference the query
+      - name: sql_text
+        type: string
+        required: true
+        description: SQL query text
+      - name: connection
+        type: string
+        required: false
+    returns: boolean
+    related: [HExecuteQuery]
+    equivalents:
+      fastapi-sqlalchemy: |
+        results = db.execute(text(sql_query)).fetchall()
+      django: |
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            results = cursor.fetchall()
+      prisma: |
+        const results = await prisma.$queryRawUnsafe(sqlQuery)
+      drizzle: |
+        const results = await db.execute(sql.raw(sqlQuery))
+
+  FileToScreen:
+    category: utility
+    description: Copies values from file buffer to screen controls
+    parameters: []
+    returns: void
+    notes: |
+      Used with data-bound controls. After reading a record, call FileToScreen()
+      to populate UI controls. In modern apps, this is handled by form binding.
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Return model as response/dict for frontend
+        return record.model_dump()  # Pydantic
+      django: |
+        # Use ModelForm with instance
+        form = ModelForm(instance=record)
+      prisma: |
+        // Return record directly - frontend handles display
+        return record
+      drizzle: |
+        // Return record directly
+        return record
+
+  ScreenToFile:
+    category: utility
+    description: Copies values from screen controls to file buffer
+    parameters: []
+    returns: void
+    notes: |
+      Used before HAdd or HModify to copy UI values to the record buffer.
+      In modern apps, form data is submitted and validated on the server.
+    equivalents:
+      fastapi-sqlalchemy: |
+        # Parse request body with Pydantic
+        record = Model(**request_data.model_dump())
+      django: |
+        # Use ModelForm validation
+        form = ModelForm(request.POST)
+        if form.is_valid():
+            record = form.save()
+      prisma: |
+        // Validate and create from request body
+        const record = await prisma.model.create({ data: requestBody })
+      drizzle: |
+        // Validate with Zod and insert
+        const validated = schema.parse(requestBody)
+        await db.insert(model).values(validated)
+
+# Mapping of common WinDev patterns to modern equivalents
+patterns:
+
+  cursor_iteration:
+    description: Iterating through records with HReadFirst/HReadNext
+    windev: |
+      HReadFirst(Customer, Name)
+      WHILE NOT HOut()
+        // process Customer record
+        HReadNext(Customer, Name)
+      END
+    modern: |
+      # Python (SQLAlchemy)
+      for customer in db.query(Customer).order_by(Customer.name).all():
+          # process customer
+
+      # TypeScript (Prisma)
+      const customers = await prisma.customer.findMany({ orderBy: { name: 'asc' } })
+      for (const customer of customers) {
+          // process customer
+      }
+
+  search_and_modify:
+    description: Finding a record and modifying it
+    windev: |
+      HReadSeek(Customer, ID, customerID, hIdentical)
+      IF HFound() THEN
+        Customer.Name = newName
+        HModify(Customer)
+      END
+    modern: |
+      # Python (SQLAlchemy)
+      customer = db.query(Customer).filter(Customer.id == customer_id).first()
+      if customer:
+          customer.name = new_name
+          db.commit()
+
+      # TypeScript (Prisma)
+      await prisma.customer.update({
+        where: { id: customerId },
+        data: { name: newName }
+      })
+
+  transaction_block:
+    description: Multiple operations in a transaction
+    windev: |
+      HTransactionStart()
+      HAdd(Order)
+      HAdd(OrderItem)
+      IF HError() = 0 THEN
+        HTransactionEnd()
+      ELSE
+        HTransactionCancel()
+      END
+    modern: |
+      # Python (SQLAlchemy)
+      try:
+          db.add(order)
+          db.add(order_item)
+          db.commit()
+      except:
+          db.rollback()
+          raise
+
+      # TypeScript (Prisma)
+      await prisma.$transaction([
+        prisma.order.create({ data: orderData }),
+        prisma.orderItem.create({ data: itemData })
+      ])

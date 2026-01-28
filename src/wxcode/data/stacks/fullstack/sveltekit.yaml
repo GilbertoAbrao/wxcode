@@ -1,0 +1,103 @@
+# SvelteKit Stack Configuration
+# Target: SvelteKit with Vite and file-based routing
+# Use case: Svelte fullstack applications with server-side rendering
+
+stack_id: "sveltekit"
+name: "SvelteKit"
+group: "fullstack"
+language: "typescript"
+framework: "sveltekit"
+orm: "prisma"
+orm_pattern: "data-mapper"
+template_engine: "svelte"
+
+file_structure:
+  models: "prisma/"
+  schemas: "src/lib/schemas/"
+  routes: "src/routes/api/"
+  services: "src/lib/server/"
+  templates: "src/routes/"
+  static: "static/"
+  components: "src/lib/components/"
+  lib: "src/lib/"
+  stores: "src/lib/stores/"
+  server: "src/lib/server/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "kebab-case"
+  component: "PascalCase"
+  variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  store: "camelCase"
+  route_file: "+page.svelte"
+  layout_file: "+layout.svelte"
+  server_file: "+server.ts"
+  page_server_file: "+page.server.ts"
+
+# HyperFile type code to Prisma type mappings
+type_mappings:
+  "1": "Bytes"       # Binary
+  "2": "String"      # Text (short)
+  "3": "String"      # Text (long)
+  "4": "Int"         # Integer (16-bit)
+  "5": "Int"         # Integer (32-bit)
+  "6": "Int"         # Integer (signed)
+  "7": "BigInt"      # Integer (64-bit)
+  "8": "Float"       # Real (single)
+  "9": "Float"       # Real (double)
+  "10": "DateTime"   # Date
+  "11": "DateTime"   # Time
+  "12": "DateTime"   # DateTime
+  "13": "Boolean"    # Boolean
+  "14": "Decimal"    # Currency/Decimal
+  "15": "String"     # Memo
+  "16": "String"     # Rich Text
+  "17": "Bytes"      # Image/Binary
+  "18": "String"     # Sound (path)
+  "19": "Int"        # Combo index
+  "20": "String"     # Radio value
+  "21": "String"     # UUID
+  "22": "String"     # Enum (as string)
+  "23": "Json"       # JSON/Variant
+  "24": "Int"        # Duration (seconds)
+  "25": "BigInt"     # Timestamp
+  "26": "String"     # URL
+  "27": "String"     # Email
+  "28": "String"     # Phone
+
+imports_template: |
+  // SvelteKit $lib alias for imports
+  import { PrismaClient } from '@prisma/client'
+  import { z } from 'zod'
+
+  // Server-side only (src/lib/server/db.ts)
+  const prisma = new PrismaClient()
+
+model_template: |
+  // Prisma schema model example
+  model User {
+    id        Int      @id @default(autoincrement())
+    email     String   @unique
+    name      String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  }
+
+  // Page server load (src/routes/users/+page.server.ts)
+  import { prisma } from '$lib/server/db'
+
+  export async function load() {
+    const users = await prisma.user.findMany()
+    return { users }
+  }
+
+  // API endpoint (src/routes/api/users/+server.ts)
+  import { json } from '@sveltejs/kit'
+  import { prisma } from '$lib/server/db'
+
+  export async function GET() {
+    const users = await prisma.user.findMany()
+    return json(users)
+  }

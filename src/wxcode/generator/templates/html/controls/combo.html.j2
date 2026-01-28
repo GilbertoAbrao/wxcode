@@ -1,0 +1,52 @@
+{# Combo/Select Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - label: Display label
+    - options: List of {value, label} dicts
+    - selected: Currently selected value
+    - required: Boolean
+    - multiple: Boolean for multi-select
+    - placeholder: Placeholder option text
+    - disabled: Boolean
+    - css_classes: Additional CSS classes
+    - htmx_attrs: HTMX attributes dict
+#}
+<div class="mb-3 control-combo" id="{{ name }}-group">
+    {% if label %}
+    <label for="{{ name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+    {% endif %}
+
+    <select
+        id="{{ name }}"
+        name="{{ name }}"
+        class="form-select {{ css_classes | default('') }}"
+        {% if required %}required{% endif %}
+        {% if multiple %}multiple{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+    >
+        {% if placeholder and not multiple %}
+        <option value="">{{ placeholder }}</option>
+        {% endif %}
+
+        {% for option in options | default([]) %}
+        <option
+            value="{{ option.value }}"
+            {% if option.value == selected %}selected{% endif %}
+        >{{ option.label }}</option>
+        {% endfor %}
+    </select>
+
+    {% if help_text %}
+    <div class="form-text">{{ help_text }}</div>
+    {% endif %}
+
+    <div class="invalid-feedback">
+        {% if error_message %}{{ error_message }}{% else %}Selecione uma opcao{% endif %}
+    </div>
+</div>

@@ -1,0 +1,28 @@
+"""
+Estado global da aplicação.
+
+Este módulo define o estado compartilhado da aplicação,
+convertido a partir das declarações GLOBAL do projeto WinDev/WebDev.
+"""
+
+from dataclasses import dataclass
+{% for import_stmt in imports %}
+{{ import_stmt }}
+{% endfor %}
+
+
+@dataclass
+class AppState:
+    """
+    Estado global da aplicação.
+
+    Contém variáveis globais declaradas em:
+    {% for source in sources %}
+    - {{ source }}
+    {% endfor %}
+    """
+
+    {% for field in fields %}
+    {{ field.name }}: {{ field.type }}{{ " = " + field.default if field.default else "" }}
+    """{{ field.comment }}"""
+    {% endfor %}

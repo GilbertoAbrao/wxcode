@@ -1,0 +1,129 @@
+# NestJS + React SPA Stack Configuration
+# Source: NestJS official docs + React conventions
+
+stack_id: "nestjs-react"
+name: "NestJS + React"
+group: "spa"
+language: "typescript"
+framework: "nestjs"
+orm: "typeorm"
+orm_pattern: "data-mapper"
+template_engine: "jsx"
+
+file_structure:
+  # Backend (NestJS)
+  entities: "backend/src/entity/"
+  dto: "backend/src/dto/"
+  modules: "backend/src/modules/"
+  services: "backend/src/services/"
+  controllers: "backend/src/controllers/"
+  config: "backend/src/config/"
+  guards: "backend/src/guards/"
+  # Frontend (React)
+  components: "frontend/src/components/"
+  pages: "frontend/src/pages/"
+  hooks: "frontend/src/hooks/"
+  frontend_services: "frontend/src/services/"
+  types: "frontend/src/types/"
+  static: "frontend/public/"
+  contexts: "frontend/src/contexts/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "kebab-case"
+  component: "PascalCase"
+  variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  entity: "PascalCase"
+  route: "kebab-case"
+
+# HyperFile type codes to TypeORM types
+type_mappings:
+  "1": "bytea"           # Binary
+  "2": "varchar"         # String 8 bits
+  "3": "varchar"         # String 16 bits (Unicode)
+  "4": "int"             # Integer 1 byte
+  "5": "int"             # Integer 2 bytes
+  "6": "int"             # Integer 4 bytes
+  "7": "bigint"          # Integer 8 bytes (BigInt)
+  "8": "float"           # Real 4 bytes
+  "9": "double precision"  # Real 8 bytes
+  "10": "timestamp"      # DateTime
+  "11": "date"           # Date
+  "12": "time"           # Time
+  "13": "boolean"        # Boolean
+  "14": "decimal"        # Currency
+  "15": "text"           # Text memo
+  "16": "text"           # Binary memo
+  "17": "bytea"          # Image
+  "18": "varchar"        # Sound
+  "19": "int"            # Duration
+  "20": "varchar"        # Enumeration
+  "21": "varchar"        # Combination
+  "22": "char"           # Character (fixed)
+  "23": "json"           # JSON
+  "24": "int"            # Unsigned integer
+  "25": "bigint"         # Unsigned integer 8 bytes
+  "26": "uuid"           # UUID
+  "27": "varchar"        # Secure password
+  "28": "varchar"        # Alias
+
+# TypeScript equivalent types for frontend
+typescript_types:
+  "1": "Buffer"
+  "2": "string"
+  "3": "string"
+  "4": "number"
+  "5": "number"
+  "6": "number"
+  "7": "bigint"
+  "8": "number"
+  "9": "number"
+  "10": "Date"
+  "11": "Date"
+  "12": "string"
+  "13": "boolean"
+  "14": "Decimal"
+  "15": "string"
+  "16": "string"
+  "17": "Buffer"
+  "18": "string"
+  "19": "number"
+  "20": "string"
+  "21": "string"
+  "22": "string"
+  "23": "object"
+  "24": "number"
+  "25": "bigint"
+  "26": "string"
+  "27": "string"
+  "28": "string"
+
+imports_template: |
+  // TypeORM Entity imports
+  import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+
+  // NestJS imports
+  import { Injectable } from '@nestjs/common';
+  import { InjectRepository } from '@nestjs/typeorm';
+  import { Repository } from 'typeorm';
+
+model_template: |
+  // TypeORM Entity
+  @Entity('{{ table_name }}')
+  export class {{ class_name }} {
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    {% for field in fields -%}
+    @Column({ type: '{{ field.typeorm_type }}'{% if field.nullable %}, nullable: true{% endif %} })
+    {{ field.name | camelCase }}: {{ field.typescript_type }};
+    {% endfor %}
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
+  }

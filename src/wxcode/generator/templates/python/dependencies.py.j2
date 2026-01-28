@@ -1,0 +1,42 @@
+"""
+Dependency injection para estado global.
+
+Este módulo define funções para injetar estado global
+em rotas FastAPI usando Depends().
+"""
+
+from fastapi import Depends, Request
+
+from app.state import AppState
+
+
+def get_app_state(request: Request) -> AppState:
+    """
+    Retorna o estado global da aplicação.
+
+    Args:
+        request: Request FastAPI
+
+    Returns:
+        AppState contendo variáveis globais
+
+    Examples:
+        @app.get("/api/example")
+        async def example(app_state: AppState = Depends(get_app_state)):
+            # Acessa variáveis globais via app_state
+            db = app_state.db
+            params = app_state.params
+            ...
+    """
+    return request.app.state.app_state
+
+{% for field in fields %}
+
+def get_{{ field.name }}(app_state: AppState = Depends(get_app_state)) -> {{ field.type }}:
+    """
+    Retorna {{ field.original_name }} do estado global.
+
+    Original: {{ field.original_name }} ({{ field.wlanguage_type }})
+    """
+    return app_state.{{ field.name }}
+{% endfor %}

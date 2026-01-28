@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "updated": 1769012613019,
+  "naming": {},
+  "directories": {
+    "api": {
+      "purpose": "API endpoints",
+      "files": 9
+    },
+    "models": {
+      "purpose": "Data models",
+      "files": 71
+    },
+    "services": {
+      "purpose": "Service layer",
+      "files": 16
+    },
+    "utils": {
+      "purpose": "Utility functions",
+      "files": 1
+    },
+    "tests": {
+      "purpose": "Test files",
+      "files": 43
+    },
+    "routes": {
+      "purpose": "API endpoints",
+      "files": 4
+    },
+    "types": {
+      "purpose": "TypeScript types",
+      "files": 2
+    },
+    "hooks": {
+      "purpose": "React/custom hooks",
+      "files": 2
+    },
+    "components": {
+      "purpose": "UI components",
+      "files": 3
+    }
+  },
+  "suffixes": {}
+}

@@ -1,0 +1,115 @@
+# Laravel + Blade Stack Configuration
+# Server-rendered PHP stack with Eloquent ORM
+
+stack_id: "laravel-blade"
+name: "Laravel + Blade"
+group: "server-rendered"
+language: "php"
+framework: "laravel"
+orm: "eloquent"
+orm_pattern: "active-record"
+template_engine: "blade"
+
+file_structure:
+  models: "app/Models/"
+  controllers: "app/Http/Controllers/"
+  requests: "app/Http/Requests/"
+  middleware: "app/Http/Middleware/"
+  services: "app/Services/"
+  views: "resources/views/"
+  routes_web: "routes/web.php"
+  routes_api: "routes/api.php"
+  migrations: "database/migrations/"
+  factories: "database/factories/"
+  seeders: "database/seeders/"
+  config: "config/"
+  public: "public/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "PascalCase"
+  variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  route: "kebab-case"
+  view: "kebab-case"
+
+# HyperFile type codes (1-28) to PHP/Laravel migration types
+type_mappings:
+  "1": "binary"             # Binary
+  "2": "string"             # String
+  "3": "text"               # Text/Memo
+  "4": "integer"            # Integer 4 bytes
+  "5": "smallInteger"       # Integer 2 bytes (short)
+  "6": "tinyInteger"        # Integer 1 byte (tiny)
+  "7": "bigInteger"         # Integer 8 bytes (bigint)
+  "8": "float"              # Real 4 bytes
+  "9": "double"             # Real 8 bytes
+  "10": "dateTime"          # DateTime
+  "11": "date"              # Date
+  "12": "time"              # Time
+  "13": "boolean"           # Boolean
+  "14": "decimal"           # Currency
+  "15": "longText"          # Memo text
+  "16": "char"              # Character
+  "17": "binary"            # Sound/Image (binary)
+  "18": "enum"              # Enumeration
+  "19": "integer"           # Duration (seconds)
+  "20": "string"            # Composite key
+  "21": "id"                # Automatic ID
+  "22": "string"            # Radio button
+  "23": "json"              # JSON
+  "24": "unsignedInteger"   # Unsigned integer
+  "25": "unsignedBigInteger" # Unsigned bigint
+  "26": "uuid"              # UUID
+  "27": "string"            # Scientific notation
+  "28": "string"            # Password (hashed)
+
+imports_template: |
+  <?php
+
+  namespace App\Models;
+
+  use Illuminate\Database\Eloquent\Factories\HasFactory;
+  use Illuminate\Database\Eloquent\Model;
+  use Illuminate\Database\Eloquent\SoftDeletes;
+
+model_template: |
+  <?php
+
+  namespace App\Models;
+
+  use Illuminate\Database\Eloquent\Factories\HasFactory;
+  use Illuminate\Database\Eloquent\Model;
+
+  class {{ class_name }} extends Model
+  {
+      use HasFactory;
+
+      /**
+       * The table associated with the model.
+       *
+       * @var string
+       */
+      protected $table = '{{ table_name }}';
+
+      /**
+       * The attributes that are mass assignable.
+       *
+       * @var array<int, string>
+       */
+      protected $fillable = [
+          {% for field in fields %}'{{ field.name }}',
+          {% endfor %}
+      ];
+
+      /**
+       * The attributes that should be cast.
+       *
+       * @var array<string, string>
+       */
+      protected $casts = [
+          {% for field in fields %}{% if field.cast %}'{{ field.name }}' => '{{ field.cast }}',
+          {% endif %}{% endfor %}
+      ];
+  }

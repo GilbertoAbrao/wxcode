@@ -1,0 +1,61 @@
+{# Edit Control Template - Input field #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - label: Display label
+    - input_type: "text", "password", "email", "number", "date", "textarea"
+    - required: Boolean
+    - placeholder: Placeholder text
+    - max_length: Maximum length
+    - min_value: Minimum value (for number)
+    - max_value: Maximum value (for number)
+    - readonly: Boolean
+    - css_classes: Additional CSS classes
+    - htmx_attrs: HTMX attributes dict
+#}
+<div class="mb-3 control-edit" id="{{ name }}-group">
+    {% if label %}
+    <label for="{{ name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+    {% endif %}
+
+    {% if input_type == "textarea" %}
+    <textarea
+        id="{{ name }}"
+        name="{{ name }}"
+        class="form-control {{ css_classes | default('') }}"
+        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+        {% if max_length %}maxlength="{{ max_length }}"{% endif %}
+        {% if required %}required{% endif %}
+        {% if readonly %}readonly{% endif %}
+        {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+        rows="4"
+    >{{ value | default('') }}</textarea>
+    {% else %}
+    <input
+        type="{{ input_type | default('text') }}"
+        id="{{ name }}"
+        name="{{ name }}"
+        class="form-control {{ css_classes | default('') }}"
+        {% if value %}value="{{ value }}"{% endif %}
+        {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+        {% if max_length %}maxlength="{{ max_length }}"{% endif %}
+        {% if min_value is defined %}min="{{ min_value }}"{% endif %}
+        {% if max_value is defined %}max="{{ max_value }}"{% endif %}
+        {% if required %}required{% endif %}
+        {% if readonly %}readonly{% endif %}
+        {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+    >
+    {% endif %}
+
+    {% if help_text %}
+    <div class="form-text">{{ help_text }}</div>
+    {% endif %}
+
+    <div class="invalid-feedback">
+        {% if error_message %}{{ error_message }}{% else %}Campo obrigatorio{% endif %}
+    </div>
+</div>

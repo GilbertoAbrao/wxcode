@@ -1,0 +1,98 @@
+# FastAPI + React SPA Stack Configuration
+# Source: FastAPI best practices + React conventions
+
+stack_id: "fastapi-react"
+name: "FastAPI + React"
+group: "spa"
+language: "python"
+framework: "fastapi"
+orm: "sqlalchemy"
+orm_pattern: "data-mapper"
+template_engine: "jsx"
+
+file_structure:
+  # Backend (FastAPI)
+  models: "backend/app/models/"
+  schemas: "backend/app/schemas/"
+  routes: "backend/app/routes/"
+  services: "backend/app/services/"
+  config: "backend/app/config/"
+  # Frontend (React)
+  components: "frontend/src/components/"
+  pages: "frontend/src/pages/"
+  hooks: "frontend/src/hooks/"
+  frontend_services: "frontend/src/services/"
+  types: "frontend/src/types/"
+  static: "frontend/public/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "snake_case"
+  component: "PascalCase"
+  variable: "snake_case"
+  js_variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  route: "kebab-case"
+
+# HyperFile type codes to Python types
+# TypeScript equivalents in comments for frontend reference
+type_mappings:
+  "1": "bytes"           # Binary -> Buffer in TS
+  "2": "str"             # String 8 bits -> string in TS
+  "3": "str"             # String 16 bits (Unicode) -> string in TS
+  "4": "int"             # Integer 1 byte -> number in TS
+  "5": "int"             # Integer 2 bytes -> number in TS
+  "6": "int"             # Integer 4 bytes -> number in TS
+  "7": "int"             # Integer 8 bytes (BigInt) -> bigint in TS
+  "8": "float"           # Real 4 bytes -> number in TS
+  "9": "float"           # Real 8 bytes -> number in TS
+  "10": "datetime"       # DateTime -> Date in TS
+  "11": "date"           # Date -> Date in TS
+  "12": "time"           # Time -> string in TS
+  "13": "bool"           # Boolean -> boolean in TS
+  "14": "Decimal"        # Currency -> Decimal from decimal.js in TS
+  "15": "str"            # Text memo -> string in TS
+  "16": "str"            # Binary memo -> string in TS
+  "17": "bytes"          # Image -> Buffer in TS
+  "18": "str"            # Sound -> string in TS
+  "19": "int"            # Duration -> number in TS
+  "20": "str"            # Enumeration -> string in TS
+  "21": "str"            # Combination -> string in TS
+  "22": "str"            # Character (fixed) -> string in TS
+  "23": "dict"           # JSON -> JsonValue in TS
+  "24": "int"            # Unsigned integer -> number in TS
+  "25": "int"            # Unsigned integer 8 bytes -> bigint in TS
+  "26": "UUID"           # UUID -> string in TS
+  "27": "str"            # Secure password -> string in TS
+  "28": "str"            # Alias -> string in TS
+
+imports_template: |
+  # Backend (Python/FastAPI)
+  from pydantic import BaseModel, Field
+  from datetime import datetime, date, time
+  from decimal import Decimal
+  from uuid import UUID
+  from typing import Optional, Any
+  from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Date, Time
+  from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
+
+model_template: |
+  # SQLAlchemy Model
+  class {{ class_name }}(Base):
+      """{{ description }}"""
+      __tablename__ = "{{ table_name }}"
+
+      {% for field in fields -%}
+      {{ field.name }} = Column({{ field.sqlalchemy_type }}{% if field.primary_key %}, primary_key=True{% endif %}{% if field.nullable %}, nullable=True{% endif %})
+      {% endfor %}
+
+  # Pydantic Schema
+  class {{ class_name }}Schema(BaseModel):
+      """{{ description }} schema."""
+      {% for field in fields -%}
+      {{ field.name }}: {{ field.python_type }}{% if field.optional %} = None{% endif %}
+      {% endfor %}
+
+      class Config:
+          from_attributes = True

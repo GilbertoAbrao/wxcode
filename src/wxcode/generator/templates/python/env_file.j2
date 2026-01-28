@@ -1,0 +1,8 @@
+# Configuration for {{ config_name }}
+# Auto-generated from WinDev COMPILE IF blocks
+
+{% for var in variables.values() -%}
+# {{ var.description or 'Configuration variable' }}
+{{ var.name }}={{ var.value if var.value is not none else '' }}
+
+{% endfor %}

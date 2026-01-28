@@ -1,0 +1,142 @@
+{# Table/Grid Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - columns: List of {name, label, sortable, width} dicts
+    - data_url: URL to fetch data via HTMX
+    - row_click_url: URL pattern for row click (use {id} placeholder)
+    - selectable: Boolean for row selection
+    - striped: Boolean for striped rows
+    - hover: Boolean for hover effect
+    - bordered: Boolean for borders
+    - responsive: Boolean for responsive wrapper
+    - css_classes: Additional CSS classes
+#}
+<div class="control-table" id="{{ name }}-container">
+    {# Table toolbar #}
+    {% if toolbar %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="table-search">
+            {% if searchable %}
+            <input
+                type="search"
+                class="form-control form-control-sm"
+                placeholder="Buscar..."
+                hx-get="{{ data_url }}"
+                hx-trigger="keyup changed delay:300ms"
+                hx-target="#{{ name }}-tbody"
+                hx-include="[name='search']"
+                name="search"
+            >
+            {% endif %}
+        </div>
+        <div class="table-actions">
+            {% block table_actions %}{% endblock %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Table wrapper #}
+    {% if responsive %}<div class="table-responsive">{% endif %}
+
+    <table
+        id="{{ name }}"
+        class="table{% if striped %} table-striped{% endif %}{% if hover %} table-hover{% endif %}{% if bordered %} table-bordered{% endif %} {{ css_classes | default('') }}"
+    >
+        <thead class="table-light">
+            <tr>
+                {% if selectable %}
+                <th style="width: 40px;">
+                    <input type="checkbox" class="form-check-input" id="{{ name }}-select-all">
+                </th>
+                {% endif %}
+
+                {% for col in columns | default([]) %}
+                <th{% if col.width %} style="width: {{ col.width }}"{% endif %}>
+                    {% if col.sortable %}
+                    <a href="#" class="text-decoration-none text-dark"
+                       hx-get="{{ data_url }}?sort={{ col.name }}"
+                       hx-target="#{{ name }}-tbody">
+                        {{ col.label }}
+                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                    </a>
+                    {% else %}
+                    {{ col.label }}
+                    {% endif %}
+                </th>
+                {% endfor %}
+
+                {% if actions_column %}
+                <th style="width: 100px;">Acoes</th>
+                {% endif %}
+            </tr>
+        </thead>
+
+        <tbody id="{{ name }}-tbody"
+               {% if data_url %}
+               hx-get="{{ data_url }}"
+               hx-trigger="load"
+               hx-swap="innerHTML"
+               {% endif %}>
+            {# Data rows will be loaded via HTMX or rendered server-side #}
+            {% block table_rows %}
+            {% for row in rows | default([]) %}
+            <tr{% if row_click_url %} style="cursor: pointer" hx-get="{{ row_click_url | replace('{id}', row.id) }}" hx-target="#content"{% endif %}>
+                {% if selectable %}
+                <td>
+                    <input type="checkbox" class="form-check-input row-select" value="{{ row.id }}">
+                </td>
+                {% endif %}
+
+                {% for col in columns %}
+                <td>{{ row[col.name] | default('') }}</td>
+                {% endfor %}
+
+                {% if actions_column %}
+                <td>
+                    {% block row_actions %}
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    {% endblock %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            {% endblock %}
+        </tbody>
+    </table>
+
+    {% if responsive %}</div>{% endif %}
+
+    {# Pagination #}
+    {% if pagination %}
+    <nav aria-label="Navegacao da tabela">
+        <ul class="pagination pagination-sm justify-content-end">
+            <li class="page-item{% if not pagination.has_prev %} disabled{% endif %}">
+                <a class="page-link" href="#"
+                   hx-get="{{ data_url }}?page={{ pagination.prev_page }}"
+                   hx-target="#{{ name }}-tbody">Anterior</a>
+            </li>
+            {% for page in pagination.pages %}
+            <li class="page-item{% if page == pagination.current_page %} active{% endif %}">
+                <a class="page-link" href="#"
+                   hx-get="{{ data_url }}?page={{ page }}"
+                   hx-target="#{{ name }}-tbody">{{ page }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item{% if not pagination.has_next %} disabled{% endif %}">
+                <a class="page-link" href="#"
+                   hx-get="{{ data_url }}?page={{ pagination.next_page }}"
+                   hx-target="#{{ name }}-tbody">Proximo</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>

@@ -1,0 +1,48 @@
+"""
+Lifecycle da aplicação FastAPI.
+
+Este módulo define startup e shutdown handlers para
+inicializar o estado global da aplicação.
+"""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+{% for import_stmt in imports %}
+{{ import_stmt }}
+{% endfor %}
+
+from app.state import AppState
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Gerencia lifecycle da aplicação (startup e shutdown).
+
+    Inicializa estado global na startup e realiza cleanup no shutdown.
+    """
+    # Startup: Inicializa estado global
+    {% for block in initialization_blocks %}
+    # {{ block.comment }}
+    {{ block.code | indent(4) }}
+    {% endfor %}
+
+    # Cria instância do AppState
+    app.state.app_state = AppState(
+        {% for field in state_fields %}
+        {{ field.name }}={{ field.init_value }},
+        {% endfor %}
+    )
+
+    yield
+
+    # Shutdown: Cleanup
+    {% if has_cleanup %}
+    {% for block in cleanup_blocks %}
+    {{ block.code | indent(4) }}
+    {% endfor %}
+    {% else %}
+    # Nenhum cleanup necessário
+    pass
+    {% endif %}

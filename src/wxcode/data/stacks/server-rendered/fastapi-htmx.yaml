@@ -1,0 +1,87 @@
+# FastAPI + HTMX Stack Configuration
+# Server-rendered Python stack with HTMX for dynamic updates
+
+stack_id: "fastapi-htmx"
+name: "FastAPI + HTMX"
+group: "server-rendered"
+language: "python"
+framework: "fastapi"
+orm: "sqlalchemy"
+orm_pattern: "data-mapper"
+template_engine: "jinja2"
+
+file_structure:
+  models: "app/models/"
+  schemas: "app/schemas/"
+  routes: "app/routes/"
+  services: "app/services/"
+  templates: "app/templates/"
+  partials: "app/templates/partials/"
+  static: "app/static/"
+  config: "app/config/"
+  utils: "app/utils/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "snake_case"
+  variable: "snake_case"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  route: "kebab-case"
+  partial: "snake_case"
+
+# HyperFile type codes (1-28) to Python/SQLAlchemy types
+type_mappings:
+  "1": "bytes"              # Binary
+  "2": "str"                # String
+  "3": "str"                # Text/Memo
+  "4": "int"                # Integer 4 bytes
+  "5": "int"                # Integer 2 bytes (short)
+  "6": "int"                # Integer 1 byte (tiny)
+  "7": "int"                # Integer 8 bytes (bigint)
+  "8": "float"              # Real 4 bytes
+  "9": "float"              # Real 8 bytes
+  "10": "datetime"          # DateTime
+  "11": "date"              # Date
+  "12": "time"              # Time
+  "13": "bool"              # Boolean
+  "14": "Decimal"           # Currency
+  "15": "str"               # Memo text
+  "16": "str"               # Character
+  "17": "bytes"             # Sound/Image (binary)
+  "18": "str"               # Enumeration
+  "19": "int"               # Duration (seconds)
+  "20": "str"               # Composite key
+  "21": "str"               # Automatic ID
+  "22": "str"               # Radio button
+  "23": "dict"              # JSON
+  "24": "int"               # Unsigned integer
+  "25": "int"               # Unsigned bigint
+  "26": "UUID"              # UUID
+  "27": "str"               # Scientific notation
+  "28": "str"               # Password (hashed)
+
+imports_template: |
+  from pydantic import BaseModel, Field
+  from datetime import datetime, date, time
+  from decimal import Decimal
+  from uuid import UUID
+  from typing import Optional, Any
+
+model_template: |
+  class {{ class_name }}(BaseModel):
+      """{{ description }}"""
+      {% for field in fields %}
+      {{ field.name }}: {{ field.type }}{% if field.optional %} = None{% endif %}
+      {% endfor %}
+
+      class Config:
+          from_attributes = True
+
+# HTMX-specific template patterns
+htmx_patterns:
+  swap_oob: "hx-swap-oob=\"true\""
+  trigger: "hx-trigger=\"{{ event }}\""
+  target: "hx-target=\"#{{ target_id }}\""
+  swap: "hx-swap=\"{{ swap_type }}\""
+  boost: "hx-boost=\"true\""

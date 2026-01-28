@@ -1,0 +1,136 @@
+# Laravel + React SPA Stack Configuration
+# Source: Laravel official docs + Inertia.js patterns
+
+stack_id: "laravel-react"
+name: "Laravel + React"
+group: "spa"
+language: "php"
+framework: "laravel"
+orm: "eloquent"
+orm_pattern: "active-record"
+template_engine: "jsx"
+
+file_structure:
+  # Backend (Laravel)
+  models: "app/Models/"
+  controllers: "app/Http/Controllers/"
+  services: "app/Services/"
+  routes: "routes/"
+  middleware: "app/Http/Middleware/"
+  requests: "app/Http/Requests/"
+  config: "config/"
+  # Frontend (React)
+  components: "resources/js/components/"
+  pages: "resources/js/pages/"
+  hooks: "resources/js/hooks/"
+  frontend_services: "resources/js/services/"
+  types: "resources/js/types/"
+  static: "public/"
+  layouts: "resources/js/layouts/"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "PascalCase"
+  component: "PascalCase"
+  variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  model: "PascalCase"
+  route: "kebab-case"
+
+# HyperFile type codes to Eloquent casts
+type_mappings:
+  "1": "binary"          # Binary
+  "2": "string"          # String 8 bits
+  "3": "string"          # String 16 bits (Unicode)
+  "4": "integer"         # Integer 1 byte
+  "5": "integer"         # Integer 2 bytes
+  "6": "integer"         # Integer 4 bytes
+  "7": "integer"         # Integer 8 bytes (BigInt)
+  "8": "float"           # Real 4 bytes
+  "9": "float"           # Real 8 bytes
+  "10": "datetime"       # DateTime
+  "11": "date"           # Date
+  "12": "datetime"       # Time
+  "13": "boolean"        # Boolean
+  "14": "decimal:2"      # Currency
+  "15": "string"         # Text memo
+  "16": "string"         # Binary memo
+  "17": "binary"         # Image
+  "18": "string"         # Sound
+  "19": "integer"        # Duration
+  "20": "string"         # Enumeration
+  "21": "string"         # Combination
+  "22": "string"         # Character (fixed)
+  "23": "array"          # JSON
+  "24": "integer"        # Unsigned integer
+  "25": "integer"        # Unsigned integer 8 bytes
+  "26": "string"         # UUID
+  "27": "hashed"         # Secure password
+  "28": "string"         # Alias
+
+# TypeScript equivalent types for frontend
+typescript_types:
+  "1": "Buffer"
+  "2": "string"
+  "3": "string"
+  "4": "number"
+  "5": "number"
+  "6": "number"
+  "7": "number"
+  "8": "number"
+  "9": "number"
+  "10": "Date"
+  "11": "Date"
+  "12": "string"
+  "13": "boolean"
+  "14": "number"
+  "15": "string"
+  "16": "string"
+  "17": "Buffer"
+  "18": "string"
+  "19": "number"
+  "20": "string"
+  "21": "string"
+  "22": "string"
+  "23": "object"
+  "24": "number"
+  "25": "number"
+  "26": "string"
+  "27": "string"
+  "28": "string"
+
+imports_template: |
+  <?php
+  // Laravel Model imports
+  namespace App\Models;
+
+  use Illuminate\Database\Eloquent\Model;
+  use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+model_template: |
+  <?php
+
+  namespace App\Models;
+
+  use Illuminate\Database\Eloquent\Model;
+  use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+  class {{ class_name }} extends Model
+  {
+      use HasFactory;
+
+      protected $table = '{{ table_name }}';
+
+      protected $fillable = [
+          {% for field in fields -%}
+          '{{ field.name }}',
+          {% endfor %}
+      ];
+
+      protected $casts = [
+          {% for field in fields if field.cast -%}
+          '{{ field.name }}' => '{{ field.cast }}',
+          {% endfor %}
+      ];
+  }

@@ -1,0 +1,48 @@
+{# Tab Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - tabs: List of {id, label, content, icon, active, disabled} dicts
+    - pills: Boolean for pill style
+    - vertical: Boolean for vertical tabs
+    - justified: Boolean for justified tabs
+    - css_classes: Additional CSS classes
+#}
+<div class="control-tab {{ css_classes | default('') }}" id="{{ name }}-container">
+    {# Tab navigation #}
+    <ul class="nav{% if pills %} nav-pills{% else %} nav-tabs{% endif %}{% if vertical %} flex-column{% endif %}{% if justified %} nav-justified{% endif %} mb-3" id="{{ name }}" role="tablist">
+        {% for tab in tabs | default([]) %}
+        <li class="nav-item" role="presentation">
+            <button
+                class="nav-link{% if tab.active %} active{% endif %}{% if tab.disabled %} disabled{% endif %}"
+                id="{{ name }}-{{ tab.id }}-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#{{ name }}-{{ tab.id }}"
+                type="button"
+                role="tab"
+                aria-controls="{{ name }}-{{ tab.id }}"
+                aria-selected="{{ 'true' if tab.active else 'false' }}"
+                {% if tab.disabled %}disabled{% endif %}
+            >
+                {% if tab.icon %}<i class="{{ tab.icon }} me-1"></i>{% endif %}
+                {{ tab.label }}
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    {# Tab content #}
+    <div class="tab-content" id="{{ name }}-content">
+        {% for tab in tabs | default([]) %}
+        <div
+            class="tab-pane fade{% if tab.active %} show active{% endif %}"
+            id="{{ name }}-{{ tab.id }}"
+            role="tabpanel"
+            aria-labelledby="{{ name }}-{{ tab.id }}-tab"
+        >
+            {{ tab.content | safe }}
+        </div>
+        {% endfor %}
+    </div>
+</div>

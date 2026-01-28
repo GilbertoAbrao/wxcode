@@ -1,0 +1,27 @@
+{# Button Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - label: Button text
+    - button_type: "submit", "button", "reset"
+    - style: "primary", "secondary", "success", "danger", "warning", "info", "link"
+    - size: "sm", "lg", or empty for default
+    - disabled: Boolean
+    - icon: Icon class (e.g., "bi-save")
+    - css_classes: Additional CSS classes
+    - htmx_attrs: HTMX attributes dict
+    - onclick: JavaScript onclick handler
+#}
+<button
+    type="{{ button_type | default('button') }}"
+    id="{{ name }}"
+    name="{{ name }}"
+    class="btn btn-{{ style | default('primary') }}{% if size %} btn-{{ size }}{% endif %} {{ css_classes | default('') }}"
+    {% if disabled %}disabled{% endif %}
+    {% if onclick %}onclick="{{ onclick }}"{% endif %}
+    {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+>
+    {% if icon %}<i class="{{ icon }} me-1"></i>{% endif %}
+    {{ label | default('Button') }}
+</button>

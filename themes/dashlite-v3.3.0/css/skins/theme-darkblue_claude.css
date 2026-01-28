@@ -1,0 +1,959 @@
+/*!
+ * Theme: Dark Blue
+ * Primary Color: #041A2F
+ * Package: DashLite v3.3.0
+ * Updated: 11.11.2025
+ * Author: Custom Theme
+ * Description: Professional dark blue theme with custom fonts
+ *
+ * Color Palette:
+ * Primary:   #041A2F (Navy Blue)
+ * Secondary: #6C757D (Neutral Gray)
+ * Success:   #0A8754 (Emerald Green)
+ * Info:      #0E7490 (Cyan Blue)
+ * Warning:   #D97706 (Amber Orange)
+ * Danger:    #DC2626 (Vibrant Red)
+ * Light:     #F3F4F6 (Light Gray)
+ * Dark:      #1F2937 (Dark Gray)
+ *
+ * Primary Variations:
+ * 100: #E6EBF0 | 200: #BDD0DD | 300: #94B4CA | 400: #6B99B7
+ * 500: #0A3555 | 600: #041A2F | 700: #03141F | 800: #020D15 | 900: #01070B
+**/
+
+/* ========================================
+   CUSTOM FONTS
+   ======================================== */
+
+@font-face {
+  font-family: 'ACaslonPro';
+  src: url('../../fonts/ACaslonPro-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'times';
+  src: url('../../fonts/times.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Univers LT 57 Condensed';
+  src: url('../../fonts/Univers LT 57 Condensed.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manta Style Script';
+  src: url('../../fonts/Manta Style Script DEMO.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ========================================
+   CSS VARIABLES & COLOR PALETTE
+   ======================================== */
+
+:root {
+  /* Font Families */
+  --bs-body-font-family: 'Univers LT 57 Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --bs-font-sans-serif: 'Univers LT 57 Condensed', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Primary Colors */
+  --color-primary: #041A2F;
+  --color-secondary: #6C757D;
+  --color-success: #0A8754;
+  --color-info: #0E7490;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
+  --color-light: #F3F4F6;
+  --color-dark: #1F2937;
+
+  /* Primary Variations */
+  --primary-100: #E6EBF0;
+  --primary-200: #BDD0DD;
+  --primary-300: #94B4CA;
+  --primary-400: #6B99B7;
+  --primary-500: #0A3555;
+  --primary-600: #041A2F;
+  --primary-700: #03141F;
+  --primary-800: #020D15;
+  --primary-900: #01070B;
+
+  /* Background & Text */
+  --body-bg: #FFFFFF;
+  --body-color: #1F2937;
+  --text-muted: #6B7280;
+
+  /* Links */
+  --link-color: #041A2F;
+  --link-hover-color: #0A3555;
+
+  /* Borders */
+  --border-color: #E5E7EB;
+  --border-radius: 0.375rem;
+  --border-radius-sm: 0.25rem;
+  --border-radius-lg: 0.5rem;
+
+  /* Shadows */
+  --box-shadow: 0 1px 3px 0 rgba(4, 26, 47, 0.1), 0 1px 2px -1px rgba(4, 26, 47, 0.1);
+  --box-shadow-sm: 0 1px 2px 0 rgba(4, 26, 47, 0.05);
+  --box-shadow-lg: 0 10px 15px -3px rgba(4, 26, 47, 0.1), 0 4px 6px -4px rgba(4, 26, 47, 0.1);
+}
+
+* {
+  font-family: 'Univers LT 57 Condensed' !important;
+}
+
+.headTitle,
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: 'ACaslonPro' !important;
+  font-weight: bold;
+}
+
+/* ========================================
+   SIDEBAR COLORS
+   ======================================== */
+
+.nk-sidebar.is-dark {
+  background: #041A2F;
+  border-right-color: #0A3555;
+}
+
+.nk-sidebar.is-theme {
+  background: #041A2F;
+  border-right-color: #0A3555;
+}
+
+.is-dark .nk-sidebar-head {
+  border-color: #0A3555;
+}
+
+.is-theme .nk-sidebar-head {
+  border-color: #0A3555;
+}
+
+.nk-sidebar.is-dark .user-balance-alt,
+.nk-sidebar.is-theme .user-balance-alt {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ========================================
+   HEADER COLORS
+   ======================================== */
+
+.nk-header {
+  background: #f5f6fa;
+  border-bottom-color: #e5e9f2;
+}
+
+.nk-header.is-dark:not([class*=bg-]) {
+  background: #041A2F;
+}
+
+.nk-header.is-theme:not([class*=bg-]) {
+  background: #041A2F;
+}
+
+/* ========================================
+   MENU COLORS - DARK MODE
+   ======================================== */
+
+.is-dark .nk-menu-link {
+  color: #BDD0DD;
+}
+
+.is-dark .nk-menu-icon {
+  color: #E6EBF0;
+}
+
+.is-dark .nk-menu-badge {
+  color: #E6EBF0;
+  background: #0A3555;
+}
+
+.is-dark .nk-menu-sub .active > .nk-menu-link,
+.is-dark .nk-menu-link:hover,
+.is-dark .active > .nk-menu-link,
+.is-dark .nk-menu-link:hover .nk-menu-icon,
+.is-dark .nk-menu-item.active > .nk-menu-link .nk-menu-icon,
+.is-dark .nk-menu-item.current-menu > .nk-menu-link .nk-menu-icon {
+  color: #6B99B7;
+}
+
+.is-dark .nk-news-icon .icon {
+  color: #0E7490;
+}
+
+.is-dark .nk-news-text .icon {
+  color: #8094ae;
+}
+
+.is-dark .nk-news-text p span {
+  color: rgba(189, 208, 221, 0.9);
+}
+
+.is-dark .user-name,
+.is-dark .nk-news-text p {
+  color: #BDD0DD;
+}
+
+.is-dark .nk-quick-nav-icon {
+  color: #E6EBF0;
+}
+
+/* ========================================
+   MENU COLORS - THEME MODE
+   ======================================== */
+
+.is-theme .nk-menu-link {
+  color: #BDD0DD;
+}
+
+.is-theme .nk-menu-icon {
+  color: #E6EBF0;
+}
+
+.is-theme .nk-menu-badge {
+  color: #E6EBF0;
+  background: #0A3555;
+}
+
+.is-theme .nk-news-icon .icon {
+  color: #94B4CA;
+}
+
+.is-theme .nk-news-text .icon,
+.is-theme .nk-quick-nav-icon,
+.is-theme .overline-title {
+  color: #BDD0DD;
+}
+
+.is-theme .nk-news-text p span,
+.is-theme .nk-menu-heading .overline-title {
+  color: rgba(189, 208, 221, 0.8);
+}
+
+.is-theme .user-name,
+.is-theme .nk-news-text p {
+  color: #E6EBF0;
+}
+
+/* ========================================
+   PRIMARY COLOR ELEMENTS
+   ======================================== */
+
+.card-tools-nav li a:before,
+.nav-tabs .nav-link:after,
+.progress-bar,
+.dot-primary,
+.alert-fill.alert-primary,
+.bg-primary,
+.icon-circle,
+.noUi-connect,
+.nk-kycfm-label::after,
+.buysell-pm-label:after,
+.nk-msg-menu-item a:after,
+.ui-shady .nk-msg-item.active:after,
+.ui-shady .nk-msg-item.current:after {
+  background: #0E7490;
+}
+
+/* ========================================
+   CARD COLORS
+   ======================================== */
+
+.card-bordered.is-dark {
+  border-color: #0A3555;
+}
+
+.card.is-dark {
+  background: #0A3555;
+}
+
+.is-dark .nk-wg7-title,
+.is-dark .nk-wg7-note {
+  color: #BDD0DD;
+}
+
+/* ========================================
+   AVATAR & ICONS
+   ======================================== */
+
+.user-avatar,
+[class^=user-avatar]:not([class*=-group]) {
+  background: #6B99B7;
+}
+
+.nk-news-item:hover .nk-news-text .icon {
+  color: #6B99B7;
+}
+
+/* ========================================
+   LINKS & NAVIGATION
+   ======================================== */
+
+.nk-menu-link:hover,
+.nk-menu-link:hover .nk-menu-icon,
+.nk-menu-item.active > .nk-menu-link .nk-menu-icon,
+.nk-menu-item.current-menu > .nk-menu-link .nk-menu-icon,
+.nk-menu-link:hover .count,
+.nk-menu-sub .nk-menu-link:hover,
+.nk-menu-sub .active > .nk-menu-link,
+.nk-menu-sm .nk-menu-link:hover,
+.nk-menu-main .nk-menu-link:hover,
+.nk-menu-main .nk-menu-link:focus,
+.nk-menu-main .nk-menu-item.active > .nk-menu-link,
+.nk-menu-main .nk-menu-item.current-menu > .nk-menu-link,
+.nk-menu-main .nk-menu-item:hover > .nk-menu-link,
+.is-light .nk-menu-link:hover,
+.is-light .active > .nk-menu-link,
+.active > .nk-menu-link,
+.active > .nk-menu-link .count,
+.nav-tabs .nav-link:focus,
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.active .nav-link,
+.nk-menu-footer .nk-menu-icon,
+.nk-menu-footer .nk-menu-link:hover,
+.nk-footer-copyright a:hover,
+.page-link:hover,
+.list-plain a:hover,
+.link-check li a:hover,
+.link-list a:hover,
+.link-list-opt a:hover,
+.link-list-plain a:hover,
+.link-list-menu li.active > a,
+.link-list-menu a.active,
+.link-list-menu a:hover,
+.link-list-menu li.active > a .icon,
+.link-list-menu a.active .icon,
+.link-list-menu a:hover .icon,
+.link-list-menu li.active > a:after,
+.link-list-menu a.active:after,
+.link-list-menu a:hover:after,
+.list-checked li:before,
+.list-step li.list-step-current:before,
+.accordion-s2 .accordion-head .title,
+.accordion-s3 .accordion-head .title,
+.bg-outline-primary,
+.badge-dim.bg-primary,
+.badge-dot.bg-primary,
+.badge-dim.bg-outline-primary,
+.alert-primary,
+.form-clip,
+.form-text-hint,
+.search-submit:hover,
+.nk-news-icon .icon,
+.nk-refwg-name .title,
+.nk-wg1-amount .amount,
+.nk-wgw-add a .title,
+.nk-wgw-actions a:hover span,
+.nk-wgw-actions a:hover .icon,
+.nk-wg4-note span,
+.nk-kycfm-control:checked ~ .nk-kycfm-label .label-icon,
+.wallet-item-add a:hover .wallet-icon,
+.wallet-item-add a:hover .wallet-name,
+.attach-item .icon,
+.attach-download:hover span,
+.nk-reply-meta-info .whom,
+.nk-msg-tags li > span .icon,
+.nk-msg-menu-item a:hover,
+.nk-msg-menu-item.active a,
+.user-balance,
+.user-avatar[class*=-primary-dim],
+.nk-order-ovwg-data.sell .amount,
+.nk-order-ovwg-data.sell .title .icon,
+.nk-wg-action-content p strong, a,
+.dropzone .dz-message-text span,
+.nk-switch-icon.active,
+.link-list-plain a .icon,
+.chat-upload-option a,
+.is-unread .chat-context .status,
+.add-opt:hover .sub-text,
+.add-opt:hover .icon,
+.icon[class*=bg-primary-dim] {
+  color: #0E7490;
+}
+
+a:hover {
+  color: #041A2F;
+}
+
+.text-primary, .link-primary {
+  color: #0E7490 !important;
+}
+
+.link-primary:hover,
+a.text-primary:hover,
+a.text-primary:focus,
+.chat-upload-option a:hover {
+  color: #041A2F !important;
+}
+
+.border-primary,
+.nk-kycfm-control:checked ~ .nk-kycfm-label {
+  border-color: #0E7490 !important;
+}
+
+.bg-lighter {
+  background-color: #f5f6fa !important;
+}
+
+.bg-primary {
+  background-color: #0E7490 !important;
+}
+
+a.bg-primary:hover,
+a.bg-primary:focus,
+button.bg-primary:hover,
+button.bg-primary:focus {
+  background-color: #041A2F !important;
+}
+
+.bg-primary-dim {
+  background-color: #E6EBF0 !important;
+}
+
+.text-primary-dim {
+  color: #E6EBF0 !important;
+}
+
+.alert-primary,
+.badge-dim.bg-outline-primary {
+  background-color: #E6EBF0;
+  border-color: #BDD0DD;
+}
+
+.alert-pro.alert-primary,
+.bg-primary,
+.form-control:focus,
+.form-control.focus,
+.custom-file-input:focus ~ .custom-file-label,
+.custom-control-input:focus:not(:checked) ~ .custom-control-label::before,
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: #0E7490;
+}
+
+.nk-order-ovwg-data.sell,
+.bg-outline-primary {
+  border-color: #BDD0DD;
+}
+
+.dropdown-menu-s1 {
+  border-top-color: #0E7490;
+}
+
+.page-item.active .page-link,
+.custom-control-input:checked ~ .custom-control-label::before,
+.custom-control-input:not(:disabled):active ~ .custom-control-label::before {
+  background-color: #0E7490;
+  border-color: #0E7490;
+}
+
+.custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before,
+.custom-radio .custom-control-input:disabled:checked ~ .custom-control-label::before,
+.custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: #94B4CA;
+}
+
+.badge-dim.bg-primary {
+  background-color: #E6EBF0;
+  border-color: #E6EBF0;
+}
+
+.bg-primary.badge-dot {
+  background: transparent !important;
+}
+
+.nk-error-head {
+  background: -webkit-linear-gradient(#0E7490, #041A2F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nav-switch .nav-link.active {
+  background: #0E7490;
+  color: #ffffff;
+}
+
+.icon-avatar,
+.nk-iv-scheme-icon.is-running {
+  color: #0E7490;
+  background-color: #E6EBF0;
+}
+
+.is-dark .nk-wgw-icon {
+  background: #6B99B7;
+}
+
+.is-dark .nk-wgw-balance .amount-sm,
+.is-dark .nk-wgw-actions a .icon,
+.is-dark .nk-wgw-more .btn-trigger {
+  color: #BDD0DD;
+}
+
+.is-dark .nk-wgw-actions a {
+  color: #BDD0DD;
+}
+
+.is-dark .nk-wgw-actions {
+  border-color: rgba(189, 208, 221, 0.4);
+}
+
+.is-dark .nk-wgw-more .btn-trigger:before,
+.is-theme .nk-quick-nav-icon:before {
+  background-color: #03141F;
+}
+
+/* ========================================
+   BUTTON STYLES
+   ======================================== */
+
+.btn-primary {
+  background-color: #0E7490;
+  border-color: #0E7490;
+  color: white;
+  font-weight: bold;
+  transition: all 200ms ease-in-out;
+}
+
+.btn-primary:hover {
+  background-color: #0A3555;
+  border-color: #041A2F;
+  transform: scale(1.02);
+}
+
+.btn-primary:focus {
+  background-color: #0A3555;
+  border-color: #041A2F;
+}
+
+.btn-primary.btn-dim {
+  color: #0E7490;
+  background-color: #E6EBF0;
+  border-color: #E6EBF0;
+}
+
+.btn-dim.btn-outline-primary {
+  color: #0E7490;
+  background-color: #E6EBF0;
+  border-color: #BDD0DD;
+}
+
+.btn-dim.btn-outline-primary.btn-white {
+  background-color: #ffffff;
+}
+
+.btn-outline-primary {
+  border-color: #0E7490;
+  color: #0E7490;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0E7490;
+  border-color: #0E7490;
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active,
+.show > .btn-primary.dropdown-toggle {
+  background-color: #0A3555;
+  border-color: #041A2F;
+}
+
+.btn-primary:focus,
+.btn-outline-primary:focus,
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled):active:focus,
+.btn-primary.btn-dim:focus,
+.btn-primary.btn-dim:not(:disabled):not(.disabled):active,
+.btn-primary.btn-dim:not(:disabled):not(.disabled):active:focus,
+.btn-dim.btn-outline-primary:focus,
+.btn-dim.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-dim.btn-outline-primary:not(:disabled):not(.disabled):active:focus,
+.show > .btn-primary.dropdown-toggle:focus,
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled):active:focus,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.btn-outline-primary:not(:disabled):not(.disabled).active:focus,
+.show > .btn-outline-primary.dropdown-toggle,
+.show > .btn-outline-primary.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(14, 116, 144, 0.2);
+}
+
+.btn-outline-light:focus,
+.btn-outline-light.focus,
+.btn-outline-light:not(:disabled):not(.disabled):active:focus,
+.btn-outline-light:not(:disabled):not(.disabled).active:focus,
+.show > .btn-outline-light.dropdown-toggle:focus {
+  box-shadow: 0 0 0 0.2rem rgba(128, 148, 174, 0.1);
+}
+
+.btn-trigger:focus {
+  box-shadow: none;
+}
+
+/* ========================================
+   FORM & INPUT STYLES
+   ======================================== */
+
+.form-control {
+  background-color: white;
+  border-width: 2px;
+  border-style: solid;
+  border-color: #d1d5db;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  transition: all 200ms ease-in-out 75ms;
+  color: #1a1a1a;
+  font-weight: bold;
+}
+
+.form-control:focus,
+.form-control.focus,
+.custom-control-input:focus ~ .custom-control-label::before,
+.custom-file-input:focus ~ .custom-file-label,
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default.select2-container--focus .select2-selection--multiple {
+  border-color: #0E7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.15);
+}
+
+.form-control-simple:focus {
+  box-shadow: none;
+}
+
+.btn-primary.btn-dim:not(:disabled):not(.disabled):hover,
+.btn-dim.btn-outline-primary:not(:disabled):not(.disabled):hover,
+.btn-outline-primary:not(:disabled):not(.disabled):active,
+.btn-outline-primary:not(:disabled):not(.disabled).active,
+.show > .btn-outline-primary.dropdown-toggle,
+.btn-primary.disabled,
+.btn-primary:disabled {
+  background-color: #0E7490;
+  border-color: #0E7490;
+}
+
+.form-focus-none:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* ========================================
+   TABLE STYLES
+   ======================================== */
+
+table {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #A97C50;
+  transition: all 150ms;
+}
+
+table thead th {
+  color: black;
+  background-color: white;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.25rem;
+}
+
+table tbody tr {
+  color: #333333;
+  background-color: white;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.25rem;
+  transition: all 150ms;
+}
+
+table tbody tr:nth-child(even) {
+  color: #1A1A1A;
+  background-color: #E0DACA;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================
+   RESPONSIVE MENU
+   ======================================== */
+
+@media (min-width: 992px) {
+  .nk-menu-main > li > .nk-menu-link:before {
+    background: #0E7490;
+  }
+  .is-theme .nk-menu-main > li > .nk-menu-link {
+    color: #BDD0DD;
+  }
+  .is-theme .nk-menu-main > li > .nk-menu-link.nk-menu-toggle:after {
+    color: rgba(189, 208, 221, 0.7);
+  }
+}
+
+/* ========================================
+   DATEPICKER
+   ======================================== */
+
+.datepicker table tr td.today,
+.datepicker table tr td.today:hover,
+.datepicker table tr td.today.disabled,
+.datepicker table tr td.today.disabled:hover {
+  background-color: #E6EBF0;
+  color: #0E7490;
+}
+
+.datepicker table tr td.today:hover,
+.datepicker table tr td.today:hover:hover,
+.datepicker table tr td.today.disabled:hover,
+.datepicker table tr td.today.disabled:hover:hover,
+.datepicker table tr td.today:active,
+.datepicker table tr td.today:hover:active,
+.datepicker table tr td.today.disabled:active,
+.datepicker table tr td.today.disabled:hover:active,
+.datepicker table tr td.today.active,
+.datepicker table tr td.today:hover.active,
+.datepicker table tr td.today.disabled.active,
+.datepicker table tr td.today.disabled:hover.active,
+.datepicker table tr td.today.disabled,
+.datepicker table tr td.today:hover.disabled,
+.datepicker table tr td.today.disabled.disabled,
+.datepicker table tr td.today.disabled:hover.disabled,
+.datepicker table tr td.today[disabled],
+.datepicker table tr td.today:hover[disabled],
+.datepicker table tr td.today.disabled[disabled],
+.datepicker table tr td.today.disabled:hover[disabled] {
+  background-color: #6B99B7;
+}
+
+.datepicker table tr td.active:active,
+.datepicker table tr td.active:hover:active,
+.datepicker table tr td.active.disabled:active,
+.datepicker table tr td.active.disabled:hover:active,
+.datepicker table tr td.active.active,
+.datepicker table tr td.active:hover.active,
+.datepicker table tr td.active.disabled.active,
+.datepicker table tr td.active.disabled:hover.active,
+.datepicker table tr td span:hover,
+.datepicker table tr td span.focused {
+  background-color: #0E7490;
+}
+
+/* ========================================
+   ADDITIONAL COMPONENTS
+   ======================================== */
+
+.code-tag {
+  color: #0E7490;
+}
+
+.alert-pro {
+  background: #ffffff;
+  color: #526484;
+}
+
+.nk-menu-badge {
+  color: #6B99B7;
+  background-color: #E6EBF0;
+}
+
+.is-theme .nk-sidebar-footer,
+.is-theme .nk-sidebar-profile-fixed {
+  background: #041A2F;
+  border-color: #0A3555;
+}
+
+.is-theme .wallet-name,
+.is-theme .wallet-icon,
+.is-theme .wallet-balance span,
+.is-theme .nk-menu-footer .nk-menu-link,
+.is-theme .sub-text,
+.is-theme .lead-text span {
+  color: #BDD0DD;
+}
+
+@media (min-width: 1200px) {
+  .nk-sidebar.is-theme .nk-menu > li:hover > a,
+  .nk-sidebar.is-theme .nk-menu > li.active > a,
+  .nk-sidebar.is-theme .nk-menu > li.current-menu > a,
+  .nk-sidebar.is-theme .nk-menu > li > a:hover,
+  .is-theme .wallet-item a:before {
+    background: #0A3555;
+  }
+}
+
+.nav-switch-s2 .nav-link:hover,
+.nav-switch-s2 .nav-link:focus {
+  color: #526484;
+}
+
+.nav-switch-s2 .nav-link.active {
+  color: #364a63;
+}
+
+.active .nk-ibx-menu-text,
+.active .nk-ibx-menu-item .icon,
+.nk-reply-form-nav li a:hover,
+.nk-reply-form-input .toggle-opt:hover {
+  color: #0E7490;
+}
+
+.nk-ibx-menu li.active {
+  background: #E6EBF0;
+}
+
+.nk-fmg-menu li.active {
+  background: #E6EBF0;
+}
+
+.nk-file-name .asterisk .icon,
+.nk-file-name-text a.title:hover,
+.nk-file-link:hover .title,
+.active .nk-fmg-menu-item .icon,
+.active .nk-fmg-menu-text {
+  color: #0E7490;
+}
+
+.nk-files-view-list .nk-file.selected {
+  background-color: #E6EBF0;
+}
+
+.chat.is-me .chat-msg {
+  background-color: #0E7490;
+}
+
+.kanban-add-task {
+  color: #0E7490;
+}
+
+.kanban-add-task:hover {
+  background: #0E7490;
+  border-color: #0E7490;
+}
+
+.actions ul li a {
+  border-color: #0E7490;
+  background: #0E7490;
+}
+
+.nk-wizard-simple .steps ul li.done h5,
+.nk-wizard-simple .steps ul li.done .number,
+.nk-wizard-simple .steps ul li.current h5,
+.nk-wizard-simple .steps ul li.current .number {
+  color: #0E7490;
+}
+
+.nk-wizard-simple .steps ul li:after {
+  background: #0E7490;
+}
+
+.invoice-contact ul .icon,
+.invoice-desc .title,
+.invoice-bills .table th {
+  color: #0E7490;
+}
+
+.product-gallery .slider-nav .slider-item.slick-current .thumb,
+.custom-control-pro.no-control .custom-control-input:checked ~ .custom-control-label,
+.custom-control-pro.no-control .custom-control-input:not(:disabled):active ~ .custom-control-label,
+.custom-control.color-control .custom-control-label:before {
+  border-color: #0E7490 !important;
+}
+
+.has-sub.active > .nk-menu-toggle:after {
+  color: #0E7490;
+}
+
+/* ========================================
+   SIDEBAR SUBMENU
+   ======================================== */
+
+.nk-sidebar .nk-menu > li .nk-menu-sub .nk-menu-link:before {
+  border-color: #E6EBF0;
+  background: #BDD0DD;
+}
+
+.nk-sidebar .nk-menu > li.active > .nk-menu-link {
+  background: #BDD0DD;
+}
+
+.nk-sidebar .nk-menu > li > .nk-menu-link:hover {
+  background: #BDD0DD;
+}
+
+.nk-sidebar .nk-menu-sub {
+  background: #E6EBF0;
+}
+
+.nk-sidebar .nk-menu-sub:before {
+  background: #BDD0DD;
+}
+
+.nk-sidebar .nk-menu-sub .active > .nk-menu-link:before {
+  background: #0E7490 !important;
+}
+
+.nk-sidebar.is-dark .nk-menu > li .nk-menu-sub .nk-menu-link:before {
+  border-color: #03141F;
+  background: #0A3555;
+}
+
+.nk-sidebar.is-dark .nk-menu > li.active > .nk-menu-link {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-dark .nk-menu > li > .nk-menu-link:hover {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-dark .nk-menu-sub {
+  background: #03141F;
+}
+
+.nk-sidebar.is-dark .nk-menu-sub:before {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-dark .nk-menu-sub .active > .nk-menu-link:before {
+  background: #ffffff !important;
+}
+
+.nk-sidebar.is-dark .nk-menu .nk-menu-link:hover .nk-menu-icon,
+.nk-sidebar.is-dark .nk-menu .nk-menu-item.active > .nk-menu-link .nk-menu-icon,
+.nk-sidebar.is-dark .nk-menu .nk-menu-item.current-menu > .nk-menu-link .nk-menu-icon,
+.nk-sidebar.is-dark .nk-menu .nk-menu-link:hover,
+.nk-sidebar.is-dark .nk-menu .active > .nk-menu-link {
+  color: #ffffff;
+}
+
+.nk-sidebar.is-theme .nk-menu > li .nk-menu-sub .nk-menu-link:before {
+  border-color: #03141F;
+  background: #0A3555;
+}
+
+.nk-sidebar.is-theme .nk-menu > li.active > .nk-menu-link {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-theme .nk-menu > li > .nk-menu-link:hover {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-theme .nk-menu-sub {
+  background: #03141F;
+}
+
+.nk-sidebar.is-theme .nk-menu-sub:before {
+  background: #0A3555;
+}
+
+.nk-sidebar.is-theme .nk-menu-sub .active > .nk-menu-link:before {
+  background: #ffffff !important;
+}

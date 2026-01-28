@@ -1,0 +1,116 @@
+# Remix Stack Configuration
+# Target: Remix with nested routing and progressive enhancement
+# Use case: React fullstack applications with web fundamentals focus
+
+stack_id: "remix"
+name: "Remix"
+group: "fullstack"
+language: "typescript"
+framework: "remix"
+orm: "prisma"
+orm_pattern: "data-mapper"
+template_engine: "jsx"
+
+file_structure:
+  models: "prisma/"
+  schemas: "app/lib/schemas/"
+  routes: "app/routes/"
+  services: "app/lib/services/"
+  templates: "app/routes/"
+  static: "public/"
+  components: "app/components/"
+  lib: "app/lib/"
+  utils: "app/utils/"
+  root: "app/root.tsx"
+
+naming_conventions:
+  class: "PascalCase"
+  file: "kebab-case"
+  component: "PascalCase"
+  variable: "camelCase"
+  constant: "UPPER_SNAKE_CASE"
+  database_table: "snake_case"
+  loader: "loader"
+  action: "action"
+  route_file: "route.tsx"
+  resource_route: "_index.tsx"
+
+# HyperFile type code to Prisma type mappings
+type_mappings:
+  "1": "Bytes"       # Binary
+  "2": "String"      # Text (short)
+  "3": "String"      # Text (long)
+  "4": "Int"         # Integer (16-bit)
+  "5": "Int"         # Integer (32-bit)
+  "6": "Int"         # Integer (signed)
+  "7": "BigInt"      # Integer (64-bit)
+  "8": "Float"       # Real (single)
+  "9": "Float"       # Real (double)
+  "10": "DateTime"   # Date
+  "11": "DateTime"   # Time
+  "12": "DateTime"   # DateTime
+  "13": "Boolean"    # Boolean
+  "14": "Decimal"    # Currency/Decimal
+  "15": "String"     # Memo
+  "16": "String"     # Rich Text
+  "17": "Bytes"      # Image/Binary
+  "18": "String"     # Sound (path)
+  "19": "Int"        # Combo index
+  "20": "String"     # Radio value
+  "21": "String"     # UUID
+  "22": "String"     # Enum (as string)
+  "23": "Json"       # JSON/Variant
+  "24": "Int"        # Duration (seconds)
+  "25": "BigInt"     # Timestamp
+  "26": "String"     # URL
+  "27": "String"     # Email
+  "28": "String"     # Phone
+
+imports_template: |
+  // Remix imports
+  import type { LoaderFunctionArgs, ActionFunctionArgs } from '@remix-run/node'
+  import { json } from '@remix-run/node'
+  import { useLoaderData, useFetcher } from '@remix-run/react'
+  import { PrismaClient } from '@prisma/client'
+  import { z } from 'zod'
+
+  const prisma = new PrismaClient()
+
+model_template: |
+  // Prisma schema model example
+  model User {
+    id        Int      @id @default(autoincrement())
+    email     String   @unique
+    name      String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  }
+
+  // Route with loader and action (app/routes/users._index.tsx)
+  import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from '@remix-run/node'
+  import { useLoaderData, Form } from '@remix-run/react'
+  import { prisma } from '~/lib/db.server'
+
+  export async function loader({ request }: LoaderFunctionArgs) {
+    const users = await prisma.user.findMany()
+    return json({ users })
+  }
+
+  export async function action({ request }: ActionFunctionArgs) {
+    const formData = await request.formData()
+    const email = formData.get('email') as string
+    const user = await prisma.user.create({ data: { email } })
+    return json({ user })
+  }
+
+  export default function Users() {
+    const { users } = useLoaderData<typeof loader>()
+    return (
+      <div>
+        <h1>Users</h1>
+        <ul>
+          {users.map(user => <li key={user.id}>{user.email}</li>)}
+        </ul>
+      </div>
+    )
+  }

@@ -1,0 +1,15 @@
+{# Static Text/Label Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - text: Display text
+    - tag: HTML tag (span, p, h1-h6, div)
+    - css_classes: Additional CSS classes
+    - style: Inline styles
+#}
+<{{ tag | default('span') }}
+    id="{{ name }}"
+    class="control-static {{ css_classes | default('') }}"
+    {% if style %}style="{{ style }}"{% endif %}
+>{{ text | default('') }}</{{ tag | default('span') }}>

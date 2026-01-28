@@ -1,0 +1,3779 @@
+{
+  "version": 1,
+  "updated": 1769012613017,
+  "files": {
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169423
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/api/__init__.py": {
+      "exports": [],
+      "imports": [
+        "fastapi"
+      ],
+      "indexed": 1768999169423
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/config.py": {
+      "exports": [
+        "Settings"
+      ],
+      "imports": [
+        "pydantic_settings"
+      ],
+      "indexed": 1768999169423
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/core/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169423
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/core/security.py": {
+      "exports": [
+        "create_access_token",
+        "verify_token"
+      ],
+      "imports": [
+        "datetime",
+        "typing"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/database.py": {
+      "exports": [
+        "init_db",
+        "close_db",
+        "get_db"
+      ],
+      "imports": [
+        "sqlalchemy.ext.asyncio",
+        "sqlalchemy.orm",
+        "app.config"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/main.py": {
+      "exports": [
+        "lifespan",
+        "home",
+        "health"
+      ],
+      "imports": [
+        "contextlib",
+        "fastapi",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "fastapi.responses",
+        "app.config",
+        "app.database",
+        "app.routers",
+        "app.api"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/agrupamento_protocolo.py": {
+      "exports": [
+        "Agrupamentoprotocolo"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/banco_cartao.py": {
+      "exports": [
+        "Bancocartao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/cartao.py": {
+      "exports": [
+        "Cartao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169424
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/cartao_estoque_vcard.py": {
+      "exports": [
+        "Cartaoestoquevcard"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/cliente.py": {
+      "exports": [
+        "Cliente"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/cliente_grupo.py": {
+      "exports": [
+        "Clientegrupo"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/cliente_produto.py": {
+      "exports": [
+        "Clienteproduto"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/configuracao.py": {
+      "exports": [
+        "Configuracao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/conta_corrente.py": {
+      "exports": [
+        "Contacorrente"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/conta_corrente_item.py": {
+      "exports": [
+        "Contacorrenteitem"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/conta_fitbank.py": {
+      "exports": [
+        "Contafitbank"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169425
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/contrato.py": {
+      "exports": [
+        "Contrato"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/contrato_premiacao.py": {
+      "exports": [
+        "ContratoPremiacao"
+      ],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/contrato_premiacao_boletos_substituidos.py": {
+      "exports": [
+        "Contratopremiacaoboletossubstituidos"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/contrato_premiacao_endereco.py": {
+      "exports": [
+        "Contratopremiacaoendereco"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/contrato_premiacao_premiados.py": {
+      "exports": [
+        "Contratopremiacaopremiados"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/email_valido.py": {
+      "exports": [
+        "Emailvalido"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/empresa_produtos.py": {
+      "exports": [
+        "Empresaprodutos"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/espelho_extrato_fitbank.py": {
+      "exports": [
+        "Espelhoextratofitbank"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/fila_mensagem.py": {
+      "exports": [
+        "FilaMensagem"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/form_pedido_ctrl.py": {
+      "exports": [
+        "FORM_PEDIDO_CTRL"
+      ],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/grupo_cobranca.py": {
+      "exports": [
+        "GrupoCobranca"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/grupo_cobranca_clientes.py": {
+      "exports": [
+        "GrupoCobrancaClientes"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/grupo_cobranca_modelos.py": {
+      "exports": [
+        "GrupoCobrancaModelos"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/h_controllers.py": {
+      "exports": [
+        "HControllers"
+      ],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169426
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/historico_padrao_extrato.py": {
+      "exports": [
+        "Historicopadraoextrato"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/lista_split.py": {
+      "exports": [
+        "Listasplit"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/locacao.py": {
+      "exports": [
+        "Locacao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/locacao_boleto.py": {
+      "exports": [
+        "Locacaoboleto"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/locacao_boletos_parcela.py": {
+      "exports": [
+        "Locacaoboletosparcela"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/locacao_composicao.py": {
+      "exports": [
+        "Locacaocomposicao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/log_integracao.py": {
+      "exports": [
+        "LogIntegracao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/log_processamento.py": {
+      "exports": [
+        "LogProcessamento"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/mensageria.py": {
+      "exports": [
+        "Mensageria"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/page__sessao_expirada.py": {
+      "exports": [
+        "PAGE_SessaoExpirada"
+      ],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/page_principal route.py": {
+      "exports": [],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/parametro.py": {
+      "exports": [
+        "Parametro"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/pessoa.py": {
+      "exports": [
+        "Pessoa"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/planilhas.py": {
+      "exports": [
+        "Planilhas"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/planilhas_itens.py": {
+      "exports": [
+        "Planilhasitens"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/renegociacao.py": {
+      "exports": [
+        "Renegociacao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/saldos_contas_fitbank.py": {
+      "exports": [
+        "Saldoscontasfitbank"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169427
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/semaforo.py": {
+      "exports": [
+        "Semaforo"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/solicitacao_antecipacao_comissoes.py": {
+      "exports": [
+        "Solicitacaoantecipacaocomissoes"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/solicitacao_antecipacao_comissoes_itens.py": {
+      "exports": [
+        "Solicitacaoantecipacaocomissoesitens"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/tarifas_banking.py": {
+      "exports": [
+        "Tarifasbanking"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/taxa.py": {
+      "exports": [
+        "Taxa"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/taxa_cliente.py": {
+      "exports": [
+        "Taxacliente"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/tbl_comissionados.py": {
+      "exports": [
+        "Tblcomissionados"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/tbl_liberacoes_financeiras.py": {
+      "exports": [
+        "Tblliberacoesfinanceiras"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/tbl_taxas_por_cargo.py": {
+      "exports": [
+        "Tbltaxasporcargo"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/transferencia.py": {
+      "exports": [
+        "Transferencia"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/usuario.py": {
+      "exports": [
+        "Usuario"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/models/usuario_aplicacao.py": {
+      "exports": [
+        "Usuarioaplicacao"
+      ],
+      "imports": [
+        "datetime",
+        "decimal",
+        "typing",
+        "uuid",
+        "pydantic"
+      ],
+      "indexed": 1768999169428
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/routers/__init__.py": {
+      "exports": [],
+      "imports": [
+        "fastapi",
+        ".auth",
+        ".principal"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/routers/auth.py": {
+      "exports": [
+        "login_page",
+        "login_submit",
+        "set_session_timeout"
+      ],
+      "imports": [
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating",
+        "sqlalchemy.orm",
+        "datetime",
+        "logging",
+        "app.database"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/routers/dashboard.py": {
+      "exports": [
+        "dashboard_page",
+        "renew_session",
+        "pedido_premiacao",
+        "pedido_credito"
+      ],
+      "imports": [
+        "datetime",
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating",
+        "sqlalchemy.orm",
+        "app.models.conta_fitbank",
+        "typing"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/routers/principal.py": {
+      "exports": [
+        "page_principal",
+        "renovar_sessao",
+        "pedido_premiacao",
+        "pedido_credito",
+        "test_conta_fitbank_gerais",
+        "calculate_session_time",
+        "startup_event"
+      ],
+      "imports": [
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating",
+        "datetime",
+        "asyncio",
+        "typing",
+        "app.services.auth"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/services/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/services/auth.py": {
+      "exports": [
+        "CurrentUser",
+        "get_current_user"
+      ],
+      "imports": [
+        "fastapi",
+        "typing"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/app/utils/create_session.py": {
+      "exports": [
+        "create_session"
+      ],
+      "imports": [],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/tests/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/tests/conftest.py": {
+      "exports": [
+        "client"
+      ],
+      "imports": [
+        "pytest",
+        "httpx",
+        "app.main"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/Producao/tests/test_health.py": {
+      "exports": [
+        "test_health",
+        "test_home"
+      ],
+      "imports": [
+        "pytest"
+      ],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169429
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/api/__init__.py": {
+      "exports": [],
+      "imports": [
+        "fastapi"
+      ],
+      "indexed": 1768999169430
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/config.py": {
+      "exports": [
+        "Settings"
+      ],
+      "imports": [
+        "pydantic_settings"
+      ],
+      "indexed": 1768999169430
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/database.py": {
+      "exports": [
+        "init_db",
+        "close_db",
+        "get_db"
+      ],
+      "imports": [
+        "motor.motor_asyncio",
+        "app.config"
+      ],
+      "indexed": 1768999169430
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/main.py": {
+      "exports": [
+        "lifespan",
+        "home",
+        "health"
+      ],
+      "imports": [
+        "contextlib",
+        "fastapi",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "fastapi.responses",
+        "app.config",
+        "app.database",
+        "app.routes",
+        "app.api"
+      ],
+      "indexed": 1768999169431
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/models/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169431
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/models/local__login procedure logic.py": {
+      "exports": [],
+      "imports": [
+        "pydantic"
+      ],
+      "indexed": 1768999169431
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/routers/__init__.py": {
+      "exports": [],
+      "imports": [
+        "fastapi",
+        ".login"
+      ],
+      "indexed": 1768999169431
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/routers/auth.py": {
+      "exports": [
+        "login_page",
+        "login",
+        "local_login"
+      ],
+      "imports": [
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating",
+        "app.core.security",
+        "app.services.user_service",
+        "app.core.config",
+        "typing"
+      ],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/routes/__init__.py": {
+      "exports": [],
+      "imports": [
+        "fastapi",
+        "app.routes.login"
+      ],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/routes/login.py": {
+      "exports": [
+        "login_page",
+        "login_submit"
+      ],
+      "imports": [
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating"
+      ],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/app/services/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/tests/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/tests/conftest.py": {
+      "exports": [
+        "client"
+      ],
+      "imports": [
+        "pytest",
+        "httpx",
+        "app.main"
+      ],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/generated/tests/test_health.py": {
+      "exports": [
+        "test_health",
+        "test_home"
+      ],
+      "imports": [
+        "pytest"
+      ],
+      "indexed": 1768999169432
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/gsd-context/PAGE_PRINCIPAL/src/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/gsd-context/PAGE_PRINCIPAL/src/main.py": {
+      "exports": [
+        "root",
+        "BASE_DIR"
+      ],
+      "imports": [
+        "pathlib",
+        "fastapi",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "src.routes"
+      ],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/gsd-context/PAGE_PRINCIPAL/src/routes/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/output/gsd-context/PAGE_PRINCIPAL/src/routes/principal.py": {
+      "exports": [
+        "principal",
+        "BASE_DIR"
+      ],
+      "imports": [
+        "pathlib",
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.templating"
+      ],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/setup.py": {
+      "exports": [],
+      "imports": [
+        "setuptools"
+      ],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/__init__.py": {
+      "exports": [
+        "NodeType",
+        "EdgeType",
+        "GraphNode",
+        "GraphEdge",
+        "CycleInfo",
+        "LayerStats",
+        "AnalysisResult",
+        "GraphBuilder",
+        "CycleDetector",
+        "TopologicalSorter",
+        "DependencyAnalyzer"
+      ],
+      "imports": [
+        "wxcode.analyzer.cycle_detector",
+        "wxcode.analyzer.dependency_analyzer",
+        "wxcode.analyzer.graph_builder",
+        "wxcode.analyzer.models",
+        "wxcode.analyzer.topological_sorter"
+      ],
+      "indexed": 1768999169433
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/cycle_detector.py": {
+      "exports": [
+        "CycleDetector"
+      ],
+      "imports": [
+        "logging",
+        "typing",
+        "networkx",
+        "wxcode.analyzer.models"
+      ],
+      "indexed": 1768999169434
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/dependency_analyzer.py": {
+      "exports": [
+        "DependencyAnalyzer"
+      ],
+      "imports": [
+        "logging",
+        "typing",
+        "networkx",
+        "beanie",
+        "wxcode.analyzer.cycle_detector",
+        "wxcode.analyzer.graph_builder",
+        "wxcode.analyzer.models",
+        "wxcode.analyzer.topological_sorter",
+        "wxcode.models",
+        "wxcode.models.schema"
+      ],
+      "indexed": 1768999169434
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/graph_builder.py": {
+      "exports": [
+        "GraphBuilder"
+      ],
+      "imports": [
+        "logging",
+        "typing",
+        "networkx",
+        "beanie",
+        "wxcode.analyzer.models",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169434
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/graph_exporter.py": {
+      "exports": [
+        "export_to_dot",
+        "export_to_html"
+      ],
+      "imports": [
+        "json",
+        "pathlib",
+        "networkx"
+      ],
+      "indexed": 1768999169435
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/models.py": {
+      "exports": [
+        "NodeType",
+        "EdgeType",
+        "GraphNode",
+        "GraphEdge",
+        "CycleInfo",
+        "LayerStats",
+        "AnalysisResult"
+      ],
+      "imports": [
+        "enum",
+        "typing",
+        "beanie",
+        "pydantic",
+        "wxcode.models.element"
+      ],
+      "indexed": 1768999169435
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/analyzer/topological_sorter.py": {
+      "exports": [
+        "TopologicalSorter",
+        "NODE_TYPE_TO_LAYER",
+        "LAYER_ORDER"
+      ],
+      "imports": [
+        "logging",
+        "typing",
+        "networkx",
+        "wxcode.analyzer.cycle_detector",
+        "wxcode.analyzer.models",
+        "wxcode.models.element"
+      ],
+      "indexed": 1768999169435
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169435
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/conversions.py": {
+      "exports": [
+        "ConversionConnectionManager",
+        "ConversionResponse",
+        "StartConversionRequest",
+        "list_conversions",
+        "start_conversion",
+        "get_conversion",
+        "websocket_conversion_stream",
+        "run_conversion_with_streaming",
+        "resume_conversion_with_streaming"
+      ],
+      "imports": [
+        "asyncio",
+        "datetime",
+        "typing",
+        "fastapi",
+        "pydantic",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169436
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/elements.py": {
+      "exports": [
+        "ElementResponse",
+        "ElementDetailResponse",
+        "ElementListResponse",
+        "list_elements",
+        "get_element",
+        "get_element_by_name"
+      ],
+      "imports": [
+        "typing",
+        "fastapi",
+        "pydantic",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169436
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/import_wizard.py": {
+      "exports": [
+        "CreateSessionResponse",
+        "UploadResponse",
+        "ProjectSummary",
+        "upload_project_file",
+        "upload_pdf_files",
+        "create_session",
+        "get_session",
+        "cancel_session",
+        "get_summary",
+        "UPLOAD_DIR"
+      ],
+      "imports": [
+        "shutil",
+        "asyncio",
+        "pathlib",
+        "typing",
+        "fastapi",
+        "pydantic",
+        "aiofiles",
+        "wxcode.models.import_session",
+        "wxcode.models.element",
+        "wxcode.models.project"
+      ],
+      "indexed": 1768999169437
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/import_wizard_ws.py": {
+      "exports": [
+        "websocket_endpoint",
+        "handle_start",
+        "handle_skip_step",
+        "handle_cancel"
+      ],
+      "imports": [
+        "json",
+        "typing",
+        "fastapi",
+        "wxcode.models.import_session",
+        "wxcode.services.step_executor"
+      ],
+      "indexed": 1768999169437
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/projects.py": {
+      "exports": [
+        "ProjectResponse",
+        "ProjectListResponse",
+        "DeleteProjectResponse",
+        "list_projects",
+        "get_project",
+        "get_project_by_name",
+        "delete_project"
+      ],
+      "imports": [
+        "typing",
+        "beanie",
+        "fastapi",
+        "pydantic",
+        "wxcode.models",
+        "wxcode.services"
+      ],
+      "indexed": 1768999169437
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/api/websocket.py": {
+      "exports": [
+        "ChatMessage",
+        "ConnectionManager",
+        "websocket_chat",
+        "get_token_usage"
+      ],
+      "imports": [
+        "json",
+        "logging",
+        "uuid",
+        "typing",
+        "fastapi",
+        "pydantic",
+        "wxcode.services.guardrail",
+        "wxcode.services.claude_bridge",
+        "wxcode.services.token_tracker",
+        "wxcode.services.chat_agent",
+        "wxcode.services.message_classifier"
+      ],
+      "indexed": 1768999169437
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/cli.py": {
+      "exports": [
+        "version_callback",
+        "main",
+        "import_project",
+        "init_project",
+        "analyze",
+        "plan",
+        "convert",
+        "validate",
+        "export",
+        "list_projects",
+        "status",
+        "split_pdf",
+        "enrich",
+        "parse_procedures",
+        "parse_classes",
+        "list_orphans",
+        "parse_schema",
+        "convert_page",
+        "themes",
+        "deploy_theme",
+        "sync_neo4j",
+        "impact",
+        "gsd_context",
+        "path",
+        "hubs",
+        "dead_code",
+        "purge_project_cmd",
+        "check_duplicates_cmd",
+        "test_app",
+        "spec_proposal",
+        "conversion_skip",
+        "list_elements"
+      ],
+      "imports": [
+        "asyncio",
+        "subprocess",
+        "pathlib",
+        "typing",
+        "dotenv",
+        "typer",
+        "rich.console",
+        "rich.panel",
+        "rich.progress",
+        "rich.table",
+        "rich",
+        "wxcode",
+        "wxcode.config"
+      ],
+      "indexed": 1768999169441
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/config.py": {
+      "exports": [
+        "Settings",
+        "get_settings",
+        "PROJECT_ROOT",
+        "ENV_FILE"
+      ],
+      "imports": [
+        "functools",
+        "pathlib",
+        "typing",
+        "pydantic_settings"
+      ],
+      "indexed": 1768999169441
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/converter/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169441
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/converter/fastapi_jinja/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169441
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/database.py": {
+      "exports": [
+        "init_db",
+        "close_db"
+      ],
+      "imports": [
+        "beanie",
+        "motor.motor_asyncio",
+        "wxcode.config",
+        "wxcode.models",
+        "wxcode.models.token_usage",
+        "wxcode.models.import_session"
+      ],
+      "indexed": 1768999169441
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/__init__.py": {
+      "exports": [
+        "APIGenerator",
+        "BaseGenerator",
+        "ConversionResult",
+        "DomainGenerator",
+        "ElementFilter",
+        "GenerationResult",
+        "GeneratorOrchestrator",
+        "OrchestratorResult",
+        "RouteGenerator",
+        "SchemaGenerator",
+        "ServiceGenerator",
+        "StarterKitGenerator",
+        "TemplateGenerator",
+        "WLanguageConverter",
+        "convert_wlanguage"
+      ],
+      "imports": [
+        ".api_generator",
+        ".base",
+        ".domain_generator",
+        ".orchestrator",
+        ".result",
+        ".route_generator",
+        ".schema_generator",
+        ".service_generator",
+        ".starter_kit",
+        ".template_generator",
+        ".wlanguage_converter"
+      ],
+      "indexed": 1768999169442
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/api_generator.py": {
+      "exports": [
+        "APIGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.element",
+        ".base"
+      ],
+      "indexed": 1768999169442
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/base.py": {
+      "exports": [
+        "ElementFilter",
+        "BaseGenerator",
+        "T"
+      ],
+      "imports": [
+        "abc",
+        "datetime",
+        "pathlib",
+        "typing",
+        "bson",
+        "jinja2",
+        "wxcode.models.element",
+        ".result"
+      ],
+      "indexed": 1768999169443
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/config_generator.py": {
+      "exports": [
+        "BaseConfigGenerator"
+      ],
+      "imports": [
+        "abc",
+        "pathlib",
+        "wxcode.models.configuration_context"
+      ],
+      "indexed": 1768999169443
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/domain_generator.py": {
+      "exports": [
+        "DomainGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.class_definition",
+        "wxcode.models.procedure",
+        ".base",
+        ".wlanguage_converter"
+      ],
+      "indexed": 1768999169443
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/orchestrator.py": {
+      "exports": [
+        "GeneratorProgress",
+        "OrchestratorResult",
+        "GeneratorOrchestrator",
+        "Settings",
+        "lifespan",
+        "root",
+        "health",
+        "init_db",
+        "close_db",
+        "get_db"
+      ],
+      "imports": [
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "wxcode.models.conversion_config",
+        "wxcode.models.configuration_context",
+        "wxcode.models.element",
+        "wxcode.models.global_state_context",
+        "wxcode.parser.compile_if_extractor",
+        "wxcode.parser.global_state_extractor",
+        ".api_generator",
+        ".base",
+        ".domain_generator",
+        ".python_config_generator",
+        ".python.state_generator",
+        ".result",
+        ".route_generator",
+        ".schema_generator",
+        ".service_generator",
+        ".state_generator",
+        ".template_generator",
+        "contextlib",
+        "fastapi",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "app.config",
+        "app.database",
+        "app.routes",
+        "app.api",
+        "pydantic_settings",
+        "motor.motor_asyncio",
+        "beanie"
+      ],
+      "indexed": 1768999169444
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/python/__init__.py": {
+      "exports": [
+        "PythonStateGenerator",
+        "PythonTypeMapper"
+      ],
+      "imports": [
+        "wxcode.generator.python.state_generator",
+        "wxcode.generator.python.type_mapper"
+      ],
+      "indexed": 1768999169445
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/python/state_generator.py": {
+      "exports": [
+        "PythonStateGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "jinja2",
+        "wxcode.generator.python.type_mapper",
+        "wxcode.generator.state_generator",
+        "wxcode.models.global_state_context",
+        "wxcode.parser.global_state_extractor"
+      ],
+      "indexed": 1768999169445
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/python/type_mapper.py": {
+      "exports": [
+        "PythonTypeMapper"
+      ],
+      "imports": [
+        "wxcode.generator.type_mapper"
+      ],
+      "indexed": 1768999169445
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/python_config_generator.py": {
+      "exports": [
+        "PythonConfigGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "jinja2",
+        "wxcode.generator.config_generator",
+        "wxcode.models.configuration_context"
+      ],
+      "indexed": 1768999169445
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/result.py": {
+      "exports": [
+        "GenerationResult"
+      ],
+      "imports": [
+        "dataclasses",
+        "pathlib"
+      ],
+      "indexed": 1768999169445
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/route_generator.py": {
+      "exports": [
+        "RouteGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.control",
+        "wxcode.models.element",
+        ".base"
+      ],
+      "indexed": 1768999169446
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/schema_generator.py": {
+      "exports": [
+        "DetectedRelationship",
+        "SchemaGenerator"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.schema",
+        ".base"
+      ],
+      "indexed": 1768999169446
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/service_generator.py": {
+      "exports": [
+        "ServiceGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.element",
+        "wxcode.models.procedure",
+        ".base",
+        ".wlanguage_converter"
+      ],
+      "indexed": 1768999169447
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/starter_kit.py": {
+      "exports": [
+        "StarterKitConfig",
+        "StarterKitResult",
+        "StarterKitGenerator",
+        "Settings",
+        "CurrentUser",
+        "lifespan",
+        "home",
+        "health",
+        "init_db",
+        "close_db",
+        "get_db",
+        "get_current_user",
+        "create_access_token",
+        "verify_token",
+        "client",
+        "test_health",
+        "test_home",
+        "generate_starter_kit"
+      ],
+      "imports": [
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "contextlib",
+        "fastapi",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "fastapi.responses",
+        "app.config",
+        "app.database",
+        "app.routers",
+        "app.api",
+        "pydantic_settings",
+        "motor.motor_asyncio",
+        "sqlalchemy.ext.asyncio",
+        "sqlalchemy.orm",
+        "datetime",
+        "pytest",
+        "httpx",
+        "app.main"
+      ],
+      "indexed": 1768999169447
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/state_generator.py": {
+      "exports": [
+        "BaseStateGenerator"
+      ],
+      "imports": [
+        "abc",
+        "pathlib",
+        "wxcode.generator.type_mapper",
+        "wxcode.models.global_state_context"
+      ],
+      "indexed": 1768999169448
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/template_generator.py": {
+      "exports": [
+        "TemplateGenerator"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models.control",
+        "wxcode.models.control_type",
+        "wxcode.models.element",
+        ".base"
+      ],
+      "indexed": 1768999169448
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/theme_deployer.py": {
+      "exports": [
+        "ThemeAssetStats",
+        "DeployResult",
+        "get_theme_path",
+        "list_themes",
+        "get_theme_asset_stats",
+        "deploy_theme_assets",
+        "DEFAULT_THEMES_DIR",
+        "ASSET_DIRS"
+      ],
+      "imports": [
+        "dataclasses",
+        "pathlib",
+        "shutil",
+        "logging"
+      ],
+      "indexed": 1768999169448
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/theme_skill_loader.py": {
+      "exports": [
+        "ThemeSkillLoader",
+        "get_available_themes",
+        "CONTROL_TYPE_TO_COMPONENT",
+        "CONTROL_NAME_TO_COMPONENT",
+        "INPUT_TYPE_TO_COMPONENT"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "yaml",
+        "logging",
+        "wxcode.models.control"
+      ],
+      "indexed": 1768999169449
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/type_mapper.py": {
+      "exports": [
+        "MappedType",
+        "BaseTypeMapper"
+      ],
+      "imports": [
+        "abc",
+        "dataclasses"
+      ],
+      "indexed": 1768999169449
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/generator/wlanguage_converter.py": {
+      "exports": [
+        "ConversionResult",
+        "WLanguageConverter",
+        "convert_wlanguage"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "typing",
+        "wxcode.transpiler",
+        "wxcode.models.configuration_context"
+      ],
+      "indexed": 1768999169450
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/graph/__init__.py": {
+      "exports": [
+        "Neo4jConnection",
+        "Neo4jSyncService",
+        "SyncResult",
+        "ImpactAnalyzer",
+        "ImpactResult"
+      ],
+      "imports": [
+        "wxcode.graph.neo4j_connection",
+        "wxcode.graph.neo4j_sync",
+        "wxcode.graph.impact_analyzer"
+      ],
+      "indexed": 1768999169450
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/graph/impact_analyzer.py": {
+      "exports": [
+        "AffectedNode",
+        "ImpactResult",
+        "PathNode",
+        "PathResult",
+        "HubNode",
+        "HubResult",
+        "DeadCodeResult",
+        "ImpactAnalyzer"
+      ],
+      "imports": [
+        "dataclasses",
+        "typing",
+        "logging",
+        "wxcode.graph.neo4j_connection"
+      ],
+      "indexed": 1768999169450
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/graph/neo4j_connection.py": {
+      "exports": [
+        "Neo4jConnectionError",
+        "Neo4jConnection"
+      ],
+      "imports": [
+        "typing",
+        "logging",
+        "neo4j",
+        "neo4j.exceptions",
+        "wxcode.config"
+      ],
+      "indexed": 1768999169451
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/graph/neo4j_sync.py": {
+      "exports": [
+        "SyncResult",
+        "Neo4jSyncService"
+      ],
+      "imports": [
+        "dataclasses",
+        "typing",
+        "logging",
+        "bson",
+        "beanie.operators",
+        "wxcode.graph.neo4j_connection",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169451
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/__init__.py": {
+      "exports": [
+        "ContextBuilder",
+        "ImportValidator",
+        "OutputWriter",
+        "PageConverter",
+        "ResponseParser",
+        "ProcedureContextBuilder",
+        "ProcedureConverter",
+        "ServiceResponseParser",
+        "ServiceOutputWriter",
+        "SpecContextLoader",
+        "ProposalGenerator",
+        "ConversionTracker",
+        "LLMProvider",
+        "AnthropicProvider",
+        "OpenAIProvider",
+        "OllamaProvider",
+        "create_provider",
+        "list_providers",
+        "LLMClient",
+        "anthropic",
+        "ConversionContext",
+        "ConversionError",
+        "ConversionResult",
+        "ContextTooLargeError",
+        "DependencyList",
+        "InvalidOutputError",
+        "LLMResponse",
+        "LLMResponseError",
+        "PageConversionResult",
+        "RouteDefinition",
+        "StaticFile",
+        "TemplateDefinition",
+        "ProcedureContext",
+        "ProcedureConversionResult",
+        "ServiceConversionResult",
+        "ProposalOutput",
+        "ConversionSpec",
+        "MappingDecision"
+      ],
+      "imports": [
+        ".context_builder",
+        ".llm_client",
+        ".import_validator",
+        ".output_writer",
+        ".page_converter",
+        ".response_parser",
+        ".procedure_context_builder",
+        ".procedure_converter",
+        ".service_response_parser",
+        ".service_output_writer",
+        ".spec_context_loader",
+        ".proposal_generator",
+        ".conversion_tracker",
+        ".models",
+        ".providers"
+      ],
+      "indexed": 1768999169452
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/context_builder.py": {
+      "exports": [
+        "ContextBuilder"
+      ],
+      "imports": [
+        "logging",
+        "re",
+        "pathlib",
+        "bson",
+        "motor.motor_asyncio",
+        ".models"
+      ],
+      "indexed": 1768999169452
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/conversion_tracker.py": {
+      "exports": [
+        "PendingItem",
+        "ConversionTracker"
+      ],
+      "imports": [
+        "dataclasses",
+        "typing",
+        "motor.motor_asyncio"
+      ],
+      "indexed": 1768999169453
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/import_validator.py": {
+      "exports": [
+        "ImportValidator"
+      ],
+      "imports": [
+        "ast",
+        "logging",
+        "re",
+        "pathlib"
+      ],
+      "indexed": 1768999169453
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/llm_client.py": {
+      "exports": [
+        "LLMClient",
+        "SYSTEM_PROMPT"
+      ],
+      "imports": [
+        "warnings",
+        ".providers",
+        ".providers.prompts"
+      ],
+      "indexed": 1768999169453
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/models.py": {
+      "exports": [
+        "ConversionContext",
+        "RouteDefinition",
+        "TemplateDefinition",
+        "StaticFile",
+        "DependencyList",
+        "ConversionResult",
+        "LLMResponse",
+        "PageConversionResult",
+        "ProcedureContext",
+        "ServiceMethod",
+        "ServiceConversionResult",
+        "ProcedureConversionResult",
+        "ConversionError",
+        "ContextTooLargeError",
+        "LLMResponseError",
+        "InvalidOutputError",
+        "ProposalOutput",
+        "MappingDecision",
+        "ConversionSpec"
+      ],
+      "imports": [
+        "typing",
+        "pydantic"
+      ],
+      "indexed": 1768999169453
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/output_writer.py": {
+      "exports": [
+        "OutputWriter"
+      ],
+      "imports": [
+        "logging",
+        "re",
+        "pathlib",
+        "aiofiles",
+        ".import_validator",
+        ".models",
+        "fastapi",
+        "pydantic"
+      ],
+      "indexed": 1768999169454
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/page_converter.py": {
+      "exports": [
+        "PageConverter"
+      ],
+      "imports": [
+        "datetime",
+        "pathlib",
+        "bson",
+        "motor.motor_asyncio",
+        ".context_builder",
+        ".models",
+        ".output_writer",
+        ".providers",
+        ".response_parser"
+      ],
+      "indexed": 1768999169454
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/procedure_context_builder.py": {
+      "exports": [
+        "ProcedureContextBuilder"
+      ],
+      "imports": [
+        "logging",
+        "re",
+        "bson",
+        "motor.motor_asyncio",
+        ".models"
+      ],
+      "indexed": 1768999169454
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/procedure_converter.py": {
+      "exports": [
+        "ProcedureConverter"
+      ],
+      "imports": [
+        "datetime",
+        "pathlib",
+        "bson",
+        "motor.motor_asyncio",
+        ".models",
+        ".procedure_context_builder",
+        ".providers",
+        ".service_output_writer",
+        ".service_response_parser"
+      ],
+      "indexed": 1768999169454
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/proposal_generator.py": {
+      "exports": [
+        "ProposalGenerator"
+      ],
+      "imports": [
+        "json",
+        "re",
+        "pathlib",
+        "typing",
+        ".models",
+        ".providers.base",
+        ".providers.prompts"
+      ],
+      "indexed": 1768999169455
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/__init__.py": {
+      "exports": [
+        "LLMProvider",
+        "BaseLLMProvider",
+        "AnthropicProvider",
+        "OpenAIProvider",
+        "OllamaProvider",
+        "SYSTEM_PROMPT",
+        "PROVIDERS",
+        "create_provider",
+        "list_providers"
+      ],
+      "imports": [
+        ".anthropic",
+        ".base",
+        ".ollama",
+        ".openai",
+        ".protocol",
+        ".prompts"
+      ],
+      "indexed": 1768999169455
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/anthropic.py": {
+      "exports": [
+        "AnthropicProvider"
+      ],
+      "imports": [
+        "os",
+        "typing",
+        "anthropic",
+        "..models",
+        ".base",
+        ".prompts"
+      ],
+      "indexed": 1768999169455
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/base.py": {
+      "exports": [
+        "BaseLLMProvider"
+      ],
+      "imports": [
+        "asyncio",
+        "abc",
+        "typing",
+        "..models"
+      ],
+      "indexed": 1768999169456
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/ollama.py": {
+      "exports": [
+        "OllamaProvider"
+      ],
+      "imports": [
+        "os",
+        "httpx",
+        "..models",
+        ".base",
+        ".prompts"
+      ],
+      "indexed": 1768999169456
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/openai.py": {
+      "exports": [
+        "OpenAIProvider"
+      ],
+      "imports": [
+        "os",
+        "typing",
+        "..models",
+        ".base",
+        ".prompts"
+      ],
+      "indexed": 1768999169456
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/prompts.py": {
+      "exports": [
+        "global_valida_cpf",
+        "PAGE_SYSTEM_PROMPT",
+        "SYSTEM_PROMPT",
+        "PROCEDURE_SYSTEM_PROMPT",
+        "PROPOSAL_GENERATION_PROMPT",
+        "IMPORTANTE"
+      ],
+      "imports": [],
+      "indexed": 1768999169457
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/providers/protocol.py": {
+      "exports": [
+        "LLMProvider"
+      ],
+      "imports": [
+        "typing",
+        "..models"
+      ],
+      "indexed": 1768999169457
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/response_parser.py": {
+      "exports": [
+        "ResponseParser"
+      ],
+      "imports": [
+        "ast",
+        "json",
+        "re",
+        "typing",
+        ".models"
+      ],
+      "indexed": 1768999169457
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/service_output_writer.py": {
+      "exports": [
+        "ServiceOutputWriter"
+      ],
+      "imports": [
+        "re",
+        "pathlib",
+        "aiofiles",
+        ".models"
+      ],
+      "indexed": 1768999169457
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/service_response_parser.py": {
+      "exports": [
+        "ServiceResponseParser"
+      ],
+      "imports": [
+        "ast",
+        "json",
+        "re",
+        "typing",
+        ".models"
+      ],
+      "indexed": 1768999169458
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/llm_converter/spec_context_loader.py": {
+      "exports": [
+        "SpecContextLoader"
+      ],
+      "imports": [
+        "pathlib",
+        "typing"
+      ],
+      "indexed": 1768999169458
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/main.py": {
+      "exports": [
+        "lifespan",
+        "root",
+        "health"
+      ],
+      "imports": [
+        "dotenv",
+        "contextlib",
+        "typing",
+        "fastapi",
+        "fastapi.middleware.cors",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "wxcode",
+        "wxcode.config",
+        "wxcode.database",
+        "wxcode.api"
+      ],
+      "indexed": 1768999169458
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/__init__.py": {
+      "exports": [
+        "Project",
+        "ProjectConfiguration",
+        "ProjectStatus",
+        "Element",
+        "ElementType",
+        "ElementLayer",
+        "ElementChunk",
+        "ElementAST",
+        "ElementDependencies",
+        "ElementConversion",
+        "ConversionStatus",
+        "Conversion",
+        "ConversionError",
+        "ConversionPhase",
+        "ControlTypeDefinition",
+        "PREFIX_TO_TYPE_NAME",
+        "CONTAINER_PREFIXES",
+        "infer_type_name_from_prefix",
+        "is_container_by_prefix",
+        "Control",
+        "ControlEvent",
+        "ControlProperties",
+        "DataBindingInfo",
+        "DataBindingType",
+        "EVENT_TYPE_CODES",
+        "get_event_name",
+        "Procedure",
+        "ProcedureParameter",
+        "ProcedureDependencies",
+        "DatabaseSchema",
+        "SchemaConnection",
+        "SchemaTable",
+        "SchemaColumn",
+        "SchemaIndex",
+        "ClassDefinition",
+        "ClassMember",
+        "ClassMethod",
+        "ClassConstant",
+        "ClassDependencies",
+        "TokenUsageLog"
+      ],
+      "imports": [
+        "wxcode.models.project",
+        "wxcode.models.element",
+        "wxcode.models.conversion",
+        "wxcode.models.control_type",
+        "wxcode.models.control",
+        "wxcode.models.procedure",
+        "wxcode.models.schema",
+        "wxcode.models.class_definition",
+        "wxcode.models.token_usage"
+      ],
+      "indexed": 1768999169458
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/class_definition.py": {
+      "exports": [
+        "ClassMember",
+        "ClassConstant",
+        "ClassMethod",
+        "ClassDependencies",
+        "ClassDefinition"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "beanie",
+        "pydantic",
+        "wxcode.models.procedure"
+      ],
+      "indexed": 1768999169459
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/configuration_context.py": {
+      "exports": [
+        "ConfigVariable",
+        "ConfigurationContext"
+      ],
+      "imports": [
+        "dataclasses",
+        "typing",
+        "wxcode.parser.compile_if_extractor"
+      ],
+      "indexed": 1768999169459
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/control.py": {
+      "exports": [
+        "DataBindingType",
+        "DataBindingInfo",
+        "ControlEvent",
+        "ControlProperties",
+        "Control",
+        "get_event_name",
+        "EVENT_TYPE_CODES"
+      ],
+      "imports": [
+        "datetime",
+        "enum",
+        "typing",
+        "beanie",
+        "pydantic",
+        "wxcode.models.control_type",
+        "wxcode.models.project"
+      ],
+      "indexed": 1768999169459
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/control_type.py": {
+      "exports": [
+        "ControlTypeDefinition",
+        "infer_type_name_from_prefix",
+        "is_container_by_prefix",
+        "PREFIX_TO_TYPE_NAME",
+        "CONTAINER_PREFIXES"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "beanie",
+        "pydantic"
+      ],
+      "indexed": 1768999169459
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/conversion.py": {
+      "exports": [
+        "ConversionPhase",
+        "ConversionError",
+        "LayerProgress",
+        "Conversion"
+      ],
+      "imports": [
+        "datetime",
+        "enum",
+        "typing",
+        "beanie",
+        "pydantic",
+        "wxcode.models.project"
+      ],
+      "indexed": 1768999169460
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/conversion_config.py": {
+      "exports": [
+        "ConversionConfig"
+      ],
+      "imports": [
+        "dataclasses",
+        "pathlib",
+        "bson"
+      ],
+      "indexed": 1768999169460
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/element.py": {
+      "exports": [
+        "ElementType",
+        "ElementLayer",
+        "ConversionStatus",
+        "ElementChunk",
+        "ElementAST",
+        "ElementDependencies",
+        "ConvertedFile",
+        "ElementConversion",
+        "Element"
+      ],
+      "imports": [
+        "datetime",
+        "enum",
+        "typing",
+        "beanie",
+        "pydantic",
+        "wxcode.models.project"
+      ],
+      "indexed": 1768999169460
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/global_state_context.py": {
+      "exports": [
+        "GlobalStateContext"
+      ],
+      "imports": [
+        "dataclasses",
+        "wxcode.parser.global_state_extractor"
+      ],
+      "indexed": 1768999169460
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/import_session.py": {
+      "exports": [
+        "StepResult",
+        "ImportSession"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "uuid",
+        "beanie",
+        "pydantic",
+        "pymongo"
+      ],
+      "indexed": 1768999169460
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/procedure.py": {
+      "exports": [
+        "ProcedureParameter",
+        "ProcedureDependencies",
+        "Procedure"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "beanie",
+        "pydantic"
+      ],
+      "indexed": 1768999169461
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/project.py": {
+      "exports": [
+        "ProjectStatus",
+        "ProjectConfiguration",
+        "Project"
+      ],
+      "imports": [
+        "datetime",
+        "enum",
+        "typing",
+        "beanie",
+        "pydantic",
+        "pymongo"
+      ],
+      "indexed": 1768999169461
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/schema.py": {
+      "exports": [
+        "SchemaConnection",
+        "SchemaColumn",
+        "SchemaIndex",
+        "SchemaTable",
+        "DatabaseSchema"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "beanie",
+        "pydantic"
+      ],
+      "indexed": 1768999169461
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/models/token_usage.py": {
+      "exports": [
+        "TokenUsageLog"
+      ],
+      "imports": [
+        "datetime",
+        "typing",
+        "beanie",
+        "pydantic",
+        "pymongo"
+      ],
+      "indexed": 1768999169461
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/__init__.py": {
+      "exports": [
+        "WWPParser",
+        "PDFDocumentSplitter",
+        "PDFElement",
+        "PDFElementType",
+        "PDFProcessingStats",
+        "split_documentation_pdf",
+        "LineContext",
+        "read_lines",
+        "count_lines",
+        "ProjectElementMapper",
+        "MappingStats",
+        "ElementInfo",
+        "ParserState",
+        "map_project_elements",
+        "XddParser",
+        "XddParseResult",
+        "HYPERFILE_TYPE_MAP",
+        "find_analysis_file",
+        "WdcParser",
+        "ParsedClass",
+        "DependencyExtractor",
+        "ExtractedDependencies",
+        "WWHParser",
+        "ParsedPage",
+        "ParsedControl",
+        "ParsedEvent",
+        "ParsedLocalProcedure",
+        "ParsedLocalParameter",
+        "parse_wwh_file"
+      ],
+      "imports": [
+        "wxcode.parser.wwp_parser",
+        "wxcode.parser.pdf_doc_splitter",
+        "wxcode.parser.line_reader",
+        "wxcode.parser.project_mapper",
+        "wxcode.parser.xdd_parser",
+        "wxcode.parser.wdc_parser",
+        "wxcode.parser.dependency_extractor",
+        "wxcode.parser.wwh_parser"
+      ],
+      "indexed": 1768999169461
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/compile_if_extractor.py": {
+      "exports": [
+        "CompileIfBlock",
+        "ExtractedVariable",
+        "CompileIfExtractor"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "typing"
+      ],
+      "indexed": 1768999169462
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/dependency_extractor.py": {
+      "exports": [
+        "ExtractedDependencies",
+        "DependencyExtractor",
+        "TableUsage"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "typing"
+      ],
+      "indexed": 1768999169462
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/element_enricher.py": {
+      "exports": [
+        "EnrichmentResult",
+        "EnrichmentStats",
+        "MatchingContext",
+        "ElementEnricher",
+        "enrich_project_elements"
+      ],
+      "imports": [
+        "json",
+        "logging",
+        "dataclasses",
+        "datetime",
+        "pathlib",
+        "typing",
+        "beanie",
+        "wxcode.models",
+        "wxcode.parser.dependency_extractor",
+        "wxcode.parser.pdf_element_parser",
+        "wxcode.parser.wwh_parser"
+      ],
+      "indexed": 1768999169463
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/global_state_extractor.py": {
+      "exports": [
+        "Scope",
+        "GlobalVariable",
+        "InitializationBlock",
+        "GlobalStateExtractor"
+      ],
+      "imports": [
+        "dataclasses",
+        "enum"
+      ],
+      "indexed": 1768999169463
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/line_reader.py": {
+      "exports": [
+        "LineContext",
+        "read_lines",
+        "count_lines"
+      ],
+      "imports": [
+        "aiofiles",
+        "dataclasses",
+        "pathlib",
+        "typing"
+      ],
+      "indexed": 1768999169463
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/pdf_doc_splitter.py": {
+      "exports": [
+        "ElementType",
+        "PDFElement",
+        "ProcessingStats",
+        "PDFDocumentSplitter",
+        "split_documentation_pdf"
+      ],
+      "imports": [
+        "json",
+        "re",
+        "time",
+        "dataclasses",
+        "datetime",
+        "enum",
+        "pathlib",
+        "typing",
+        "fitz  # PyMuPDF"
+      ],
+      "indexed": 1768999169464
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/pdf_element_parser.py": {
+      "exports": [
+        "ParsedPDFElement",
+        "PDFElementParser",
+        "parse_pdf_element"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "fitz  # PyMuPDF",
+        "wxcode.models.control"
+      ],
+      "indexed": 1768999169464
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/project_mapper.py": {
+      "exports": [
+        "ParserState",
+        "MappingStats",
+        "ElementInfo",
+        "ProjectElementMapper",
+        "map_project_elements",
+        "WINDEV_TYPE_MAP",
+        "EXTENSION_TYPE_MAP",
+        "TYPE_LAYER_MAP"
+      ],
+      "imports": [
+        "dataclasses",
+        "datetime",
+        "enum",
+        "logging",
+        "pathlib",
+        "typing",
+        "wxcode.models",
+        ".line_reader"
+      ],
+      "indexed": 1768999169465
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/query_enricher.py": {
+      "exports": [
+        "QueryEnricher"
+      ],
+      "imports": [
+        "logging",
+        "pathlib",
+        "typing",
+        "bson",
+        "wxcode.models",
+        "wxcode.parser.query_parser"
+      ],
+      "indexed": 1768999169465
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/query_parser.py": {
+      "exports": [
+        "QueryInfo",
+        "QueryParser"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "fitz  # PyMuPDF"
+      ],
+      "indexed": 1768999169465
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/wdc_parser.py": {
+      "exports": [
+        "ParsedMember",
+        "ParsedConstant",
+        "ParsedMethod",
+        "ParsedDependencies",
+        "ParsedClass",
+        "WdcParser"
+      ],
+      "imports": [
+        "re",
+        "yaml",
+        "dataclasses",
+        "pathlib",
+        "typing"
+      ],
+      "indexed": 1768999169466
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/wdg_parser.py": {
+      "exports": [
+        "ParsedParameter",
+        "ParsedDependencies",
+        "ParsedProcedure",
+        "ParsedStructure",
+        "ParsedProcedureSet",
+        "WdgParser",
+        "parse_wdg_file"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "pathlib",
+        "typing"
+      ],
+      "indexed": 1768999169466
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/wwh_parser.py": {
+      "exports": [
+        "ParsedLocalParameter",
+        "ParsedLocalProcedure",
+        "ParsedEvent",
+        "ParsedControl",
+        "ParsedPage",
+        "WWHParser",
+        "parse_wwh_file"
+      ],
+      "imports": [
+        "re",
+        "dataclasses",
+        "pathlib",
+        "typing"
+      ],
+      "indexed": 1768999169467
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/wwp_parser.py": {
+      "exports": [
+        "WWPParser",
+        "EXTENSION_TO_TYPE",
+        "WINDEV_TYPE_TO_ELEMENT",
+        "TYPE_TO_LAYER"
+      ],
+      "imports": [
+        "re",
+        "pathlib",
+        "typing",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169467
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/parser/xdd_parser.py": {
+      "exports": [
+        "XddParseResult",
+        "XddParser",
+        "find_analysis_file",
+        "HYPERFILE_TYPE_MAP",
+        "CONNECTION_TYPE_MAP"
+      ],
+      "imports": [
+        "xml.etree.ElementTree",
+        "dataclasses",
+        "pathlib",
+        "typing",
+        "wxcode.models.schema"
+      ],
+      "indexed": 1768999169468
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/preview_server.py": {
+      "exports": [
+        "setup_directories",
+        "load_templates_from_mongo",
+        "create_base_template",
+        "create_static_files",
+        "index",
+        "render_page",
+        "run_server",
+        "MONGO_URI",
+        "DATABASE",
+        "TEMP_DIR",
+        "TEMPLATES_DIR",
+        "STATIC_DIR"
+      ],
+      "imports": [
+        "contextlib",
+        "pathlib",
+        "tempfile",
+        "fastapi",
+        "fastapi.responses",
+        "fastapi.staticfiles",
+        "fastapi.templating",
+        "pymongo",
+        "uvicorn"
+      ],
+      "indexed": 1768999169468
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/__init__.py": {
+      "exports": [
+        "purge_project",
+        "purge_project_by_name",
+        "check_duplicate_projects",
+        "PurgeStats",
+        "ConversionExecutor",
+        "ConversionExecutionResult"
+      ],
+      "imports": [
+        "wxcode.services.project_service",
+        "wxcode.services.conversion_executor"
+      ],
+      "indexed": 1768999169468
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/chat_agent.py": {
+      "exports": [
+        "ProcessedInput",
+        "ProcessedMessage",
+        "ChatAgent"
+      ],
+      "imports": [
+        "dataclasses",
+        "typing",
+        "wxcode.services.guardrail",
+        "wxcode.services.message_classifier",
+        "wxcode.services.output_sanitizer"
+      ],
+      "indexed": 1768999169468
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/claude_bridge.py": {
+      "exports": [
+        "ChatMessage",
+        "ChatSession",
+        "ClaudeBridge",
+        "ClaudeBridgeFactory"
+      ],
+      "imports": [
+        "asyncio",
+        "json",
+        "logging",
+        "shutil",
+        "dataclasses",
+        "datetime",
+        "typing",
+        "wxcode.services.token_tracker",
+        "wxcode.services.guardrail"
+      ],
+      "indexed": 1768999169469
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/conversion_executor.py": {
+      "exports": [
+        "ConversionExecutionResult",
+        "ConversionExecutor"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "motor.motor_asyncio",
+        "wxcode.llm_converter",
+        "wxcode.llm_converter.providers",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169469
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/gsd_context_collector.py": {
+      "exports": [
+        "GSDContextData",
+        "GSDContextCollector",
+        "GSDContextWriter",
+        "create_gsd_branch"
+      ],
+      "imports": [
+        "json",
+        "secrets",
+        "subprocess",
+        "dataclasses",
+        "datetime",
+        "pathlib",
+        "typing",
+        "beanie",
+        "motor.motor_asyncio",
+        "rich.console",
+        "wxcode.graph.impact_analyzer",
+        "wxcode.graph.neo4j_connection",
+        "wxcode.models.control",
+        "wxcode.models.control_type",
+        "wxcode.models.element",
+        "wxcode.models.procedure",
+        "wxcode.models.project",
+        "wxcode.models.schema"
+      ],
+      "indexed": 1768999169470
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/gsd_conversion_executor.py": {
+      "exports": [
+        "GSDConversionResult",
+        "GSDConversionExecutor"
+      ],
+      "imports": [
+        "pathlib",
+        "typing",
+        "motor.motor_asyncio",
+        "wxcode.models",
+        "wxcode.llm_converter",
+        "wxcode.services.gsd_context_collector",
+        "wxcode.services.gsd_invoker"
+      ],
+      "indexed": 1768999169470
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/gsd_invoker.py": {
+      "exports": [
+        "GSDInvokerError",
+        "GSDInvoker",
+        "N8N_WEBHOOK_URL"
+      ],
+      "imports": [
+        "asyncio",
+        "os",
+        "shutil",
+        "subprocess",
+        "datetime",
+        "pathlib",
+        "typing",
+        "httpx",
+        "rich.console"
+      ],
+      "indexed": 1768999169471
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/guardrail.py": {
+      "exports": [
+        "Guardrail"
+      ],
+      "imports": [
+        "re",
+        "typing"
+      ],
+      "indexed": 1768999169471
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/message_classifier.py": {
+      "exports": [
+        "MessageType",
+        "MessageClassifier"
+      ],
+      "imports": [
+        "re",
+        "enum",
+        "typing"
+      ],
+      "indexed": 1768999169471
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/output_sanitizer.py": {
+      "exports": [
+        "OutputSanitizer"
+      ],
+      "imports": [
+        "re",
+        "typing"
+      ],
+      "indexed": 1768999169471
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/project_service.py": {
+      "exports": [
+        "PurgeStats",
+        "DuplicateInfo",
+        "purge_project",
+        "purge_project_by_name",
+        "check_duplicate_projects",
+        "get_project_by_name"
+      ],
+      "imports": [
+        "logging",
+        "dataclasses",
+        "typing",
+        "beanie",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169472
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/step_executor.py": {
+      "exports": [
+        "StepExecutor"
+      ],
+      "imports": [
+        "asyncio",
+        "json",
+        "re",
+        "sys",
+        "datetime",
+        "pathlib",
+        "typing",
+        "wxcode.models.import_session"
+      ],
+      "indexed": 1768999169472
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/services/token_tracker.py": {
+      "exports": [
+        "TokenUsageMetrics",
+        "TokenTracker"
+      ],
+      "imports": [
+        "json",
+        "dataclasses",
+        "typing",
+        "beanie",
+        "wxcode.models.token_usage"
+      ],
+      "indexed": 1768999169472
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/transpiler/__init__.py": {
+      "exports": [
+        "BufferBehavior",
+        "HFunctionInfo",
+        "HFUNCTION_CATALOG",
+        "get_hfunction",
+        "get_functions_by_behavior",
+        "is_buffer_modifying",
+        "needs_llm_conversion",
+        "get_mongodb_equivalent"
+      ],
+      "imports": [
+        "wxcode.transpiler.hyperfile_catalog"
+      ],
+      "indexed": 1768999169473
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/src/wxcode/transpiler/hyperfile_catalog.py": {
+      "exports": [
+        "BufferBehavior",
+        "HFunctionInfo",
+        "get_hfunction",
+        "get_functions_by_behavior",
+        "is_buffer_modifying",
+        "needs_llm_conversion",
+        "get_mongodb_equivalent",
+        "get_all_function_names",
+        "get_functions_needing_llm",
+        "HFUNCTION_CATALOG"
+      ],
+      "imports": [
+        "dataclasses",
+        "enum",
+        "typing"
+      ],
+      "indexed": 1768999169473
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169473
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/integration/test_binding_extraction.py": {
+      "exports": [
+        "TestBindingExtractionIntegration",
+        "TestHyperFileCatalogIntegration",
+        "TestDataBindingModelIntegration"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.models.control",
+        "wxcode.models.element",
+        "wxcode.parser.dependency_extractor",
+        "wxcode.parser.pdf_element_parser"
+      ],
+      "indexed": 1768999169474
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/integration/test_dashlite_theme.py": {
+      "exports": [
+        "TestDashLiteThemeStructure",
+        "TestDashLiteSkillContent",
+        "TestDashLiteProgressiveDiscovery",
+        "TestDashLiteContextIntegration",
+        "TestDashLiteAvailability",
+        "PROJECT_ROOT"
+      ],
+      "imports": [
+        "pathlib",
+        "pytest",
+        "wxcode.generator.theme_skill_loader",
+        "wxcode.llm_converter.models"
+      ],
+      "indexed": 1768999169474
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/integration/test_database_connections_pipeline.py": {
+      "exports": [
+        "TestDatabaseConnectionsPipeline",
+        "TestConnectionTypeEdgeCases",
+        "sample_xdd_file",
+        "output_dir",
+        "SAMPLE_XDD_MULTI_CONNECTIONS"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "wxcode.parser.xdd_parser",
+        "wxcode.models.schema",
+        "wxcode.generator.orchestrator"
+      ],
+      "indexed": 1768999169474
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/parser/__init__.py": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1768999169474
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/parser/test_project_mapper.py": {
+      "exports": [
+        "TestReadSourceFile"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "tempfile",
+        "unittest.mock",
+        "wxcode.parser.project_mapper"
+      ],
+      "indexed": 1768999169475
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_analyzer.py": {
+      "exports": [
+        "TestNodeType",
+        "TestEdgeType",
+        "TestGraphNode",
+        "TestGraphEdge",
+        "TestCycleInfo",
+        "TestAnalysisResult",
+        "TestCycleDetector",
+        "TestTopologicalSorter",
+        "TestLayerStats",
+        "TestIntegration"
+      ],
+      "imports": [
+        "pytest",
+        "networkx",
+        "wxcode.analyzer.models",
+        "wxcode.analyzer.cycle_detector",
+        "wxcode.analyzer.topological_sorter",
+        "wxcode.models.element"
+      ],
+      "indexed": 1768999169475
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_chat_agent.py": {
+      "exports": [
+        "TestMessageClassifier",
+        "TestOutputSanitizer",
+        "TestGuardrailInjection",
+        "TestChatAgent"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.services.message_classifier",
+        "wxcode.services.output_sanitizer",
+        "wxcode.services.guardrail",
+        "wxcode.services.chat_agent"
+      ],
+      "indexed": 1768999169476
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_compile_if_extractor.py": {
+      "exports": [
+        "TestCompileIfExtractor"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.parser.compile_if_extractor"
+      ],
+      "indexed": 1768999169476
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_configuration_models.py": {
+      "exports": [
+        "TestConfigVariable",
+        "TestConfigurationContext",
+        "TestConversionConfig"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "bson",
+        "wxcode.models.configuration_context",
+        "wxcode.models.conversion_config",
+        "wxcode.parser.compile_if_extractor"
+      ],
+      "indexed": 1768999169476
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_control_matching.py": {
+      "exports": [
+        "TestMatchingContext",
+        "TestBuildMatchingContext",
+        "TestMatchControl",
+        "TestMatchingStatistics",
+        "TestContainerControlsInParentPDF",
+        "TestBackwardCompatibility"
+      ],
+      "imports": [
+        "pytest",
+        "unittest.mock",
+        "wxcode.parser.element_enricher",
+        "wxcode.parser.wwh_parser",
+        "wxcode.parser.pdf_element_parser"
+      ],
+      "indexed": 1768999169477
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_data_binding.py": {
+      "exports": [
+        "TestDataBindingInfo",
+        "TestPDFBindingExtraction",
+        "TestControlWithBinding",
+        "TestEdgeCases",
+        "BINDING_EXAMPLES",
+        "PDF_TEXT_EXAMPLES"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.models.control",
+        "wxcode.parser.pdf_element_parser"
+      ],
+      "indexed": 1768999169477
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_dependency_extractor.py": {
+      "exports": [
+        "TestExtractedDependencies",
+        "TestDependencyExtractorProcedureCalls",
+        "TestDependencyExtractorHyperFile",
+        "TestDependencyExtractorClasses",
+        "TestDependencyExtractorAPIs",
+        "TestDependencyExtractorMerge",
+        "TestDependencyExtractorRealCode"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.parser.dependency_extractor"
+      ],
+      "indexed": 1768999169478
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_domain_generator.py": {
+      "exports": [
+        "TestDomainGenerator",
+        "TestWLanguageConverter",
+        "TestConvertWLanguageFunction"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "pytest",
+        "wxcode.generator.domain_generator",
+        "wxcode.generator.wlanguage_converter",
+        "wxcode.models.class_definition",
+        "wxcode.models.procedure"
+      ],
+      "indexed": 1768999169478
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_element_filter.py": {
+      "exports": [
+        "TestElementFilter",
+        "TestBaseGeneratorWithFilter",
+        "TestOrchestratorWithFilter"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "bson",
+        "wxcode.generator.base"
+      ],
+      "indexed": 1768999169478
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_global_state_extractor.py": {
+      "exports": [
+        "test_extract_simple_declaration",
+        "test_extract_declaration_with_default",
+        "test_extract_multi_declaration",
+        "test_wlanguage_types_preserved",
+        "test_scope_determination",
+        "test_extract_initialization",
+        "test_no_global_block"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.parser.global_state_extractor"
+      ],
+      "indexed": 1768999169479
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_hyperfile_catalog.py": {
+      "exports": [
+        "TestHFunctionCatalog",
+        "TestBufferBehaviors",
+        "TestLookupHelpers",
+        "TestLLMMarkers",
+        "TestMongoDBEquivalents",
+        "TestSanityChecks"
+      ],
+      "imports": [
+        "pytest",
+        "wxcode.transpiler.hyperfile_catalog"
+      ],
+      "indexed": 1768999169479
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_impact_analyzer.py": {
+      "exports": [
+        "TestImpactResult",
+        "TestPathResult",
+        "TestHubNode",
+        "TestDeadCodeResult",
+        "TestImpactAnalyzer"
+      ],
+      "imports": [
+        "pytest",
+        "unittest.mock",
+        "wxcode.graph.impact_analyzer"
+      ],
+      "indexed": 1768999169479
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_neo4j_connection.py": {
+      "exports": [
+        "TestNeo4jConnection"
+      ],
+      "imports": [
+        "pytest",
+        "unittest.mock",
+        "wxcode.graph.neo4j_connection"
+      ],
+      "indexed": 1768999169479
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_neo4j_sync.py": {
+      "exports": [
+        "TestSyncResult",
+        "TestNeo4jSyncService"
+      ],
+      "imports": [
+        "pytest",
+        "unittest.mock",
+        "bson",
+        "wxcode.graph.neo4j_sync"
+      ],
+      "indexed": 1768999169480
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_orchestrator.py": {
+      "exports": [
+        "TestOrchestratorResult",
+        "TestGeneratorOrchestrator",
+        "TestGeneratorOrchestratorFiles",
+        "TestOrchestratorResultCounts"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "pytest",
+        "wxcode.generator.orchestrator"
+      ],
+      "indexed": 1768999169480
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_pdf_doc_splitter.py": {
+      "exports": [
+        "TestElementType",
+        "TestPDFElement",
+        "TestProcessingStats",
+        "TestPDFDocumentSplitter",
+        "TestSplitDocumentationPDF"
+      ],
+      "imports": [
+        "json",
+        "pathlib",
+        "pytest",
+        "wxcode.parser.pdf_doc_splitter"
+      ],
+      "indexed": 1768999169480
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_project_idempotency.py": {
+      "exports": [
+        "TestPurgeStats",
+        "TestDuplicateInfo",
+        "TestPurgeProjectData",
+        "TestPurgeProject",
+        "TestCheckDuplicateProjects",
+        "TestProjectUniqueIndex",
+        "TestImportIdempotency",
+        "TestAPIDeleteProject"
+      ],
+      "imports": [
+        "pytest",
+        "unittest.mock",
+        "datetime",
+        "beanie",
+        "wxcode.models",
+        "wxcode.services.project_service"
+      ],
+      "indexed": 1768999169481
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_project_mapper.py": {
+      "exports": [
+        "TestLineContext",
+        "TestElementInfo",
+        "TestMappingStats",
+        "TestTypeMappings",
+        "TestProjectElementMapper",
+        "TestElementConfigurationParsing",
+        "TestIntegrationWithRealFile"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "unittest.mock",
+        "beanie",
+        "wxcode.parser.line_reader",
+        "wxcode.parser.project_mapper",
+        "wxcode.models"
+      ],
+      "indexed": 1768999169481
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_python_config_generator.py": {
+      "exports": [
+        "TestPythonConfigGenerator"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "tempfile",
+        "shutil",
+        "wxcode.generator.python_config_generator",
+        "wxcode.models.configuration_context"
+      ],
+      "indexed": 1768999169482
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_query_parser.py": {
+      "exports": [
+        "parser",
+        "test_extract_parameters_simple",
+        "test_extract_parameters_multiple",
+        "test_extract_parameters_duplicates",
+        "test_extract_parameters_none",
+        "test_extract_tables_from",
+        "test_extract_tables_join",
+        "test_extract_tables_multiple_joins",
+        "test_extract_sql_starts_with_select",
+        "test_extract_sql_stops_at_marker"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "wxcode.parser.query_parser"
+      ],
+      "indexed": 1768999169482
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_route_generator.py": {
+      "exports": [
+        "TestRouteGenerator",
+        "TestAPIGenerator"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "wxcode.generator.api_generator",
+        "wxcode.generator.route_generator"
+      ],
+      "indexed": 1768999169482
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_schema_generator.py": {
+      "exports": [
+        "TestSchemaGenerator"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "wxcode.generator.schema_generator",
+        "wxcode.models.schema"
+      ],
+      "indexed": 1768999169482
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_service_generator.py": {
+      "exports": [
+        "ServerService",
+        "TestServiceGenerator"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "pytest",
+        "wxcode.generator.service_generator",
+        "wxcode.models.procedure"
+      ],
+      "indexed": 1768999169483
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_starter_kit.py": {
+      "exports": [
+        "MockSchemaConnection",
+        "TestGenerateEnvExample",
+        "TestGenerateRequirementsTxt",
+        "TestGenerateDatabasePy",
+        "TestGenerateConfigPy",
+        "TestStarterKitConfig",
+        "TestStarterKitResult",
+        "tmp_output_dir",
+        "sqlserver_connection",
+        "mysql_connection",
+        "postgresql_connection"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "dataclasses",
+        "pytest",
+        "wxcode.generator.starter_kit"
+      ],
+      "indexed": 1768999169483
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_template_generator.py": {
+      "exports": [
+        "TestTemplateGenerator",
+        "TestTemplateGeneratorIntegration"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "wxcode.generator.template_generator"
+      ],
+      "indexed": 1768999169484
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_theme_deployer.py": {
+      "exports": [
+        "TestThemeAssetStats",
+        "TestDeployResult",
+        "TestGetThemePath",
+        "TestListThemes",
+        "TestGetThemeAssetStats",
+        "TestDeployThemeAssets",
+        "TestDeployWithRealTheme"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "pytest",
+        "wxcode.generator.theme_deployer"
+      ],
+      "indexed": 1768999169484
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_theme_skill_loader.py": {
+      "exports": [
+        "TestControlMappings",
+        "TestThemeSkillLoaderInit",
+        "TestThemeSkillLoaderExists",
+        "TestThemeSkillLoaderAnalyze",
+        "TestThemeSkillLoaderLoadSkills",
+        "TestThemeSkillLoaderMetadata",
+        "TestGetAvailableThemes",
+        "TestThemeSkillLoaderWithRealTheme"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "unittest.mock",
+        "pytest",
+        "wxcode.generator.theme_skill_loader"
+      ],
+      "indexed": 1768999169485
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_wdc_parser.py": {
+      "exports": [
+        "TestWdcParserInit",
+        "TestClassDefinition",
+        "TestMembers",
+        "TestMethods",
+        "TestDependencies",
+        "TestProperties",
+        "TestEncoding",
+        "temp_dir",
+        "simple_wdc_file",
+        "inherited_wdc_file",
+        "abstract_wdc_file",
+        "SIMPLE_CLASS_WDC",
+        "INHERITED_CLASS_WDC",
+        "ABSTRACT_CLASS_WDC"
+      ],
+      "imports": [
+        "pytest",
+        "tempfile",
+        "pathlib",
+        "wxcode.parser.wdc_parser"
+      ],
+      "indexed": 1768999169485
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_wdg_parser.py": {
+      "exports": [
+        "TestParsedParameter",
+        "TestParsedDependencies",
+        "TestParsedProcedure",
+        "TestParsedProcedureSet",
+        "TestWdgParser",
+        "TestWdgParserEdgeCases",
+        "TestIntegrationWithRealFile"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "wxcode.parser.wdg_parser"
+      ],
+      "indexed": 1768999169486
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_wwh_parser.py": {
+      "exports": [
+        "TestParsedLocalParameter",
+        "TestParsedLocalProcedure",
+        "TestWWHParserLocalProcedures",
+        "TestWWHParserParameterParsing",
+        "TestParsedPage"
+      ],
+      "imports": [
+        "pytest",
+        "pathlib",
+        "unittest.mock",
+        "wxcode.parser.wwh_parser"
+      ],
+      "indexed": 1768999169486
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/tests/test_xdd_parser.py": {
+      "exports": [
+        "TestXddParserInit",
+        "TestParseConnections",
+        "TestParseColumns",
+        "TestParseIndexes",
+        "TestParseNullableAndDefaults",
+        "TestUnknownTypeHandling",
+        "TestParseTables",
+        "TestParseResult",
+        "TestFindAnalysisFile",
+        "TestHyperFileTypeMap",
+        "TestEncodingHandling",
+        "TestConnectionTypeMapping",
+        "TestExtractPortFromExtendedInfo",
+        "TestParseConnectionsWithExtendedInfo",
+        "sample_xdd_file",
+        "all_types_xdd_file",
+        "indexes_xdd_file",
+        "unknown_type_xdd_file",
+        "SAMPLE_XDD_SIMPLE",
+        "SAMPLE_XDD_ALL_TYPES",
+        "SAMPLE_XDD_INDEXES",
+        "SAMPLE_XDD_UNKNOWN_TYPE"
+      ],
+      "imports": [
+        "tempfile",
+        "pathlib",
+        "pytest",
+        "wxcode.parser.xdd_parser",
+        "wxcode.models.schema"
+      ],
+      "indexed": 1768999169487
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/types/tree.ts": {
+      "exports": [
+        "treeNodeIcons",
+        "elementTypeIcons",
+        "categoryLabels",
+        "statusColors",
+        "TreeNodeType",
+        "TreeNodeMetadata",
+        "TreeNode"
+      ],
+      "imports": [],
+      "indexed": 1769010677546
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/hooks/useProjectTree.ts": {
+      "exports": [
+        "useProjectTree",
+        "useTreeNodeChildren",
+        "useInvalidateTree"
+      ],
+      "imports": [
+        "@tanstack/react-query"
+      ],
+      "indexed": 1769010723030
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/components/project/WorkspaceTree.tsx": {
+      "exports": [
+        "WorkspaceTree",
+        "default",
+        "WorkspaceTreeProps"
+      ],
+      "imports": [
+        "react",
+        "framer-motion",
+        "lucide-react",
+        "@/lib/utils",
+        "@/hooks/useProjectTree",
+        "@/lib/animations",
+        "./TreeNodeItem"
+      ],
+      "indexed": 1769010790259
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/components/project/index.ts": {
+      "exports": [
+        "ElementTree",
+        "type ElementTreeProps",
+        "WorkspaceTree",
+        "type WorkspaceTreeProps",
+        "TreeNodeItem",
+        "type TreeNodeItemProps",
+        "TokenUsageCard",
+        "type TokenUsageCardProps",
+        "ConversionStatus",
+        "type ConversionStatusProps",
+        "ConversionCard",
+        "type ConversionCardProps",
+        "ProjectCard",
+        "type ProjectCardProps",
+        "CreateConversionModal",
+        "type CreateConversionModalProps",
+        "ElementSelector",
+        "type ElementSelectorProps",
+        "ManualElementInput",
+        "type ManualElementInputProps"
+      ],
+      "imports": [],
+      "indexed": 1769010879535
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/hooks/index.ts": {
+      "exports": [
+        "useChat",
+        "type UseChatReturn",
+        "type UseChatState",
+        "type UseChatActions",
+        "useTokenUsage",
+        "useProject",
+        "useProjects",
+        "useElements",
+        "useElement",
+        "groupElementsByType",
+        "useProjectTree",
+        "useTreeNodeChildren",
+        "useInvalidateTree",
+        "useConversions",
+        "useCreateConversion",
+        "useConversion",
+        "useUpdateConversionStatus",
+        "useApproveConversion",
+        "useRejectConversion",
+        "useConversionStream",
+        "type StreamMessage",
+        "type UseConversionStreamOptions",
+        "type UseConversionStreamReturn"
+      ],
+      "imports": [],
+      "indexed": 1769010907327
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/types/index.ts": {
+      "exports": [],
+      "imports": [],
+      "indexed": 1769010932786
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/app/project/[id]/page.tsx": {
+      "exports": [
+        "default",
+        "WorkspacePage"
+      ],
+      "imports": [
+        "react",
+        "@/components/layout",
+        "@/components/project",
+        "@/components/editor",
+        "@/components/chat",
+        "@/components/terminal",
+        "@/hooks/useElements"
+      ],
+      "indexed": 1769010989456
+    },
+    "/Users/gilberto/projetos/wxk/wxcode/frontend/src/components/project/TreeNodeItem.tsx": {
+      "exports": [
+        "TreeNodeItem",
+        "default",
+        "TreeNodeItemProps"
+      ],
+      "imports": [
+        "react",
+        "framer-motion",
+        "lucide-react",
+        "@/lib/utils"
+      ],
+      "indexed": 1769012613017
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{# Modal Component Template #}
+{#
+    Context variables:
+    - modal_id: Modal ID
+    - title: Modal title
+    - content: Modal body content (HTML)
+    - footer: Modal footer content (HTML)
+    - size: "sm", "lg", "xl", or empty for default
+    - centered: Boolean for vertically centered
+    - static_backdrop: Boolean for static backdrop
+    - scrollable: Boolean for scrollable body
+    - css_classes: Additional CSS classes
+#}
+<div
+    class="modal fade {{ css_classes | default('') }}"
+    id="{{ modal_id }}"
+    tabindex="-1"
+    aria-labelledby="{{ modal_id }}-label"
+    aria-hidden="true"
+    {% if static_backdrop %}data-bs-backdrop="static" data-bs-keyboard="false"{% endif %}
+>
+    <div class="modal-dialog{% if size %} modal-{{ size }}{% endif %}{% if centered %} modal-dialog-centered{% endif %}{% if scrollable %} modal-dialog-scrollable{% endif %}">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="{{ modal_id }}-label">{{ title | default('Modal') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body" id="{{ modal_id }}-body">
+                {% if content %}
+                {{ content | safe }}
+                {% else %}
+                {% block modal_content %}{% endblock %}
+                {% endif %}
+            </div>
+
+            {% if footer or show_default_footer %}
+            <div class="modal-footer">
+                {% if footer %}
+                {{ footer | safe }}
+                {% else %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="{{ modal_id }}-confirm">Confirmar</button>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+{# Card Component Template #}
+{#
+    Context variables:
+    - card_id: Card ID
+    - title: Card title
+    - subtitle: Card subtitle
+    - icon: Icon class for header
+    - content: Card body content (HTML)
+    - footer: Card footer content (HTML)
+    - collapsible: Boolean for collapsible card
+    - collapsed: Boolean for initially collapsed
+    - css_classes: Additional CSS classes
+#}
+<div class="card {{ css_classes | default('') }}" id="{{ card_id | default('card') }}">
+    {% if title or subtitle %}
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+            {% if icon %}<i class="{{ icon }} me-2"></i>{% endif %}
+            {% if title %}<span class="fw-semibold">{{ title }}</span>{% endif %}
+            {% if subtitle %}<small class="text-muted ms-2">{{ subtitle }}</small>{% endif %}
+        </div>
+
+        {% if collapsible %}
+        <button
+            class="btn btn-sm btn-link p-0"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#{{ card_id }}-body"
+            aria-expanded="{{ 'false' if collapsed else 'true' }}"
+        >
+            <i class="bi bi-chevron-{{ 'down' if collapsed else 'up' }}"></i>
+        </button>
+        {% endif %}
+
+        {% block card_header_actions %}{% endblock %}
+    </div>
+    {% endif %}
+
+    <div
+        id="{{ card_id }}-body"
+        class="{% if collapsible %}collapse{% if not collapsed %} show{% endif %}{% endif %}"
+    >
+        <div class="card-body">
+            {% if content %}
+            {{ content | safe }}
+            {% else %}
+            {% block card_content %}{% endblock %}
+            {% endif %}
+        </div>
+    </div>
+
+    {% if footer %}
+    <div class="card-footer">
+        {{ footer | safe }}
+    </div>
+    {% endif %}
+</div>

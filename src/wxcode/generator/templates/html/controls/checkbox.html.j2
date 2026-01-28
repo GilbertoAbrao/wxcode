@@ -1,0 +1,31 @@
+{# Checkbox Control Template #}
+{#
+    Context variables:
+    - name: Control name (snake_case)
+    - original_name: Original WinDev control name
+    - label: Display label
+    - checked: Boolean
+    - value: Checkbox value
+    - disabled: Boolean
+    - inline: Boolean for inline display
+    - switch_style: Boolean for switch appearance
+    - css_classes: Additional CSS classes
+    - htmx_attrs: HTMX attributes dict
+#}
+<div class="{% if inline %}form-check-inline{% else %}mb-3{% endif %} form-check{% if switch_style %} form-switch{% endif %} control-checkbox" id="{{ name }}-group">
+    <input
+        type="checkbox"
+        id="{{ name }}"
+        name="{{ name }}"
+        class="form-check-input {{ css_classes | default('') }}"
+        value="{{ value | default('1') }}"
+        {% if checked %}checked{% endif %}
+        {% if disabled %}disabled{% endif %}
+        {% for attr, value in (htmx_attrs or {}).items() %}{{ attr }}="{{ value }}" {% endfor %}
+    >
+    {% if label %}
+    <label class="form-check-label" for="{{ name }}">
+        {{ label }}
+    </label>
+    {% endif %}
+</div>

@@ -1,0 +1,38 @@
+"""
+Configuration settings for {{ config_name }}.
+
+Auto-generated from WinDev COMPILE IF blocks.
+"""
+
+from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="allow"
+    )
+
+{% for var in variables.values() %}
+    # {{ var.description or 'Configuration variable' }}
+    {{ var.name }}: {{ var.python_type }}{% if var.value is not none %} = {{ var.value|tojson }}{% endif %}
+{% endfor %}
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Get cached settings instance.
+
+    Returns:
+        Settings instance loaded from environment.
+    """
+    return Settings()
+
+
+# Convenience export
+settings = get_settings()
