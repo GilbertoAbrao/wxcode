@@ -533,7 +533,7 @@ app = FastAPI(lifespan=lifespan)
 | `Global_PegaInfoINI(path, key)` | `os.getenv()` or `pydantic_settings.BaseSettings` |'''
 
     @staticmethod
-    def format_mcp_instructions(kb_name: str) -> str:
+    def format_mcp_instructions(kb_name: str, output_project_id: str) -> str:
         """
         Gera secao de instrucoes MCP para CONTEXT.md.
 
@@ -542,12 +542,14 @@ app = FastAPI(lifespan=lifespan)
 
         Args:
             kb_name: Nome da Knowledge Base (projeto WinDev original)
+            output_project_id: ID do OutputProject para marcacao de status
 
         Returns:
             String markdown com instrucoes MCP
         """
         safe_kb = sanitize_identifier(kb_name)
-        return f'''## MCP Server Integration
+        safe_output_id = str(output_project_id)
+        return f'''## MCP Server Integration (wxcode-kb)
 
 > **MANDATORY**: The `.mcp.json` file is already configured in this workspace.
 > You MUST use these MCP tools to query the original WinDev code before converting.
@@ -568,29 +570,115 @@ get_controls(element_name="PAGE_Login", project_name="{safe_kb}")
 get_dependencies(element_name="PAGE_Login", project_name="{safe_kb}")
 ```
 
-### Available MCP Tools
+### Available MCP Tools (25 tools)
+
+#### Elements (source code access)
 
 | Tool | Purpose | When to Use |
 |------|---------|-------------|
-| `get_element` | Get full element with AST and code | **ALWAYS** before converting |
-| `get_controls` | Get UI control hierarchy | For PAGE elements |
-| `get_procedures` | List procedures with code | For procedure sets (.wdg) |
-| `get_dependencies` | What this element uses/is used by | To plan conversion order |
-| `search_code` | Find code patterns (regex) | To find related elements |
-| `get_table` | Get table schema details | When working with data access |
-| `list_elements` | List elements by type/layer | To explore what needs conversion |
-| `get_conversion_candidates` | Elements ready to convert | To find next element to convert |
+| `get_element` | Get full element with AST, raw_content, dependencies | **ALWAYS** before converting any element |
+| `list_elements` | List elements with filters (type, layer, status) | To explore what needs conversion |
+| `search_code` | Regex search across element source code | To find patterns, usages, related code |
 
-### Conversion Workflow
+#### Controls (UI structure)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_controls` | Get UI control hierarchy with events/properties | For PAGE elements - understand UI structure |
+| `get_data_bindings` | Get control -> table.field mappings | To understand FileToScreen/ScreenToFile bindings |
+
+#### Procedures (business logic)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_procedures` | List procedures in element with signatures | For procedure groups (.wdg) |
+| `get_procedure` | Get specific procedure with full code | To get detailed procedure implementation |
+
+#### Schema (database)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_schema` | Get complete database schema | To understand data model |
+| `get_table` | Get table definition (columns, indexes) | When working with specific table |
+
+#### Graph (dependency analysis - requires Neo4j)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_dependencies` | Direct dependencies (uses/used_by) | To understand element relationships |
+| `get_impact` | Transitive impact analysis | To assess change impact |
+| `get_path` | Find paths between two elements | To understand indirect relationships |
+| `find_hubs` | Find high-connectivity nodes | To identify critical elements |
+| `find_dead_code` | Find potentially unused code | To identify cleanup candidates |
+| `find_cycles` | Detect circular dependencies | To identify problematic patterns |
+
+#### Conversion (workflow tracking)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_conversion_candidates` | Elements ready to convert | To find next element to convert |
+| `get_topological_order` | Recommended conversion order | To plan conversion sequence |
+| `get_conversion_stats` | Conversion progress statistics | To track overall progress |
+| `mark_converted` | Mark element as converted (**write**) | After completing element conversion |
+| `mark_project_initialized` | Mark OutputProject as initialized (**write**) | After Phase 1 (project structure + schema) |
+
+#### Stack (target conventions)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_stack_conventions` | Get naming, patterns, templates | To ensure consistent code generation |
+
+#### Planes (tabs/wizard views)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_element_planes` | Detect tabs/wizard/conditional views | For pages with multiple views |
+
+#### WLanguage (function reference)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_wlanguage_reference` | Get H* function docs with modern equivalent | When converting HReadSeek, HAdd, etc. |
+| `list_wlanguage_functions` | List functions by category | To explore available functions |
+| `get_wlanguage_pattern` | Get common patterns (cursor, transaction) | When converting common WLanguage idioms |
+
+#### Similarity (pattern reuse)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `search_converted_similar` | Find similar already-converted elements | To reuse patterns, ensure consistency |
+
+#### PDF (documentation)
+
+| Tool | Purpose | When to Use |
+|------|---------|-------------|
+| `get_element_pdf_slice` | Get PDF docs and screenshot paths | To access visual documentation |
+
+### Project Initialization Workflow (Phase 1)
+
+After completing project initialization (structure, config, database models):
+
+```
+mark_project_initialized(output_project_id="{safe_output_id}", confirm=True, notes="Created project structure and X models")
+```
+
+This marks the OutputProject as INITIALIZED, enabling milestone-based element conversion.
+
+### Element Conversion Workflow (Phase 2 - Milestones)
 
 1. **Query**: `get_element(element_name="X", project_name="{safe_kb}")`
-2. **Understand**: Read the WLanguage code, understand the business logic
-3. **Convert**: Translate to Python/FastAPI preserving functionality
-4. **Mark**: `mark_converted(element_name="X", project_name="{safe_kb}", confirm=True)`
+2. **Controls** (for pages): `get_controls(element_name="X", project_name="{safe_kb}")`
+3. **Dependencies**: `get_dependencies(element_name="X", project_name="{safe_kb}")`
+4. **Similar**: `search_converted_similar(element_name="X", output_project_id="{safe_output_id}")` (if available)
+5. **WLanguage**: `get_wlanguage_reference(function_name="HReadSeek")` (for H* functions)
+6. **Understand**: Read the WLanguage code, understand the business logic
+7. **Convert**: Translate to Python/FastAPI preserving functionality
+8. **Mark**: `mark_converted(element_name="X", project_name="{safe_kb}", confirm=True)`
 
 ### Knowledge Base Information
 
-- **Project Name**: `{safe_kb}`
+- **KB Project Name**: `{safe_kb}`
+- **Output Project ID**: `{safe_output_id}`
 - **MCP Server**: `wxcode-kb` (configured in `.mcp.json`)
 
 **REMEMBER**: This is a CONVERSION project. The original code EXISTS. Query it, don't generate from scratch.'''
@@ -640,7 +728,7 @@ get_dependencies(element_name="PAGE_Login", project_name="{safe_kb}")
             global_var_count=len(global_state.variables) if global_state else 0,
             initialization_code=cls.format_initialization_blocks(global_state),
             lifespan_pattern=cls.format_lifespan_pattern() if global_state is not None and global_state.initialization_blocks else "",
-            mcp_instructions=cls.format_mcp_instructions(kb_name),
+            mcp_instructions=cls.format_mcp_instructions(kb_name, str(output_project.id)),
         )
 
     @classmethod

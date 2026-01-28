@@ -25,7 +25,7 @@ O wxcode converte projetos desenvolvidos na plataforma PC Soft para stacks moder
 | Versão | Nome | Data | Descrição |
 |--------|------|------|-----------|
 | v1 | Delete Project UI | 2026-01-21 | Exclusão segura com type-to-confirm |
-| v2 | MCP Server KB Integration | 2026-01-22 | 19 MCP tools para Claude Code |
+| v2 | MCP Server KB Integration | 2026-01-22 | 25 MCP tools para Claude Code |
 | v3 | Product Factory | 2026-01-23 | Workspaces isolados, multi-produto |
 | v4 | Conceptual Restructure | 2026-01-24 | LLM-driven generation, 15 stacks |
 | v5 | Full Initialization Context | 2026-01-24 | CONTEXT.md completo |
@@ -528,6 +528,43 @@ wxcode gsd-context PAGE_Login --output /tmp/gsd --depth 3
 
 **Requer:** Claude Code CLI instalado (`npm install -g @anthropic-ai/claude-code`)
 
+### MCP Server (wxcode-kb)
+
+O wxcode inclui um servidor MCP que expõe 25 ferramentas para acesso à Knowledge Base durante conversão via Claude Code.
+
+**Iniciar o servidor MCP:**
+```bash
+python -m wxcode.mcp.server
+```
+
+**Ferramentas disponíveis (25 tools):**
+
+| Categoria | Tools | Descrição |
+|-----------|-------|-----------|
+| **Elements** | `get_element`, `list_elements`, `search_code` | Acesso ao código fonte WinDev |
+| **Controls** | `get_controls`, `get_data_bindings` | Hierarquia de controles UI e bindings |
+| **Procedures** | `get_procedures`, `get_procedure` | Procedures globais e locais |
+| **Schema** | `get_schema`, `get_table` | Schema do banco de dados |
+| **Graph** | `get_dependencies`, `get_impact`, `get_path`, `find_hubs`, `find_dead_code`, `find_cycles` | Análise de dependências (Neo4j) |
+| **Conversion** | `get_conversion_candidates`, `get_topological_order`, `get_conversion_stats`, `mark_converted`, `mark_project_initialized` | Workflow de conversão |
+| **Stack** | `get_stack_conventions` | Convenções da stack alvo |
+| **Planes** | `get_element_planes` | Detecção de tabs/wizard/views |
+| **WLanguage** | `get_wlanguage_reference`, `list_wlanguage_functions`, `get_wlanguage_pattern` | Referência de funções H* |
+| **Similarity** | `search_converted_similar` | Busca elementos similares já convertidos |
+| **PDF** | `get_element_pdf_slice` | Documentação PDF e screenshots |
+
+**Exemplo de uso (no CONTEXT.md):**
+```python
+# Obter código fonte de um elemento
+get_element(element_name="PAGE_Login", project_name="MeuProjeto")
+
+# Obter hierarquia de controles UI
+get_controls(element_name="PAGE_Login", project_name="MeuProjeto")
+
+# Marcar projeto como inicializado após Phase 1
+mark_project_initialized(output_project_id="...", confirm=True)
+```
+
 ### Conversão (Geradores)
 
 ```bash
@@ -733,7 +770,7 @@ pytest tests/test_dependency_extractor.py -v
 
 ### AI/LLM
 - **Claude Code** - Conversão inteligente via /gsd workflows
-- **MCP Server** - 19 tools para Knowledge Base access
+- **MCP Server** - 25 tools para Knowledge Base access
 
 ## Licença
 

@@ -1,10 +1,11 @@
 """MCP tools for conversion workflow tracking.
 
 Provides tools to track conversion progress, determine optimal conversion order,
-identify elements ready for conversion, and mark elements as converted.
+identify elements ready for conversion, and mark elements/projects as converted.
 
-The mark_converted tool is the ONLY write operation in the MCP server.
-All other tools are read-only.
+Write operations:
+- mark_converted: Mark an element as converted
+- mark_project_initialized: Mark an OutputProject as initialized
 """
 
 import logging
@@ -22,6 +23,7 @@ from wxcode.config import get_settings
 from wxcode.mcp.server import mcp
 from wxcode.models import Element, Project
 from wxcode.models.element import ConversionStatus
+from wxcode.models.output_project import OutputProject, OutputProjectStatus
 
 
 async def _find_element(
@@ -553,6 +555,123 @@ async def mark_converted(
             "mark_converted failed: project=%s element=%s error=%s",
             project_name,
             element_name,
+            str(e),
+        )
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
+
+
+@mcp.tool
+async def mark_project_initialized(
+    ctx: Context,
+    output_project_id: str,
+    confirm: bool = False,
+    notes: str | None = None,
+) -> dict[str, Any]:
+    """
+    Mark an OutputProject as initialized after project structure is created.
+
+    Use this after completing Phase 1 (project initialization):
+    - Project structure created (directories, config files)
+    - Database models generated for all tables
+    - Main application entry point created
+    - PROJECT.md and ROADMAP.md created
+
+    This is a write operation that requires explicit confirm=True to execute.
+    Calling with confirm=False returns a preview of the change.
+
+    Args:
+        output_project_id: ID of the OutputProject to mark as initialized
+        confirm: Set to True to execute the change (default: False for preview)
+        notes: Optional notes about the initialization (e.g., what was created)
+
+    Returns:
+        Preview dict (confirm=False) or execution result (confirm=True)
+    """
+    try:
+        # Find OutputProject
+        output_project = await OutputProject.get(output_project_id)
+        if not output_project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"OutputProject '{output_project_id}' not found",
+            }
+
+        # Get current status
+        current_status = output_project.status.value
+        new_status = OutputProjectStatus.INITIALIZED.value
+
+        # Validate transition
+        if output_project.status == OutputProjectStatus.INITIALIZED:
+            return {
+                "error": True,
+                "code": "ALREADY_INITIALIZED",
+                "message": f"OutputProject is already initialized",
+                "current_status": current_status,
+            }
+
+        if output_project.status == OutputProjectStatus.ACTIVE:
+            return {
+                "error": True,
+                "code": "INVALID_TRANSITION",
+                "message": "Cannot mark as initialized - project is already active",
+                "current_status": current_status,
+            }
+
+        # Preview mode
+        if not confirm:
+            return {
+                "error": False,
+                "requires_confirmation": True,
+                "preview": {
+                    "output_project_id": output_project_id,
+                    "project_name": output_project.name,
+                    "current_status": current_status,
+                    "new_status": new_status,
+                    "notes": notes,
+                    "instruction": (
+                        "Call mark_project_initialized again with confirm=True to execute this change"
+                    ),
+                },
+            }
+
+        # Execute mode - apply the change
+        output_project.status = OutputProjectStatus.INITIALIZED
+        output_project.updated_at = datetime.utcnow()
+        await output_project.save()
+
+        # Audit log
+        audit_logger.info(
+            "mark_project_initialized executed: output_project_id=%s name=%s old_status=%s new_status=%s notes=%s",
+            output_project_id,
+            output_project.name,
+            current_status,
+            new_status,
+            notes,
+        )
+
+        return {
+            "error": False,
+            "executed": True,
+            "data": {
+                "output_project_id": output_project_id,
+                "project_name": output_project.name,
+                "old_status": current_status,
+                "new_status": new_status,
+                "updated_at": output_project.updated_at.isoformat(),
+                "notes": notes,
+            },
+        }
+
+    except Exception as e:
+        audit_logger.error(
+            "mark_project_initialized failed: output_project_id=%s error=%s",
+            output_project_id,
             str(e),
         )
         return {
