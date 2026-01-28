@@ -624,52 +624,7 @@ async def _create_project_interactive_session(
     )
 
     session = session_manager.get_session(session_id)
-
-    # If first run (no claude_session_id), spawn task to capture it
-    if created and output_project.claude_session_id is None:
-        asyncio.create_task(
-            _capture_and_save_project_session_id(session, str(output_project.id))
-        )
-
     return session
-
-
-async def _capture_and_save_project_session_id(
-    session: PTYSession,
-    output_project_id: str,
-) -> None:
-    """
-    Monitor PTY output and capture session_id from init message.
-
-    Saves to MongoDB atomically when found.
-    """
-    from wxcode.services.session_id_capture import (
-        capture_session_id_from_line,
-        save_session_id_atomic,
-    )
-
-    session_manager = get_session_manager()
-
-    # Monitor output buffer for init message
-    for _ in range(100):  # Max 10 seconds of checking
-        await asyncio.sleep(0.1)
-
-        # Check all chunks in buffer
-        for chunk in session.output_buffer:
-            for line in chunk.split(b'\n'):
-                session_id = capture_session_id_from_line(line)
-                if session_id:
-                    # Save to MongoDB atomically
-                    saved = await save_session_id_atomic(
-                        output_project_id, session_id
-                    )
-                    if saved:
-                        # Update in-memory session too
-                        session.claude_session_id = session_id
-                        session_manager.update_claude_session_id(
-                            session.session_id, session_id
-                        )
-                    return
 
 
 @router.websocket("/{id}/terminal")
@@ -766,8 +721,22 @@ async def terminal_websocket(websocket: WebSocket, id: str):
             TerminalOutputMessage(data=text).model_dump()
         )
 
-    # Handle bidirectional communication
-    handler = TerminalHandler(session)
+    # Create callback to save session_id when captured
+    async def on_session_id_captured(claude_session_id: str) -> None:
+        """Save captured session_id to MongoDB and update in-memory session."""
+        from wxcode.services.session_id_capture import save_session_id_atomic
+
+        saved = await save_session_id_atomic(str(output_project.id), claude_session_id)
+        if saved:
+            # Update in-memory session too
+            session.claude_session_id = claude_session_id
+            session_manager.update_claude_session_id(session.session_id, claude_session_id)
+
+    # Handle bidirectional communication with session_id capture
+    handler = TerminalHandler(
+        session,
+        on_session_id=on_session_id_captured if not output_project.claude_session_id else None,
+    )
     try:
         await handler.handle_session(websocket)
     except WebSocketDisconnect:
