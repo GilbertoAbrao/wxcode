@@ -18,6 +18,9 @@ export interface MessageOption {
   description?: string;
 }
 
+/** Tipo de seleção para questões */
+export type SelectionType = "single" | "multiple";
+
 /** Contextos de operação disponíveis */
 export type ChatContext = "analysis" | "conversion" | "review";
 
@@ -99,6 +102,8 @@ export interface ChatMessage {
   messageType?: MessageType;
   /** Opções para multi-question */
   options?: MessageOption[];
+  /** Tipo de seleção: single (radio) ou multiple (checkbox) */
+  selectionType?: SelectionType;
   /** Metadata adicional */
   metadata?: Record<string, unknown>;
 }

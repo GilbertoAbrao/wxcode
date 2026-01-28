@@ -48,8 +48,14 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [isInitializingMilestone, setIsInitializingMilestone] = useState(false);
 
-  // Output project state
-  const { data: project, isLoading, refetch } = useOutputProject(projectId);
+  // Working indicator state - shows "processing" in chat when Claude is working
+  const [isWorking, setIsWorking] = useState(false);
+  const workingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Output project state - poll every 2s while initializing to detect status change
+  const { data: project, isLoading, refetch } = useOutputProject(projectId, {
+    refetchInterval: isInitializing ? 2000 : false,
+  });
   // Note: useInitializeProject provides file streaming for FileTree display
   // Terminal initialization happens automatically via /terminal WebSocket endpoint
   const { files: streamFiles, isComplete } = useInitializeProject(projectId);
@@ -106,8 +112,24 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     }
   }, [isComplete, refetch]);
 
+  // Cleanup working timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (workingTimeoutRef.current) {
+        clearTimeout(workingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle AskUserQuestion events from WebSocket (session file watcher)
   const handleAskUserQuestion = useCallback((event: AskUserQuestionEvent) => {
+    // Claude is waiting for user input - stop working indicator
+    setIsWorking(false);
+    if (workingTimeoutRef.current) {
+      clearTimeout(workingTimeoutRef.current);
+      workingTimeoutRef.current = null;
+    }
+
     // Convert questions to chat messages
     for (const q of event.questions) {
       const options = q.options.map((opt, idx) => ({
@@ -123,6 +145,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         timestamp: new Date(),
         messageType: options.length > 0 ? "multi_question" : "question",
         options: options.length > 0 ? options : undefined,
+        selectionType: q.multiSelect ? "multiple" : "single",
       };
       setChatMessages((prev) => [...prev, assistantMsg]);
     }
@@ -133,62 +156,81 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     let content = "";
     let icon = "";
 
-    switch (event.type) {
-      case "task_create":
-        icon = "\u{1F4CB}"; // 📋
-        content = `${icon} **Tarefa:** ${event.subject}`;
-        break;
-      case "task_update":
-        if (event.status === "completed") {
-          icon = "\u{2705}"; // ✅
-          content = `${icon} **Concluído:** ${event.subject || `Tarefa #${event.task_id}`}`;
-        } else if (event.status === "in_progress") {
-          icon = "\u{23F3}"; // ⏳
-          content = `${icon} **Em progresso:** ${event.subject || `Tarefa #${event.task_id}`}`;
-        } else {
-          return; // Ignore other status updates
-        }
-        break;
-      case "file_write":
-        icon = "\u{1F4C4}"; // 📄
-        content = `${icon} **Criado:** \`${event.file_name}\``;
-        break;
-      case "file_edit":
-        icon = "\u{270F}\u{FE0F}"; // ✏️
-        content = `${icon} **Editado:** \`${event.file_name}\``;
-        break;
-      case "file_read":
-        icon = "\u{1F4D6}"; // 📖
-        content = `${icon} **Lendo:** \`${event.file_name}\``;
-        break;
-      case "bash":
-        icon = "\u{1F4BB}"; // 💻
-        // Show description if available, otherwise truncated command
-        const cmdDisplay = event.description || event.command;
-        content = `${icon} **Comando:** ${cmdDisplay}`;
-        break;
-      case "task_spawn":
-        icon = "\u{1F916}"; // 🤖
-        content = `${icon} **Agente:** ${event.description}`;
-        break;
-      case "glob":
-        icon = "\u{1F50D}"; // 🔍
-        content = `${icon} **Busca:** \`${event.pattern}\``;
-        break;
-      case "grep":
-        icon = "\u{1F50E}"; // 🔎
-        content = `${icon} **Grep:** \`${event.pattern}\``;
-        break;
-      case "summary":
-        icon = "\u{1F4CA}"; // 📊
-        content = `${icon} **${event.summary}**`;
-        break;
-      case "assistant_banner":
-        // Display the banner as-is (it's already formatted)
-        content = event.text;
-        break;
-      default:
-        return;
+    // Summary indicates Claude finished - stop working indicator
+    if (event.type === "summary") {
+      setIsWorking(false);
+      if (workingTimeoutRef.current) {
+        clearTimeout(workingTimeoutRef.current);
+        workingTimeoutRef.current = null;
+      }
+      icon = "\u{1F4CA}"; // 📊
+      content = `${icon} **${event.summary}**`;
+    } else {
+      // Any other progress event means Claude is working
+      setIsWorking(true);
+
+      // Reset timeout - hide indicator after 8s of no events
+      if (workingTimeoutRef.current) {
+        clearTimeout(workingTimeoutRef.current);
+      }
+      workingTimeoutRef.current = setTimeout(() => {
+        setIsWorking(false);
+        workingTimeoutRef.current = null;
+      }, 8000);
+
+      switch (event.type) {
+        case "task_create":
+          icon = "\u{1F4CB}"; // 📋
+          content = `${icon} **Tarefa:** ${event.subject}`;
+          break;
+        case "task_update":
+          if (event.status === "completed") {
+            icon = "\u{2705}"; // ✅
+            content = `${icon} **Concluído:** ${event.subject || `Tarefa #${event.task_id}`}`;
+          } else if (event.status === "in_progress") {
+            icon = "\u{23F3}"; // ⏳
+            content = `${icon} **Em progresso:** ${event.subject || `Tarefa #${event.task_id}`}`;
+          } else {
+            return; // Ignore other status updates
+          }
+          break;
+        case "file_write":
+          icon = "\u{1F4C4}"; // 📄
+          content = `${icon} **Criado:** \`${event.file_name}\``;
+          break;
+        case "file_edit":
+          icon = "\u{270F}\u{FE0F}"; // ✏️
+          content = `${icon} **Editado:** \`${event.file_name}\``;
+          break;
+        case "file_read":
+          icon = "\u{1F4D6}"; // 📖
+          content = `${icon} **Lendo:** \`${event.file_name}\``;
+          break;
+        case "bash":
+          icon = "\u{1F4BB}"; // 💻
+          // Show description if available, otherwise truncated command
+          const cmdDisplay = event.description || event.command;
+          content = `${icon} **Comando:** ${cmdDisplay}`;
+          break;
+        case "task_spawn":
+          icon = "\u{1F916}"; // 🤖
+          content = `${icon} **Agente:** ${event.description}`;
+          break;
+        case "glob":
+          icon = "\u{1F50D}"; // 🔍
+          content = `${icon} **Busca:** \`${event.pattern}\``;
+          break;
+        case "grep":
+          icon = "\u{1F50E}"; // 🔎
+          content = `${icon} **Grep:** \`${event.pattern}\``;
+          break;
+        case "assistant_banner":
+          // Display the banner as-is (it's already formatted)
+          content = event.text;
+          break;
+        default:
+          return;
+      }
     }
 
     const progressMsg: ChatDisplayMessage = {
@@ -233,6 +275,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       if (!response.ok) {
         const error = await response.json();
         console.error("Prepare initialization failed:", error);
+        setIsInitializing(false); // Reset on error
         return;
       }
 
@@ -242,14 +285,20 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       // Simulate typing the command character by character
       await simulateTyping(`/wxcode:new-project ${data.context_path}`);
 
-      // Refetch project to update status
-      refetch();
+      // Don't reset isInitializing here - wait for status to change
+      // The useEffect below will reset it when project.status changes
     } catch (error) {
       console.error("Error initializing project:", error);
-    } finally {
+      setIsInitializing(false); // Reset on error
+    }
+  }, [projectId, simulateTyping]);
+
+  // Reset isInitializing when project status changes from "created"
+  useEffect(() => {
+    if (project?.status && project.status !== "created") {
       setIsInitializing(false);
     }
-  }, [projectId, refetch, simulateTyping]);
+  }, [project?.status]);
 
   // Handle milestone initialization
   const handleInitializeMilestone = useCallback(async (milestoneId: string) => {
@@ -345,6 +394,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               selectedMilestoneId={selectedMilestoneId || undefined}
               onSelectMilestone={setSelectedMilestoneId}
               onCreateClick={() => setIsCreateModalOpen(true)}
+              projectStatus={project.status}
             />
           </div>
 
@@ -460,7 +510,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
             <div className="h-full bg-zinc-900 border-l border-zinc-800">
               <ChatDisplay
                 messages={chatMessages}
-                isProcessing={false}
+                isProcessing={isWorking}
                 title="Botfy WX"
                 inputDisabled={!terminalRef.current?.isConnected()}
                 onOptionSelect={async (option) => {
@@ -475,6 +525,21 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
 
                   // Send option as input to terminal
                   await simulateTyping(option.value);
+                }}
+                onMultipleOptionsSelect={async (options) => {
+                  // Add user selections to chat display
+                  const labels = options.map((o) => o.label).join(", ");
+                  const userMsg: ChatDisplayMessage = {
+                    id: `user_${++messageIdCounter.current}`,
+                    role: "user",
+                    content: labels,
+                    timestamp: new Date(),
+                  };
+                  setChatMessages((prev) => [...prev, userMsg]);
+
+                  // Send values as comma-separated (Claude expects "1, 2, 3" format)
+                  const values = options.map((o) => o.value).join(", ");
+                  await simulateTyping(values);
                 }}
                 onSendMessage={async (message) => {
                   // Add user message to chat display

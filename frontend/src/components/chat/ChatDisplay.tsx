@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 import { Bot, Loader2 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
-import type { MessageType, MessageOption } from "@/types/chat";
+import type { MessageType, MessageOption, SelectionType } from "@/types/chat";
 
 export interface ChatDisplayMessage {
   id: string;
@@ -21,6 +21,8 @@ export interface ChatDisplayMessage {
   timestamp: Date;
   messageType?: MessageType;
   options?: MessageOption[];
+  /** Tipo de seleção: single (radio) ou multiple (checkbox) */
+  selectionType?: SelectionType;
 }
 
 export interface ChatDisplayProps {
@@ -32,8 +34,10 @@ export interface ChatDisplayProps {
   className?: string;
   /** Título do painel */
   title?: string;
-  /** Callback quando uma opção é selecionada */
+  /** Callback quando uma opção é selecionada (single select) */
   onOptionSelect?: (option: MessageOption) => void;
+  /** Callback quando múltiplas opções são selecionadas (multiple select) */
+  onMultipleOptionsSelect?: (options: MessageOption[]) => void;
   /** Callback quando usuário envia mensagem */
   onSendMessage?: (message: string) => void;
   /** Se o input está desabilitado */
@@ -46,6 +50,7 @@ export function ChatDisplay({
   className,
   title = "Botfy WX",
   onOptionSelect,
+  onMultipleOptionsSelect,
   onSendMessage,
   inputDisabled = false,
 }: ChatDisplayProps) {
@@ -93,7 +98,9 @@ export function ChatDisplay({
             showTimestamp
             messageType={message.messageType}
             options={message.options}
+            selectionType={message.selectionType}
             onOptionSelect={onOptionSelect}
+            onMultipleOptionsSelect={onMultipleOptionsSelect}
           />
         ))}
 

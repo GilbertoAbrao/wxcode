@@ -594,11 +594,9 @@ async def _capture_and_save_session_id(
                 _, session_id = result
 
         if session_id:
-            # Save session_id and update status to INITIALIZED
-            # This confirms Claude is actually running and processing input
+            # Save session_id only - status change is handled by Claude via MCP
+            # Claude will call mark_project_initialized() when Phase 1 is complete
             output_project.claude_session_id = session_id
-            if output_project.status == OutputProjectStatus.CREATED:
-                output_project.status = OutputProjectStatus.INITIALIZED
             output_project.updated_at = datetime.utcnow()
             await output_project.save()
 

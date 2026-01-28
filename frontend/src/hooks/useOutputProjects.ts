@@ -111,13 +111,15 @@ export function useOutputProjects(kbId: string) {
  * Hook to fetch a single output project.
  *
  * @param id - Output project ID
+ * @param options - Optional query options (e.g., refetchInterval for polling)
  * @returns Query result with output project
  */
-export function useOutputProject(id: string) {
+export function useOutputProject(id: string, options?: { refetchInterval?: number | false }) {
   return useQuery({
     queryKey: ["output-project", id],
     queryFn: () => fetchOutputProject(id),
     enabled: !!id,
+    refetchInterval: options?.refetchInterval,
   });
 }
 

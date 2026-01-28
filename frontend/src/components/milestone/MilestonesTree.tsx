@@ -17,6 +17,8 @@ interface MilestonesTreeProps {
   onSelectMilestone?: (id: string) => void;
   onCreateClick?: () => void;
   className?: string;
+  /** Project status - hide create button when "created" (not initialized) */
+  projectStatus?: string;
 }
 
 const STATUS_CONFIG: Record<
@@ -35,6 +37,7 @@ export function MilestonesTree({
   onSelectMilestone,
   onCreateClick,
   className,
+  projectStatus,
 }: MilestonesTreeProps) {
   const { data, isLoading } = useMilestones(outputProjectId);
   const milestones = data?.milestones || [];
@@ -46,7 +49,8 @@ export function MilestonesTree({
         <span className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
           Milestones
         </span>
-        {onCreateClick && (
+        {/* Only show create button after project is initialized */}
+        {onCreateClick && projectStatus !== "created" && (
           <button
             onClick={onCreateClick}
             className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"

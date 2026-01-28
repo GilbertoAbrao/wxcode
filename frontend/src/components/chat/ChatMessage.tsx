@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import { User, Bot, HelpCircle, ChevronDown, ChevronRight, AlertCircle, Wrench } from "lucide-react";
-import type { MessageType, MessageOption } from "@/types/chat";
+import type { MessageType, MessageOption, SelectionType } from "@/types/chat";
 
 export interface ChatMessageProps {
   role: "user" | "assistant";
@@ -14,8 +14,12 @@ export interface ChatMessageProps {
   messageType?: MessageType;
   /** Opções para multi-question */
   options?: MessageOption[];
-  /** Callback quando uma opção é selecionada */
+  /** Tipo de seleção: single (radio) ou multiple (checkbox) */
+  selectionType?: SelectionType;
+  /** Callback quando uma opção é selecionada (single select) */
   onOptionSelect?: (option: MessageOption) => void;
+  /** Callback quando múltiplas opções são selecionadas (multiple select) */
+  onMultipleOptionsSelect?: (options: MessageOption[]) => void;
 }
 
 function formatTime(date: Date): string {
@@ -33,10 +37,14 @@ function ChatMessageComponent({
   className,
   messageType,
   options,
+  selectionType = "single",
   onOptionSelect,
+  onMultipleOptionsSelect,
 }: ChatMessageProps) {
   const isUser = role === "user";
   const [isToolResultExpanded, setIsToolResultExpanded] = useState(false);
+  const [selectedOptions, setSelectedOptions] = useState<Set<string>>(new Set());
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   // Determinar estilo baseado no tipo de mensagem
   const getMessageStyle = () => {
@@ -132,27 +140,124 @@ function ChatMessageComponent({
     );
   };
 
+  // Toggle checkbox selection
+  const handleCheckboxToggle = (option: MessageOption) => {
+    if (hasSubmitted) return;
+    setSelectedOptions((prev) => {
+      const next = new Set(prev);
+      if (next.has(option.value)) {
+        next.delete(option.value);
+      } else {
+        next.add(option.value);
+      }
+      return next;
+    });
+  };
+
+  // Submit multiple selections
+  const handleSubmitMultiple = () => {
+    if (hasSubmitted || !options) return;
+    const selected = options.filter((opt) => selectedOptions.has(opt.value));
+    if (selected.length > 0) {
+      setHasSubmitted(true);
+      onMultipleOptionsSelect?.(selected);
+    }
+  };
+
+  // Handle single selection (radio)
+  const handleSingleSelect = (option: MessageOption) => {
+    if (hasSubmitted) return;
+    setHasSubmitted(true);
+    onOptionSelect?.(option);
+  };
+
   // Renderizar opções para multi-question
   const renderOptions = () => {
     if (messageType !== "multi_question" || !options || options.length === 0) {
       return null;
     }
 
+    // Multiple selection with checkboxes
+    if (selectionType === "multiple") {
+      return (
+        <div className="mt-3 space-y-2">
+          {options.map((option, index) => {
+            const isSelected = selectedOptions.has(option.value);
+            return (
+              <label
+                key={index}
+                className={`
+                  flex items-start gap-3 p-2 rounded-lg cursor-pointer
+                  transition-colors
+                  ${hasSubmitted ? "opacity-60 cursor-not-allowed" : "hover:bg-purple-800/30"}
+                  ${isSelected ? "bg-purple-700/40" : "bg-purple-900/20"}
+                `}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => handleCheckboxToggle(option)}
+                  disabled={hasSubmitted}
+                  className="
+                    mt-0.5 w-4 h-4 rounded
+                    border-purple-500 bg-purple-900/50
+                    text-purple-500 focus:ring-purple-500 focus:ring-offset-0
+                    disabled:opacity-50
+                  "
+                />
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm text-purple-100">{option.label}</span>
+                  {option.description && (
+                    <p className="text-xs text-purple-300/70 mt-0.5">{option.description}</p>
+                  )}
+                </div>
+              </label>
+            );
+          })}
+          {!hasSubmitted && (
+            <button
+              onClick={handleSubmitMultiple}
+              disabled={selectedOptions.size === 0}
+              className="
+                mt-2 px-4 py-2 rounded-lg text-sm font-medium
+                bg-purple-600 hover:bg-purple-500
+                disabled:bg-purple-800 disabled:text-purple-400 disabled:cursor-not-allowed
+                text-white transition-colors
+              "
+            >
+              Confirmar ({selectedOptions.size} selecionado{selectedOptions.size !== 1 ? "s" : ""})
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    // Single selection with radio-style buttons
     return (
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 space-y-2">
         {options.map((option, index) => (
           <button
             key={index}
-            onClick={() => onOptionSelect?.(option)}
-            className="
-              px-3 py-1.5 rounded-lg text-sm
-              bg-purple-700/50 hover:bg-purple-600/50
-              text-purple-100 border border-purple-600/50
+            onClick={() => handleSingleSelect(option)}
+            disabled={hasSubmitted}
+            className={`
+              w-full flex items-start gap-3 p-2 rounded-lg text-left
               transition-colors
-            "
+              ${hasSubmitted ? "opacity-60 cursor-not-allowed" : "hover:bg-purple-700/50"}
+              bg-purple-800/30 border border-purple-600/30
+            `}
             title={option.description || undefined}
           >
-            {option.label}
+            <div className={`
+              mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0
+              ${hasSubmitted ? "border-purple-500/50" : "border-purple-400"}
+            `} />
+            <div className="flex-1 min-w-0">
+              <span className="text-sm text-purple-100">{option.label}</span>
+              {option.description && (
+                <p className="text-xs text-purple-300/70 mt-0.5">{option.description}</p>
+              )}
+            </div>
           </button>
         ))}
       </div>
