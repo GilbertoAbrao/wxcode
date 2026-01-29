@@ -18,6 +18,20 @@ export interface MessageOption {
   description?: string;
 }
 
+/** Item de pergunta individual (para múltiplas perguntas com abas) */
+export interface QuestionItem {
+  /** Header/título curto da aba */
+  header: string;
+  /** Texto completo da pergunta */
+  question: string;
+  /** Opções de resposta */
+  options: MessageOption[];
+  /** Permite múltiplas seleções? */
+  multiSelect: boolean;
+  /** Resposta selecionada (índices das opções) */
+  selectedIndices?: number[];
+}
+
 /** Tipo de seleção para questões */
 export type SelectionType = "single" | "multiple";
 
@@ -100,10 +114,14 @@ export interface ChatMessage {
   usage?: TokenUsage;
   /** Tipo de mensagem classificado pelo ChatAgent */
   messageType?: MessageType;
-  /** Opções para multi-question */
+  /** Opções para multi-question (deprecated: use questions) */
   options?: MessageOption[];
   /** Tipo de seleção: single (radio) ou multiple (checkbox) */
   selectionType?: SelectionType;
+  /** Múltiplas perguntas com abas (novo formato) */
+  questions?: QuestionItem[];
+  /** tool_use_id para enviar resposta */
+  toolUseId?: string;
   /** Metadata adicional */
   metadata?: Record<string, unknown>;
 }

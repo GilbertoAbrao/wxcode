@@ -12,7 +12,7 @@ import { useEffect, useRef } from "react";
 import { Bot, Loader2 } from "lucide-react";
 import { ChatMessage } from "./ChatMessage";
 import { ChatInput } from "./ChatInput";
-import type { MessageType, MessageOption, SelectionType } from "@/types/chat";
+import type { MessageType, MessageOption, SelectionType, QuestionItem } from "@/types/chat";
 
 export interface ChatDisplayMessage {
   id: string;
@@ -23,6 +23,10 @@ export interface ChatDisplayMessage {
   options?: MessageOption[];
   /** Tipo de seleção: single (radio) ou multiple (checkbox) */
   selectionType?: SelectionType;
+  /** Múltiplas perguntas com abas */
+  questions?: QuestionItem[];
+  /** tool_use_id para enviar resposta */
+  toolUseId?: string;
 }
 
 export interface ChatDisplayProps {
@@ -38,6 +42,8 @@ export interface ChatDisplayProps {
   onOptionSelect?: (option: MessageOption) => void;
   /** Callback quando múltiplas opções são selecionadas (multiple select) */
   onMultipleOptionsSelect?: (options: MessageOption[]) => void;
+  /** Callback quando todas as perguntas são respondidas (tabbed questions) */
+  onQuestionsSubmit?: (toolUseId: string, answers: Record<string, string>) => void;
   /** Callback quando usuário envia mensagem */
   onSendMessage?: (message: string) => void;
   /** Se o input está desabilitado */
@@ -51,6 +57,7 @@ export function ChatDisplay({
   title = "Botfy WX",
   onOptionSelect,
   onMultipleOptionsSelect,
+  onQuestionsSubmit,
   onSendMessage,
   inputDisabled = false,
 }: ChatDisplayProps) {
@@ -99,8 +106,11 @@ export function ChatDisplay({
             messageType={message.messageType}
             options={message.options}
             selectionType={message.selectionType}
+            questions={message.questions}
+            toolUseId={message.toolUseId}
             onOptionSelect={onOptionSelect}
             onMultipleOptionsSelect={onMultipleOptionsSelect}
+            onQuestionsSubmit={onQuestionsSubmit}
           />
         ))}
 

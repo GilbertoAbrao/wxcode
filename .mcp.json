@@ -1,20 +1,20 @@
 {
-    "mcpServers": {
-        "mongodb": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "mongodb-mcp-server",
-                "--connectionString",
-                "mongodb://5.161.127.145:27017/wxcode"
-            ]
-        },
-        "wxcode-kb": {
-            "command": "/Users/gilberto/projetos/wxk/wxcode/.venv/bin/python",
-            "args": ["-m", "wxcode.mcp.server"],
-            "env": {
-                "PYTHONPATH": "/Users/gilberto/projetos/wxk/wxcode/src"
-            }
-        }
+  "mcpServers": {
+    "mongodb": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mongodb-mcp-server",
+        "--connectionString",
+        "mongodb://5.161.127.145:27017/wxcode"
+      ]
+    },
+    "wxcode-kb": {
+      "command": "/Users/gilberto/projetos/wxk/wxcode/.venv/bin/python",
+      "args": ["-m", "wxcode.mcp.server"],
+      "env": {
+        "PYTHONPATH": "/Users/gilberto/projetos/wxk/wxcode/src"
+      }
     }
+  }
 }

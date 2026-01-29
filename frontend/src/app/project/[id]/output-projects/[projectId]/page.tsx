@@ -130,11 +130,37 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       workingTimeoutRef.current = null;
     }
 
-    // Convert questions to chat messages
+    // Se tem múltiplas perguntas, cria UMA ÚNICA mensagem com abas
+    if (event.questions.length > 1) {
+      const questions = event.questions.map((q) => ({
+        header: q.header || "",
+        question: q.question,
+        options: q.options.map((opt, idx) => ({
+          label: opt.label,
+          value: String(idx + 1),
+          description: opt.description || undefined,
+        })),
+        multiSelect: q.multiSelect || false,
+      }));
+
+      const assistantMsg: ChatDisplayMessage = {
+        id: `assistant_${++messageIdCounter.current}`,
+        role: "assistant",
+        content: "", // Conteúdo vazio - perguntas são renderizadas nas abas
+        timestamp: new Date(),
+        messageType: "multi_question",
+        questions,
+        toolUseId: event.tool_use_id,
+      };
+      setChatMessages((prev) => [...prev, assistantMsg]);
+      return;
+    }
+
+    // Fallback: single question (legacy behavior)
     for (const q of event.questions) {
       const options = q.options.map((opt, idx) => ({
         label: `${idx + 1}. ${opt.label}`,
-        value: String(idx + 1), // Send the number as response
+        value: String(idx + 1),
         description: opt.description || undefined,
       }));
 
@@ -146,6 +172,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         messageType: options.length > 0 ? "multi_question" : "question",
         options: options.length > 0 ? options : undefined,
         selectionType: q.multiSelect ? "multiple" : "single",
+        toolUseId: event.tool_use_id,
       };
       setChatMessages((prev) => [...prev, assistantMsg]);
     }
@@ -540,6 +567,34 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                   // Send values as comma-separated (Claude expects "1, 2, 3" format)
                   const values = options.map((o) => o.value).join(", ");
                   await simulateTyping(values);
+                }}
+                onQuestionsSubmit={async (toolUseId, answers) => {
+                  // Format answers for display
+                  const answerSummary = Object.entries(answers)
+                    .map(([header, value]) => `${header}: ${value}`)
+                    .join(" | ");
+
+                  // Add user response to chat display
+                  const userMsg: ChatDisplayMessage = {
+                    id: `user_${++messageIdCounter.current}`,
+                    role: "user",
+                    content: answerSummary,
+                    timestamp: new Date(),
+                  };
+                  setChatMessages((prev) => [...prev, userMsg]);
+
+                  // Claude CLI processes questions one at a time
+                  // Send each answer separately with delay between them
+                  const values = Object.values(answers);
+                  for (let i = 0; i < values.length; i++) {
+                    // Send the answer number
+                    await simulateTyping(values[i]);
+                    // Wait for CLI to process and show next question
+                    // Needs enough time for Claude to render next question UI
+                    if (i < values.length - 1) {
+                      await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                  }
                 }}
                 onSendMessage={async (message) => {
                   // Add user message to chat display
