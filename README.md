@@ -551,7 +551,7 @@ python -m wxcode.mcp.server --http
 python -m wxcode.mcp.server --http --port 9000  # Porta customizada
 ```
 
-**Ferramentas disponíveis (27 tools):**
+**Ferramentas disponíveis (29 tools):**
 
 | Categoria | Tools | Descrição |
 |-----------|-------|-----------|
@@ -566,6 +566,7 @@ python -m wxcode.mcp.server --http --port 9000  # Porta customizada
 | **WLanguage** | `get_wlanguage_reference`, `list_wlanguage_functions`, `get_wlanguage_pattern` | Referência de funções H* |
 | **Similarity** | `search_converted_similar` | Busca elementos similares já convertidos |
 | **PDF** | `get_element_pdf_slice` | Documentação PDF e screenshots |
+| **System** | `health_check`, `list_tools` | Health check e listagem de tools |
 
 **Exemplo de uso (no CONTEXT.md):**
 ```python

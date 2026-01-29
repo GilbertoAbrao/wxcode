@@ -254,7 +254,7 @@ wxcode gsd-context PAGE_Login --output /tmp/gsd --depth 3
 
 ### MCP Server (wxcode-kb)
 
-Servidor MCP que expõe 27 tools para acesso à Knowledge Base durante conversão.
+Servidor MCP que expõe 29 tools para acesso à Knowledge Base durante conversão.
 
 ```bash
 # Modo STDIO (padrão - para Claude Code local)
@@ -297,6 +297,7 @@ MCP_HTTP_PORT=8152            # Porta padrão
 - WLanguage: `get_wlanguage_reference`, `list_wlanguage_functions`, `get_wlanguage_pattern`
 - Similarity: `search_converted_similar`
 - PDF: `get_element_pdf_slice`
+- System: `health_check`, `list_tools`
 
 ---
 
