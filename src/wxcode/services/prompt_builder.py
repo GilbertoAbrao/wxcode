@@ -12,8 +12,8 @@ from typing import Any
 
 from wxcode.models.global_state_context import GlobalStateContext
 from wxcode.models.output_project import OutputProject
+from wxcode.models.project import Project
 from wxcode.models.stack import Stack
-from wxcode.parser.global_state_extractor import Scope
 
 
 def sanitize_identifier(name: str, max_length: int = 100) -> str:
@@ -35,131 +35,72 @@ def sanitize_identifier(name: str, max_length: int = 100) -> str:
     return re.sub(r'[^A-Za-z0-9_]', '_', name)[:max_length]
 
 
-def _is_sensitive_name(name: str) -> bool:
+def _project_type_to_string(project_type: int) -> str:
     """
-    Detecta nomes de variaveis potencialmente sensiveis.
+    Converte project_type numerico para string legivel.
 
     Args:
-        name: Nome da variavel
+        project_type: Tipo numerico do projeto
 
     Returns:
-        True se nome contem padrao sensivel
+        String descritiva do tipo
     """
-    sensitive_patterns = ["token", "secret", "password", "key", "pwd", "auth", "credential"]
-    name_lower = name.lower()
-    return any(p in name_lower for p in sensitive_patterns)
-
-
-def _scope_to_mapping(scope: Scope) -> str:
-    """
-    Mapeia escopo WinDev para padrao Python recomendado.
-
-    Args:
-        scope: Escopo da variavel (APP, MODULE, REQUEST)
-
-    Returns:
-        String descrevendo padrao Python recomendado
-    """
-    return {
-        Scope.APP: "Environment variable / Settings class",
-        Scope.MODULE: "Module singleton / FastAPI Depends()",
-        Scope.REQUEST: "Request context / Depends()",
-    }.get(scope, "Unknown")
+    type_map = {
+        4097: "WebDev",
+        4098: "WinDev",
+        4099: "WinDev Mobile",
+    }
+    return type_map.get(project_type, f"Unknown ({project_type})")
 
 
 PROMPT_TEMPLATE = '''# Project Context for WXCODE
 
-> **IMPORTANT: CONVERSION PROJECT**
-> This is a **code conversion project**, NOT a greenfield project.
-> The source code exists in a WinDev/WebDev Knowledge Base accessible via MCP tools.
-> You MUST use the configured MCP server (wxcode-kb) to query original WinDev code.
-
-## Autonomous Execution Instructions
-
-> **EXECUTE AUTOMATICALLY - DO NOT ASK QUESTIONS**
->
-> This workflow is being run headlessly. You MUST proceed without user interaction.
-> Make reasonable decisions based on the context provided below.
-> If something is unclear, use sensible defaults based on industry best practices.
-
-### Phase 1: Project Initialization (DO NOW)
-
-Execute these steps automatically:
-
-1. **Create Project Starter**
-   - Initialize the project structure for **{stack_name}**
-   - Create all necessary directories per the file structure below
-   - Setup configuration files (pyproject.toml, requirements.txt, .env.example, etc.)
-   - Create the main application entry point
-
-2. **Convert Database Schema**
-   - Create database models for ALL {table_count} tables listed below
-   - Follow the type mappings and naming conventions for {stack_name}
-   - Include relationships, indexes, and constraints
-   - Generate migration files if applicable
-
-3. **Setup Project Documentation**
-   - Create PROJECT.md with conversion strategy
-   - Create ROADMAP.md documenting that element conversion will happen via milestones
-
-### Phase 2: Element Conversion (VIA MILESTONES)
-
-> **DO NOT CONVERT ELEMENTS NOW**
->
-> Individual elements (pages, procedures, classes) will be converted gradually
-> through separate milestone workflows. Each milestone will:
-> - Receive specific element context
-> - Query the Knowledge Base for source code
-> - Convert that specific element
->
-> This initialization phase only creates the project foundation and schema.
-
-## What to Build
-
-Convert a **WinDev/WebDev application** to **{stack_name}** with project name "{project_name}":
-
-1. **Use MCP Tools**: Query the Knowledge Base to get original WinDev code before converting
-2. **Database Models**: Create models based on the {table_count} tables from the original schema
-3. **Convert Business Logic**: Use `get_element` and `get_procedures` to get original code
-4. **Convert UI to Routes**: Use `get_controls` to understand original UI structure
-5. **Preserve Functionality**: The converted code must replicate original behavior
-
-**CRITICAL**: Before converting any element, ALWAYS:
-1. Call `get_element(element_name="X", project_name="{kb_name}")` to get the source code
-2. Call `get_controls(element_name="X")` to understand UI structure (for pages)
-3. Call `get_dependencies(element_name="X")` to understand what it uses
-
-This is NOT a greenfield project. Do NOT generate placeholder code - convert the REAL WinDev code.
+> **CONVERSION PROJECT**
+> This is a code conversion project from WinDev/WebDev to modern stack.
+> MCP server (wxcode-kb) provides access to the source Knowledge Base.
 
 ## Project Information
 
-- **Name:** {project_name}
-- **Stack:** {stack_name}
-- **Language:** {language}
-- **Framework:** {framework}
+| Field | Value |
+|-------|-------|
+| **Name** | {project_name} |
+| **Stack** | {stack_name} |
+| **Stack ID** | {stack_id} |
+| **Language** | {language} |
+| **Framework** | {framework} |
+| **ORM** | {orm} |
+| **Template Engine** | {template_engine} |
 
-## Target Stack Characteristics
+## Source Project
 
-### File Structure
-{file_structure}
+| Field | Value |
+|-------|-------|
+| **Project Name** | {kb_name} |
+| **Project ID** | {kb_id} |
+| **Type** | {kb_type} |
+| **Elements Count** | {elements_count} |
+| **Tables Count** | {tables_count} |
 
-### Naming Conventions
-{naming_conventions}
+## Output Project
 
-### Type Mappings (HyperFile -> {language})
-{type_mappings}
+| Field | Value |
+|-------|-------|
+| **Output ID** | {output_project_id} |
+| **Workspace Path** | {workspace_path} |
 
-### Model Template
-```{language}
-{model_template}
-```
+## File Structure
 
-### Common Imports
-```{language}
-{imports_template}
-```
+{file_structure_table}
 
-## Database Schema ({table_count} tables)
+## Naming Conventions
+
+{naming_conventions_table}
+
+## Type Mappings
+
+{type_mappings_table}
+
+## Database Schema ({tables_count} tables)
 
 {schema_tables}
 
@@ -183,43 +124,56 @@ This is NOT a greenfield project. Do NOT generate placeholder code - convert the
 
 {lifespan_pattern}
 
-{mcp_instructions}
+## MCP Tools (25 tools)
 
-## Execution Instructions
+### Elements
+- `get_element` — Get WinDev source code
+- `list_elements` — List all elements
+- `search_code` — Search in source code
 
-> **AUTONOMOUS MODE - PROCEED WITHOUT ASKING**
+### Controls
+- `get_controls` — Get UI control hierarchy
+- `get_data_bindings` — Get data bindings
 
-### DO NOW (Project Initialization):
+### Procedures
+- `get_procedures` — Get global procedures
+- `get_procedure` — Get specific procedure
 
-1. **Create project structure** for {stack_name}:
-   - All directories per file structure above
-   - Configuration files (pyproject.toml/package.json, requirements.txt, .gitignore)
-   - Main application entry point
-   - Database connection setup
+### Schema
+- `get_schema` — Get database schema
+- `get_table` — Get specific table
 
-2. **Convert ALL database tables** ({table_count} tables):
-   - Create Pydantic/SQLAlchemy models for EVERY table listed above
-   - Include all columns, types, indexes, and relationships
-   - Follow naming conventions for {stack_name}
+### Graph (Neo4j)
+- `get_dependencies` — Get dependencies
+- `get_impact` — Get impact analysis
+- `get_path` — Get path between elements
+- `find_hubs` — Find critical elements
+- `find_dead_code` — Find unused elements
+- `find_cycles` — Find circular dependencies
 
-3. **Create documentation**:
-   - PROJECT.md: Describe the conversion project and target stack
-   - ROADMAP.md: Document that element conversion will happen via milestones
+### Conversion
+- `get_conversion_candidates` — Get ready elements
+- `get_topological_order` — Get conversion order
+- `get_conversion_stats` — Get progress
+- `mark_converted` — Mark as converted
+- `mark_project_initialized` — Mark initialized
 
-### DO NOT DO NOW (Handled by Milestones):
+### Stack
+- `get_stack_conventions` — Get stack conventions
 
-- Converting pages (PAGE_*)
-- Converting procedures (*.wdg)
-- Converting classes (*.wdc)
-- Converting reports (*.wde)
+### Planes
+- `get_element_planes` — Detect tabs/wizard/views
 
-These will be converted one-by-one through milestone workflows that provide
-specific element context and source code.
+### WLanguage
+- `get_wlanguage_reference` — Get H* reference
+- `list_wlanguage_functions` — List functions
+- `get_wlanguage_pattern` — Get patterns
 
-### Start Execution
+### Similarity
+- `search_converted_similar` — Find similar converted
 
-Begin by creating the project structure and database models.
-**Do not ask questions - make reasonable decisions and proceed.**
+### PDF
+- `get_element_pdf_slice` — Get PDF/screenshots
 '''
 
 
@@ -232,33 +186,60 @@ class PromptBuilder:
     """
 
     @staticmethod
-    def format_dict_as_yaml(d: dict[str, Any], indent: int = 0) -> str:
+    def format_file_structure_table(file_structure: dict[str, str]) -> str:
         """
-        Formata dict como string YAML-like indentada.
+        Formata file_structure como tabela markdown.
 
         Args:
-            d: Dicionario a formatar
-            indent: Nivel de indentacao atual
+            file_structure: Dict de componente -> path
 
         Returns:
-            String formatada estilo YAML
+            String markdown formatada como tabela
         """
-        lines = []
-        prefix = "  " * indent
-        for k, v in d.items():
-            if isinstance(v, dict):
-                lines.append(f"{prefix}{k}:")
-                lines.append(PromptBuilder.format_dict_as_yaml(v, indent + 1))
-            elif isinstance(v, list):
-                lines.append(f"{prefix}{k}:")
-                for item in v:
-                    if isinstance(item, dict):
-                        lines.append(f"{prefix}  -")
-                        lines.append(PromptBuilder.format_dict_as_yaml(item, indent + 2))
-                    else:
-                        lines.append(f"{prefix}  - {item}")
-            else:
-                lines.append(f"{prefix}{k}: {v}")
+        if not file_structure:
+            return "| Component | Path |\n|-----------|------|\n| *none* | *none* |"
+
+        lines = ["| Component | Path |", "|-----------|------|"]
+        for component, path in file_structure.items():
+            lines.append(f"| {component} | {path} |")
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_naming_conventions_table(naming_conventions: dict[str, str]) -> str:
+        """
+        Formata naming_conventions como tabela markdown.
+
+        Args:
+            naming_conventions: Dict de elemento -> convenção
+
+        Returns:
+            String markdown formatada como tabela
+        """
+        if not naming_conventions:
+            return "| Element | Convention |\n|---------|------------|\n| *none* | *none* |"
+
+        lines = ["| Element | Convention |", "|---------|------------|"]
+        for element, convention in naming_conventions.items():
+            lines.append(f"| {element} | {convention} |")
+        return "\n".join(lines)
+
+    @staticmethod
+    def format_type_mappings_table(type_mappings: dict[str, str]) -> str:
+        """
+        Formata type_mappings como tabela markdown.
+
+        Args:
+            type_mappings: Dict de tipo HyperFile -> tipo alvo
+
+        Returns:
+            String markdown formatada como tabela
+        """
+        if not type_mappings:
+            return "| HyperFile Type | Target Type |\n|----------------|-------------|\n| *none* | *none* |"
+
+        lines = ["| HyperFile Type | Target Type |", "|----------------|-------------|"]
+        for hf_type, target_type in type_mappings.items():
+            lines.append(f"| {hf_type} | {target_type} |")
         return "\n".join(lines)
 
     @staticmethod
@@ -371,6 +352,39 @@ class PromptBuilder:
         return "\n".join(lines)
 
     @staticmethod
+    def _is_sensitive_name(name: str) -> bool:
+        """
+        Detecta nomes de variaveis potencialmente sensiveis.
+
+        Args:
+            name: Nome da variavel
+
+        Returns:
+            True se nome contem padrao sensivel
+        """
+        sensitive_patterns = ["token", "secret", "password", "key", "pwd", "auth", "credential"]
+        name_lower = name.lower()
+        return any(p in name_lower for p in sensitive_patterns)
+
+    @staticmethod
+    def _scope_to_mapping(scope) -> str:
+        """
+        Mapeia escopo WinDev para padrao Python recomendado.
+
+        Args:
+            scope: Escopo da variavel (APP, MODULE, REQUEST)
+
+        Returns:
+            String descrevendo padrao Python recomendado
+        """
+        from wxcode.parser.global_state_extractor import Scope
+        return {
+            Scope.APP: "Environment variable / Settings class",
+            Scope.MODULE: "Module singleton / FastAPI Depends()",
+            Scope.REQUEST: "Request context / Depends()",
+        }.get(scope, "Unknown")
+
+    @staticmethod
     def format_global_state(global_state: GlobalStateContext) -> str:
         """
         Formata variaveis globais como tabela markdown com anotacoes de escopo.
@@ -394,11 +408,11 @@ class PromptBuilder:
         for var in global_state.variables:
             # Redact sensitive-looking defaults
             default = var.default_value or "*none*"
-            if _is_sensitive_name(var.name):
+            if PromptBuilder._is_sensitive_name(var.name):
                 default = "*[REDACTED]*"
 
             # Recommend mapping based on scope
-            mapping = _scope_to_mapping(var.scope)
+            mapping = PromptBuilder._scope_to_mapping(var.scope)
 
             # Truncate long type names
             wl_type = var.wlanguage_type
@@ -425,22 +439,7 @@ class PromptBuilder:
 |----------------|---------------------------|
 | APP (Project Code) | Environment variables via `pydantic.BaseSettings` |
 | MODULE (Set of Procedures) | FastAPI dependency injection or module-level singleton |
-| REQUEST (Page-level) | Request context via `request.state` or `Depends()` |
-
-### Example Conversions
-
-**Connection globals (`gCnn is Connection`):**
-- Use `DATABASE_URL` environment variable
-- Configure in `app/core/config.py` as Settings field
-- Inject via `Depends(get_db_session)`
-
-**JSON parameter globals (`gjParametros is JSON`):**
-- Move to Settings class if static configuration
-- Use request context if per-request data
-
-**Session/Auth globals (`gsAccessToken`, `gUsuarioLogado`):**
-- Use FastAPI's built-in authentication
-- Store in `request.state` after auth middleware'''
+| REQUEST (Page-level) | Request context via `request.state` or `Depends()` |'''
 
     @staticmethod
     def format_initialization_blocks(global_state: GlobalStateContext | None) -> str:
@@ -512,176 +511,11 @@ from fastapi import FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Initialize connections, load config
-    # Convert HOpenConnection, Global_PegaInfoINI, etc. here
     yield
     # Shutdown: Close connections, cleanup resources
-    # Convert HCloseConnection, etc. here
 
 app = FastAPI(lifespan=lifespan)
-```
-
-**Note:** Use `@asynccontextmanager` (not deprecated `@app.on_event("startup")` / `@app.on_event("shutdown")`)
-
-### WLanguage to FastAPI/Python Mapping
-
-| WLanguage Pattern | FastAPI/Python Equivalent |
-|-------------------|---------------------------|
-| `gCnn is Connection` | `app.state.db_engine` or `Depends()` |
-| `HOpenConnection(gCnn)` | `create_async_engine(DATABASE_URL)` |
-| `HChangeConnection("*", gCnn)` | Default database routing in ORM |
-| `COMPILE IF Configuration="X"` | Environment variables / `.env` files |
-| `Global_PegaInfoINI(path, key)` | `os.getenv()` or `pydantic_settings.BaseSettings` |'''
-
-    @staticmethod
-    def format_mcp_instructions(kb_name: str, output_project_id: str) -> str:
-        """
-        Gera secao de instrucoes MCP para CONTEXT.md.
-
-        Documenta ferramentas disponiveis do servidor wxcode-kb
-        para consultas dinamicas durante geracao de codigo.
-
-        Args:
-            kb_name: Nome da Knowledge Base (projeto WinDev original)
-            output_project_id: ID do OutputProject para marcacao de status
-
-        Returns:
-            String markdown com instrucoes MCP
-        """
-        safe_kb = sanitize_identifier(kb_name)
-        safe_output_id = str(output_project_id)
-        return f'''## MCP Server Integration (wxcode-kb)
-
-> **MANDATORY**: The `.mcp.json` file is already configured in this workspace.
-> You MUST use these MCP tools to query the original WinDev code before converting.
-> DO NOT generate placeholder code - get the REAL source code from the Knowledge Base.
-
-### How to Get Source Code
-
-**Before converting any element, ALWAYS run these MCP calls:**
-
-```
-// Step 1: Get the original WinDev source code
-get_element(element_name="PAGE_Login", project_name="{safe_kb}")
-
-// Step 2: Get UI controls and events (for pages)
-get_controls(element_name="PAGE_Login", project_name="{safe_kb}")
-
-// Step 3: Understand dependencies
-get_dependencies(element_name="PAGE_Login", project_name="{safe_kb}")
-```
-
-### Available MCP Tools (25 tools)
-
-#### Elements (source code access)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_element` | Get full element with AST, raw_content, dependencies | **ALWAYS** before converting any element |
-| `list_elements` | List elements with filters (type, layer, status) | To explore what needs conversion |
-| `search_code` | Regex search across element source code | To find patterns, usages, related code |
-
-#### Controls (UI structure)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_controls` | Get UI control hierarchy with events/properties | For PAGE elements - understand UI structure |
-| `get_data_bindings` | Get control -> table.field mappings | To understand FileToScreen/ScreenToFile bindings |
-
-#### Procedures (business logic)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_procedures` | List procedures in element with signatures | For procedure groups (.wdg) |
-| `get_procedure` | Get specific procedure with full code | To get detailed procedure implementation |
-
-#### Schema (database)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_schema` | Get complete database schema | To understand data model |
-| `get_table` | Get table definition (columns, indexes) | When working with specific table |
-
-#### Graph (dependency analysis - requires Neo4j)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_dependencies` | Direct dependencies (uses/used_by) | To understand element relationships |
-| `get_impact` | Transitive impact analysis | To assess change impact |
-| `get_path` | Find paths between two elements | To understand indirect relationships |
-| `find_hubs` | Find high-connectivity nodes | To identify critical elements |
-| `find_dead_code` | Find potentially unused code | To identify cleanup candidates |
-| `find_cycles` | Detect circular dependencies | To identify problematic patterns |
-
-#### Conversion (workflow tracking)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_conversion_candidates` | Elements ready to convert | To find next element to convert |
-| `get_topological_order` | Recommended conversion order | To plan conversion sequence |
-| `get_conversion_stats` | Conversion progress statistics | To track overall progress |
-| `mark_converted` | Mark element as converted (**write**) | After completing element conversion |
-| `mark_project_initialized` | Mark OutputProject as initialized (**write**) | After Phase 1 (project structure + schema) |
-
-#### Stack (target conventions)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_stack_conventions` | Get naming, patterns, templates | To ensure consistent code generation |
-
-#### Planes (tabs/wizard views)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_element_planes` | Detect tabs/wizard/conditional views | For pages with multiple views |
-
-#### WLanguage (function reference)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_wlanguage_reference` | Get H* function docs with modern equivalent | When converting HReadSeek, HAdd, etc. |
-| `list_wlanguage_functions` | List functions by category | To explore available functions |
-| `get_wlanguage_pattern` | Get common patterns (cursor, transaction) | When converting common WLanguage idioms |
-
-#### Similarity (pattern reuse)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `search_converted_similar` | Find similar already-converted elements | To reuse patterns, ensure consistency |
-
-#### PDF (documentation)
-
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `get_element_pdf_slice` | Get PDF docs and screenshot paths | To access visual documentation |
-
-### Project Initialization Workflow (Phase 1)
-
-After completing project initialization (structure, config, database models):
-
-```
-mark_project_initialized(output_project_id="{safe_output_id}", confirm=True, notes="Created project structure and X models")
-```
-
-This marks the OutputProject as INITIALIZED, enabling milestone-based element conversion.
-
-### Element Conversion Workflow (Phase 2 - Milestones)
-
-1. **Query**: `get_element(element_name="X", project_name="{safe_kb}")`
-2. **Controls** (for pages): `get_controls(element_name="X", project_name="{safe_kb}")`
-3. **Dependencies**: `get_dependencies(element_name="X", project_name="{safe_kb}")`
-4. **Similar**: `search_converted_similar(element_name="X", output_project_id="{safe_output_id}")` (if available)
-5. **WLanguage**: `get_wlanguage_reference(function_name="HReadSeek")` (for H* functions)
-6. **Understand**: Read the WLanguage code, understand the business logic
-7. **Convert**: Translate to Python/FastAPI preserving functionality
-8. **Mark**: `mark_converted(element_name="X", project_name="{safe_kb}", confirm=True)`
-
-### Knowledge Base Information
-
-- **KB Project Name**: `{safe_kb}`
-- **Output Project ID**: `{safe_output_id}`
-- **MCP Server**: `wxcode-kb` (configured in `.mcp.json`)
-
-**REMEMBER**: This is a CONVERSION project. The original code EXISTS. Query it, don't generate from scratch.'''
+```'''
 
     @classmethod
     def build_context(
@@ -689,7 +523,7 @@ This marks the OutputProject as INITIALIZED, enabling milestone-based element co
         output_project: OutputProject,
         stack: Stack,
         tables: list[dict],
-        kb_name: str,
+        kb_project: Project,
         connections: list = None,
         global_state: GlobalStateContext = None,
     ) -> str:
@@ -700,35 +534,50 @@ This marks the OutputProject as INITIALIZED, enabling milestone-based element co
             output_project: Projeto de saida com nome e configuracao
             stack: Stack alvo com metadados de tecnologia
             tables: Lista de tabelas extraidas do schema
-            kb_name: Nome da Knowledge Base (projeto WinDev original)
+            kb_project: Projeto Knowledge Base (WinDev original)
             connections: Lista de conexoes de banco (opcional)
             global_state: Contexto de variaveis globais (opcional)
 
         Returns:
             Conteudo formatado do CONTEXT.md
         """
-        safe_kb = sanitize_identifier(kb_name)
+        # Determine display name for KB
+        kb_display_name = kb_project.display_name or kb_project.name
+
         return PROMPT_TEMPLATE.format(
+            # Project Information
             project_name=output_project.name,
-            kb_name=safe_kb,
             stack_name=stack.name,
+            stack_id=stack.stack_id,
             language=stack.language,
             framework=stack.framework,
-            file_structure=cls.format_dict_as_yaml(stack.file_structure),
-            naming_conventions=cls.format_dict_as_yaml(stack.naming_conventions),
-            type_mappings=cls.format_dict_as_yaml(stack.type_mappings),
-            model_template=stack.model_template or "# No model template defined",
-            imports_template=stack.imports_template or "# No imports template defined",
+            orm=stack.orm,
+            template_engine=stack.template_engine,
+            # Source Project
+            kb_name=sanitize_identifier(kb_display_name),
+            kb_id=str(kb_project.id),
+            kb_type=_project_type_to_string(kb_project.project_type),
+            elements_count=kb_project.total_elements,
+            # Output Project
+            output_project_id=str(output_project.id),
+            workspace_path=output_project.workspace_path,
+            # Tables count
+            tables_count=len(tables),
+            # File Structure, Naming, Type Mappings (as tables)
+            file_structure_table=cls.format_file_structure_table(stack.file_structure),
+            naming_conventions_table=cls.format_naming_conventions_table(stack.naming_conventions),
+            type_mappings_table=cls.format_type_mappings_table(stack.type_mappings),
+            # Schema
             schema_tables=cls.format_tables(tables),
-            table_count=len(tables),
+            # Connections
             database_connections=cls.format_connections(connections or []),
             env_example=cls.format_env_example(connections or [], output_project.name),
+            # Global State
             global_state_table=cls.format_global_state(global_state),
             scope_patterns=cls.format_scope_patterns() if global_state and global_state.variables else "",
             global_var_count=len(global_state.variables) if global_state else 0,
             initialization_code=cls.format_initialization_blocks(global_state),
             lifespan_pattern=cls.format_lifespan_pattern() if global_state is not None and global_state.initialization_blocks else "",
-            mcp_instructions=cls.format_mcp_instructions(kb_name, str(output_project.id)),
         )
 
     @classmethod
@@ -769,7 +618,7 @@ This marks the OutputProject as INITIALIZED, enabling milestone-based element co
         stack: Stack,
         tables: list[dict],
         workspace_path: Path,
-        kb_name: str,
+        kb_project: Project,
         connections: list = None,
         global_state: GlobalStateContext = None,
     ) -> Path:
@@ -781,7 +630,7 @@ This marks the OutputProject as INITIALIZED, enabling milestone-based element co
             stack: Stack alvo
             tables: Tabelas do schema
             workspace_path: Caminho do workspace do projeto
-            kb_name: Nome da Knowledge Base (projeto WinDev original)
+            kb_project: Projeto Knowledge Base (WinDev original)
             connections: Lista de conexoes de banco (opcional)
             global_state: Contexto de variaveis globais (opcional)
 
@@ -793,7 +642,7 @@ This marks the OutputProject as INITIALIZED, enabling milestone-based element co
 
         # Write CONTEXT.md
         content = cls.build_context(
-            output_project, stack, tables, kb_name=kb_name,
+            output_project, stack, tables, kb_project=kb_project,
             connections=connections, global_state=global_state
         )
         context_path = workspace_path / "CONTEXT.md"

@@ -331,9 +331,10 @@ async def prepare_initialization(id: str):
     if not stack:
         raise HTTPException(status_code=404, detail=f"Stack nao encontrada: {output_project.stack_id}")
 
-    # Fetch Knowledge Base name
+    # Fetch Knowledge Base project
     kb_project = await Project.get(output_project.kb_id)
-    kb_name = kb_project.name if kb_project else "Unknown"
+    if not kb_project:
+        raise HTTPException(status_code=404, detail="Knowledge Base nao encontrada")
 
     workspace_path = Path(output_project.workspace_path)
 
@@ -355,7 +356,7 @@ async def prepare_initialization(id: str):
         stack=stack,
         tables=tables,
         workspace_path=workspace_path,
-        kb_name=kb_name,
+        kb_project=kb_project,
         connections=connections,
         global_state=global_state,
     )
@@ -488,7 +489,7 @@ async def initialize_output_project(
             stack=stack,
             tables=tables,
             workspace_path=workspace_path,
-            kb_name=kb_name,
+            kb_project=kb_project,
             connections=connections,
             global_state=global_state,
         )
