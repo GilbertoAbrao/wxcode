@@ -6,7 +6,7 @@ files (.xdd). Essential for understanding data structures during conversion.
 
 from fastmcp import Context
 
-from wxcode.mcp.server import mcp
+from wxcode.mcp.instance import mcp
 from wxcode.models.project import Project
 from wxcode.models.schema import DatabaseSchema
 

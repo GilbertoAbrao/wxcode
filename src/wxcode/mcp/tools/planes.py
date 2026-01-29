@@ -13,7 +13,7 @@ from bson import DBRef
 from fastmcp import Context
 
 from wxcode.config import get_settings
-from wxcode.mcp.server import mcp
+from wxcode.mcp.instance import mcp
 from wxcode.models.control import Control
 from wxcode.models.element import Element
 from wxcode.models.project import Project

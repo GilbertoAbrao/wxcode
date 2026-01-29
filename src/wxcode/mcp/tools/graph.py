@@ -6,7 +6,7 @@ All tools require Neo4j to be running and synced with MongoDB.
 
 from fastmcp import Context
 
-from wxcode.mcp.server import mcp
+from wxcode.mcp.instance import mcp
 from wxcode.graph.impact_analyzer import ImpactAnalyzer
 from wxcode.graph.neo4j_connection import Neo4jConnection
 

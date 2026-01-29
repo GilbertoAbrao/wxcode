@@ -8,7 +8,7 @@ from typing import Any
 
 from fastmcp import Context
 
-from wxcode.mcp.server import mcp
+from wxcode.mcp.instance import mcp
 from wxcode.models import Project, Element
 
 
