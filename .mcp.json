@@ -10,7 +10,7 @@
             ]
         },
         "wxcode-kb": {
-            "command": "python",
+            "command": "/Users/gilberto/projetos/wxk/wxcode/.venv/bin/python",
             "args": ["-m", "wxcode.mcp.server"],
             "env": {
                 "PYTHONPATH": "/Users/gilberto/projetos/wxk/wxcode/src"

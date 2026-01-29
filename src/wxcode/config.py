@@ -51,6 +51,10 @@ class Settings(BaseSettings):
     neo4j_password: str = ""
     neo4j_database: str = "neo4j"
 
+    # MCP HTTP Server
+    mcp_http_port: int = 8152
+    mcp_api_key: Optional[str] = None  # Required for HTTP mode
+
     # File deletion safety - base directory for allowed deletions
     allowed_deletion_base: str = str(PROJECT_ROOT / "project-refs")
 

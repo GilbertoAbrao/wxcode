@@ -157,6 +157,7 @@ ls openspec/specs/
 - **Graph DB**: Neo4j (análise de dependências)
 - **CLI**: Typer
 - **LLM**: Claude (conversão inteligente)
+- **MCP Server**: FastMCP (Knowledge Base para Claude Code)
 
 ---
 
@@ -250,6 +251,52 @@ wxcode gsd-context PAGE_Login --output /tmp/gsd --depth 3
 **Requer:** Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
 
 **Fallback graceful:** Se Neo4j indisponível, usa apenas MongoDB.
+
+### MCP Server (wxcode-kb)
+
+Servidor MCP que expõe 27 tools para acesso à Knowledge Base durante conversão.
+
+```bash
+# Modo STDIO (padrão - para Claude Code local)
+python -m wxcode.mcp.server
+
+# Modo HTTP (acesso remoto com API key)
+python -m wxcode.mcp.server --http
+python -m wxcode.mcp.server --http --port 9000
+```
+
+**Configuração HTTP (.env):**
+```env
+MCP_API_KEY=sua-api-key-aqui  # Obrigatório para modo HTTP
+MCP_HTTP_PORT=8152            # Porta padrão
+```
+
+**Cliente remoto (.mcp.json):**
+```json
+{
+  "mcpServers": {
+    "wxcode-kb": {
+      "url": "http://servidor:8152/mcp",
+      "transport": "http",
+      "headers": {
+        "X-API-Key": "sua-api-key-aqui"
+      }
+    }
+  }
+}
+```
+
+**Tools disponíveis (27):**
+- Elements: `get_element`, `list_elements`, `search_code`
+- Controls: `get_controls`, `get_data_bindings`
+- Procedures: `get_procedures`, `get_procedure`
+- Schema: `get_schema`, `get_table`
+- Graph: `get_dependencies`, `get_impact`, `get_path`, `find_hubs`, `find_dead_code`, `find_cycles`
+- Conversion: `get_conversion_candidates`, `get_topological_order`, `mark_converted`, `mark_project_initialized`, `get_conversion_stats`
+- Stack: `get_stack_conventions`
+- WLanguage: `get_wlanguage_reference`, `list_wlanguage_functions`, `get_wlanguage_pattern`
+- Similarity: `search_converted_similar`
+- PDF: `get_element_pdf_slice`
 
 ---
 

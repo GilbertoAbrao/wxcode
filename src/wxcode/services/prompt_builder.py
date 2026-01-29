@@ -583,7 +583,7 @@ app = FastAPI(lifespan=lifespan)
     @classmethod
     def write_mcp_config(cls, workspace_path: Path) -> Path:
         """
-        Escreve .mcp.json no workspace para configurar o MCP server.
+        Escreve .mcp.json no workspace para configurar o MCP HTTP server.
 
         Args:
             workspace_path: Caminho do workspace do projeto
@@ -591,17 +591,18 @@ app = FastAPI(lifespan=lifespan)
         Returns:
             Path do arquivo .mcp.json criado
         """
-        # Get wxcode src path dynamically
-        import wxcode
-        wxcode_src = Path(wxcode.__file__).parent.parent
+        from wxcode.config import get_settings
 
+        settings = get_settings()
+
+        # Use HTTP transport - requires MCP server running with --http flag
         mcp_config = {
             "mcpServers": {
                 "wxcode-kb": {
-                    "command": "python",
-                    "args": ["-m", "wxcode.mcp.server"],
-                    "env": {
-                        "PYTHONPATH": str(wxcode_src)
+                    "url": f"http://localhost:{settings.mcp_http_port}/mcp",
+                    "transport": "http",
+                    "headers": {
+                        "X-API-Key": settings.mcp_api_key or ""
                     }
                 }
             }

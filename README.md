@@ -530,14 +530,28 @@ wxcode gsd-context PAGE_Login --output /tmp/gsd --depth 3
 
 ### MCP Server (wxcode-kb)
 
-O wxcode inclui um servidor MCP que expõe 25 ferramentas para acesso à Knowledge Base durante conversão via Claude Code.
+O wxcode inclui um servidor MCP que expõe 27 ferramentas para acesso à Knowledge Base durante conversão via Claude Code.
 
-**Iniciar o servidor MCP:**
+**Modos de operação:**
+
+| Modo | Comando | Uso |
+|------|---------|-----|
+| **STDIO** | `python -m wxcode.mcp.server` | Claude Code local (padrão) |
+| **HTTP** | `python -m wxcode.mcp.server --http` | Acesso remoto com API key |
+
+**Iniciar em modo STDIO (local):**
 ```bash
 python -m wxcode.mcp.server
 ```
 
-**Ferramentas disponíveis (25 tools):**
+**Iniciar em modo HTTP (remoto):**
+```bash
+# Requer MCP_API_KEY configurada no .env
+python -m wxcode.mcp.server --http
+python -m wxcode.mcp.server --http --port 9000  # Porta customizada
+```
+
+**Ferramentas disponíveis (27 tools):**
 
 | Categoria | Tools | Descrição |
 |-----------|-------|-----------|
@@ -564,6 +578,98 @@ get_controls(element_name="PAGE_Login", project_name="MeuProjeto")
 # Marcar projeto como inicializado após Phase 1
 mark_project_initialized(output_project_id="...", confirm=True)
 ```
+
+### Configuração do MCP HTTP (Acesso Remoto)
+
+Para usar o MCP Server via HTTP (acesso remoto de outra máquina ou container):
+
+**1. Configure a API key no `.env`:**
+```env
+# MCP HTTP Server
+MCP_API_KEY=sua-api-key-secreta-aqui
+MCP_HTTP_PORT=8152  # Porta padrão
+```
+
+> **Dica:** Gere uma API key segura com `openssl rand -hex 32`
+
+**2. Inicie o servidor HTTP:**
+```bash
+python -m wxcode.mcp.server --http
+```
+
+**3. Configure o cliente remoto (`.mcp.json`):**
+```json
+{
+  "mcpServers": {
+    "wxcode-kb": {
+      "url": "http://seu-servidor:8152/mcp",
+      "transport": "http",
+      "headers": {
+        "X-API-Key": "sua-api-key-secreta-aqui"
+      }
+    }
+  }
+}
+```
+
+**Autenticação:**
+- Todas as requisições HTTP requerem header `X-API-Key`
+- Requisições sem key ou com key inválida retornam `401 Unauthorized`
+
+### Configuração do Claude Code para MCP (Local)
+
+Quando o Claude Code é invocado programaticamente (ex: via backend do wxcode), ele precisa carregar o MCP Server `wxcode-kb` do arquivo `.mcp.json` do workspace automaticamente, sem interação manual.
+
+**Passo 1: Habilitar MCPs de projeto automaticamente**
+
+Adicione no arquivo `~/.claude/settings.json`:
+
+```json
+{
+  "enableAllProjectMcpServers": true
+}
+```
+
+Esta configuração faz o Claude Code aprovar automaticamente todos os MCPs definidos em `.mcp.json` de projetos, sem exigir confirmação manual.
+
+**Passo 2: Estrutura do `.mcp.json` (gerado automaticamente)**
+
+O wxcode cria automaticamente um `.mcp.json` no workspace de cada Output Project:
+
+```json
+{
+  "mcpServers": {
+    "wxcode-kb": {
+      "command": "/caminho/para/wxcode/.venv/bin/python",
+      "args": ["-m", "wxcode.mcp.server"],
+      "env": {
+        "PYTHONPATH": "/caminho/para/wxcode/src"
+      }
+    }
+  }
+}
+```
+
+> **Importante:** O arquivo usa o caminho absoluto do Python do virtualenv para garantir que as dependências (fastmcp, etc.) estejam disponíveis.
+
+**Deploy em Docker:**
+
+Para containers Docker, inclua a configuração na imagem:
+
+```dockerfile
+# Criar settings.json com auto-aprovação de MCPs
+RUN mkdir -p ~/.claude && \
+    echo '{"enableAllProjectMcpServers": true}' > ~/.claude/settings.json
+```
+
+**Verificar se o MCP está conectado:**
+
+No terminal do Claude Code, execute:
+```
+/mcp
+```
+
+O `wxcode-kb` deve aparecer na lista de "Project MCPs" com status `✔ connected`.
 
 ### Conversão (Geradores)
 
