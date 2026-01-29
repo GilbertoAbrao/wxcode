@@ -323,6 +323,19 @@ export default function ConversionDetailPage({ params }: ConversionDetailPagePro
                   };
                   setChatMessages((prev) => [...prev, userMsg]);
                 }}
+                onSkillClick={(skill) => {
+                  // Skill comes as "wxcode:plan-phase 1", add leading slash
+                  const command = skill.startsWith("/") ? skill : `/${skill}`;
+                  sendMessage(command);
+                  // Adiciona ao chat
+                  const userMsg: ChatDisplayMessage = {
+                    id: `user_${++messageIdCounter.current}`,
+                    role: "user",
+                    content: `Executando: \`${command}\``,
+                    timestamp: new Date(),
+                  };
+                  setChatMessages((prev) => [...prev, userMsg]);
+                }}
               />
             </div>
           </ResizablePanels>

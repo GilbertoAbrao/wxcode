@@ -46,6 +46,8 @@ export interface ChatDisplayProps {
   onQuestionsSubmit?: (toolUseId: string, answers: Record<string, string>) => void;
   /** Callback quando usuário envia mensagem */
   onSendMessage?: (message: string) => void;
+  /** Callback quando uma skill é clicada (ex: /wxcode:plan-phase 1) */
+  onSkillClick?: (skill: string) => void;
   /** Se o input está desabilitado */
   inputDisabled?: boolean;
 }
@@ -59,6 +61,7 @@ export function ChatDisplay({
   onMultipleOptionsSelect,
   onQuestionsSubmit,
   onSendMessage,
+  onSkillClick,
   inputDisabled = false,
 }: ChatDisplayProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,6 +114,7 @@ export function ChatDisplay({
             onOptionSelect={onOptionSelect}
             onMultipleOptionsSelect={onMultipleOptionsSelect}
             onQuestionsSubmit={onQuestionsSubmit}
+            onSkillClick={onSkillClick}
           />
         ))}
 

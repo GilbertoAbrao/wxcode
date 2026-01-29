@@ -609,6 +609,22 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                   // Simulate typing character by character
                   await simulateTyping(message);
                 }}
+                onSkillClick={async (skill) => {
+                  // Skill comes as "wxcode:plan-phase 1", add leading slash
+                  const command = skill.startsWith("/") ? skill : `/${skill}`;
+
+                  // Add user message to chat display
+                  const userMsg: ChatDisplayMessage = {
+                    id: `user_${++messageIdCounter.current}`,
+                    role: "user",
+                    content: `Executando: \`${command}\``,
+                    timestamp: new Date(),
+                  };
+                  setChatMessages((prev) => [...prev, userMsg]);
+
+                  // Simulate typing the skill command
+                  await simulateTyping(command);
+                }}
               />
             </div>
           </ResizablePanels>
