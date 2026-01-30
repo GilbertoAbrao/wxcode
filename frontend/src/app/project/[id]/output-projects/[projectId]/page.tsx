@@ -30,7 +30,7 @@ import {
 } from "@/components/milestone";
 import { ProjectDashboard } from "@/components/dashboard";
 import { useProjectDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
-import { Loader2, Play } from "lucide-react";
+import { Loader2, Play, LayoutDashboard } from "lucide-react";
 
 interface OutputProjectPageProps {
   params: Promise<{ id: string; projectId: string }>;
@@ -86,9 +86,15 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const urlMilestoneId = searchParams.get("milestone");
   const [selectedMilestoneId, setSelectedMilestoneIdState] = useState<string | null>(urlMilestoneId);
 
+  // Dashboard view state - show dashboard in center panel
+  const [showDashboard, setShowDashboard] = useState(!urlMilestoneId);
+
   // Sync URL with selected milestone
   const setSelectedMilestoneId = useCallback((id: string | null) => {
     setSelectedMilestoneIdState(id);
+    if (id) {
+      setShowDashboard(false); // Hide dashboard when milestone selected
+    }
     const url = new URL(window.location.href);
     if (id) {
       url.searchParams.set("milestone", id);
@@ -97,6 +103,12 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     }
     router.replace(url.pathname + url.search, { scroll: false });
   }, [router]);
+
+  // Show dashboard handler
+  const handleShowDashboard = useCallback(() => {
+    setShowDashboard(true);
+    setSelectedMilestoneId(null);
+  }, [setSelectedMilestoneId]);
 
   // Milestone hooks
   // Note: useInitializeMilestone is no longer used - terminal handles initialization
@@ -435,6 +447,23 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
             )}
           </div>
 
+          {/* Dashboard button */}
+          <div className="px-3 py-2 border-b border-zinc-800">
+            <button
+              onClick={handleShowDashboard}
+              className={`
+                w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                ${showDashboard
+                  ? "bg-violet-600/20 text-violet-300 border border-violet-500/30"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                }
+              `}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </button>
+          </div>
+
           {/* Milestones list */}
           <div className="flex-1 overflow-y-auto">
             <MilestonesTree
@@ -468,41 +497,54 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
           >
             {/* Content Viewer */}
             <div className="h-full bg-zinc-950 flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-zinc-300">
-                    {selectedMilestone?.element_name || "Selecione um elemento"}
-                  </h3>
-                  <p className="text-xs text-zinc-500">
-                    {selectedMilestone
-                      ? `Status: ${selectedMilestone.status.replace("_", " ")}`
-                      : ""}
-                  </p>
+              {/* Header - changes based on view */}
+              {!showDashboard && (
+                <div className="flex-shrink-0 px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-zinc-300">
+                      {selectedMilestone?.element_name || "Selecione um elemento"}
+                    </h3>
+                    <p className="text-xs text-zinc-500">
+                      {selectedMilestone
+                        ? `Status: ${selectedMilestone.status.replace("_", " ")}`
+                        : ""}
+                    </p>
+                  </div>
+                  {/* Botao de inicializacao para milestones PENDING */}
+                  {selectedMilestone?.status === "pending" && (
+                    <button
+                      onClick={() => handleInitializeMilestone(selectedMilestone.id)}
+                      disabled={isInitializingMilestone}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
+                    >
+                      {isInitializingMilestone ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Preparando...
+                        </>
+                      ) : (
+                        <>
+                          <Play className="w-4 h-4" />
+                          Iniciar Conversao
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
-                {/* Botao de inicializacao para milestones PENDING */}
-                {selectedMilestone?.status === "pending" && (
-                  <button
-                    onClick={() => handleInitializeMilestone(selectedMilestone.id)}
-                    disabled={isInitializingMilestone}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
-                  >
-                    {isInitializingMilestone ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Preparando...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4" />
-                        Iniciar Conversao
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
+              )}
 
               <div className="flex-1 overflow-y-auto">
-                {selectedMilestone ? (
+                {/* Dashboard view */}
+                {showDashboard ? (
+                  <ProjectDashboard
+                    data={dashboardData}
+                    isLoading={isDashboardLoading}
+                    error={dashboardError}
+                    lastUpdated={dashboardLastUpdated}
+                    onRefresh={refreshDashboard}
+                    className="h-full"
+                  />
+                ) : selectedMilestone ? (
                   <div className="p-4 space-y-4">
                     {/* Milestone details */}
                     <div className="rounded-lg border border-zinc-800 p-4">
@@ -532,16 +574,10 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col">
-                    {/* Show Project Dashboard when no milestone selected */}
-                    <ProjectDashboard
-                      data={dashboardData}
-                      isLoading={isDashboardLoading}
-                      error={dashboardError}
-                      lastUpdated={dashboardLastUpdated}
-                      onRefresh={refreshDashboard}
-                      className="flex-1"
-                    />
+                  <div className="h-full flex flex-col items-center justify-center">
+                    <p className="text-sm text-zinc-500">
+                      Selecione um milestone ou clique em Dashboard
+                    </p>
                   </div>
                 )}
               </div>
