@@ -50,6 +50,16 @@ class Milestone(Document):
         description="Current status: pending | in_progress | completed | failed"
     )
 
+    # WXCODE integration
+    wxcode_version: Optional[str] = Field(
+        default=None,
+        description="WXCODE milestone version (e.g., v1.0, v1.1)"
+    )
+    milestone_folder_name: Optional[str] = Field(
+        default=None,
+        description="Name of the milestone folder in .planning/milestones/"
+    )
+
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(

@@ -3,13 +3,13 @@
 All tools are registered on import by using the @mcp.tool decorator.
 Import this module to register all tools with the MCP server.
 
-Tools available (29 tools):
+Tools available (30 tools):
 - elements: get_element, list_elements, search_code
 - controls: get_controls, get_data_bindings
 - procedures: get_procedures, get_procedure
 - schema: get_schema, get_table
 - graph: get_dependencies, get_impact, get_path, find_hubs, find_dead_code, find_cycles
-- conversion: get_conversion_candidates, get_topological_order, mark_converted, mark_project_initialized, get_conversion_stats
+- conversion: get_conversion_candidates, get_topological_order, mark_converted, mark_project_initialized, get_conversion_stats, create_milestone
 - stack: get_stack_conventions
 - planes: get_element_planes
 - wlanguage: get_wlanguage_reference, list_wlanguage_functions, get_wlanguage_pattern

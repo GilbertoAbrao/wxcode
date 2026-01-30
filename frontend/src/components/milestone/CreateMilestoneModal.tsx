@@ -1,10 +1,11 @@
 "use client";
 
 /**
- * CreateMilestoneModal - Modal for creating a new milestone from a KB element.
+ * CreateMilestoneModal - Modal for selecting an element to convert.
  *
- * Shows a searchable list of elements that can be converted. Filters out
- * elements that already have milestones.
+ * Shows a searchable list of elements. When user confirms, it triggers
+ * onStartConversion with the selected element - the actual milestone
+ * creation happens via MCP tool when Claude starts the conversion.
  */
 
 import { useState, useMemo } from "react";
@@ -13,8 +14,6 @@ import { X, Milestone, Search, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useElementsRaw, type RawElement } from "@/hooks/useElements";
-import { useCreateMilestone } from "@/hooks/useMilestones";
-import type { Milestone as MilestoneType } from "@/types/milestone";
 
 export interface CreateMilestoneModalProps {
   outputProjectId: string;
@@ -22,7 +21,8 @@ export interface CreateMilestoneModalProps {
   existingMilestoneElementIds: string[];
   isOpen: boolean;
   onClose: () => void;
-  onCreated?: (milestone: MilestoneType) => void;
+  /** Called when user confirms element selection - triggers conversion flow */
+  onStartConversion?: (element: RawElement) => void;
 }
 
 // Internal component that handles form state - remounts when modal opens
@@ -31,7 +31,7 @@ function CreateMilestoneForm({
   kbId,
   existingMilestoneElementIds,
   onClose,
-  onCreated,
+  onStartConversion,
 }: Omit<CreateMilestoneModalProps, "isOpen">) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedElement, setSelectedElement] = useState<RawElement | null>(null);
@@ -40,7 +40,6 @@ function CreateMilestoneForm({
   const { data: elementsData, isLoading: isLoadingElements } = useElementsRaw(kbId, {
     limit: 500,
   });
-  const { mutate: createMilestone, isPending, error } = useCreateMilestone();
 
   // Extract elements array for stable dependency
   const elements = elementsData?.elements;
@@ -65,21 +64,10 @@ function CreateMilestoneForm({
     });
   }, [elements, existingMilestoneElementIds, searchQuery]);
 
-  const handleCreate = () => {
+  const handleStartConversion = () => {
     if (!selectedElement) return;
-
-    createMilestone(
-      {
-        output_project_id: outputProjectId,
-        element_id: selectedElement.id,
-      },
-      {
-        onSuccess: (milestone) => {
-          onClose();
-          onCreated?.(milestone);
-        },
-      }
-    );
+    onClose();
+    onStartConversion?.(selectedElement);
   };
 
   const isFormValid = selectedElement !== null;
@@ -94,17 +82,16 @@ function CreateMilestoneForm({
           </div>
           <div>
             <Dialog.Title className="text-xl font-semibold text-zinc-100">
-              Create Milestone
+              Iniciar Conversão
             </Dialog.Title>
             <Dialog.Description className="text-sm text-zinc-400 mt-1">
-              Select an element to convert
+              Selecione um elemento para converter
             </Dialog.Description>
           </div>
         </div>
         <Dialog.Close asChild>
           <button
             className="p-2 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition-colors"
-            disabled={isPending}
           >
             <X className="w-5 h-5" />
           </button>
@@ -120,16 +107,14 @@ function CreateMilestoneForm({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search elements..."
-            disabled={isPending}
+            placeholder="Buscar elementos..."
             className={cn(
               "w-full rounded-lg pl-10 pr-4 py-2.5",
               "border outline-none transition-all duration-200",
               "bg-zinc-800 border-zinc-700 text-sm text-zinc-100",
               "hover:border-zinc-600",
               "focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20",
-              "placeholder:text-zinc-500",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
+              "placeholder:text-zinc-500"
             )}
           />
         </div>
@@ -137,7 +122,7 @@ function CreateMilestoneForm({
         {/* Element List */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-zinc-300">
-            Select Element <span className="text-rose-400">*</span>
+            Selecione o Elemento <span className="text-rose-400">*</span>
           </label>
 
           {isLoadingElements ? (
@@ -147,10 +132,10 @@ function CreateMilestoneForm({
           ) : filteredElements.length === 0 ? (
             <div className="py-8 text-center text-sm text-zinc-500">
               {elementsData?.elements?.length === 0
-                ? "No elements found in this Knowledge Base."
+                ? "Nenhum elemento encontrado neste Knowledge Base."
                 : searchQuery
-                  ? "No elements match your search."
-                  : "All elements already have milestones."}
+                  ? "Nenhum elemento corresponde à busca."
+                  : "Todos os elementos já possuem milestones."}
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
@@ -159,12 +144,10 @@ function CreateMilestoneForm({
                   key={element.id}
                   type="button"
                   onClick={() => setSelectedElement(element)}
-                  disabled={isPending}
                   className={cn(
                     "w-full text-left rounded-lg p-4 border transition-all duration-200",
                     "bg-zinc-800 border-zinc-700",
                     "hover:border-zinc-600",
-                    "disabled:opacity-50 disabled:cursor-not-allowed",
                     selectedElement?.id === element.id && "bg-blue-500/10 border-blue-500"
                   )}
                 >
@@ -172,31 +155,24 @@ function CreateMilestoneForm({
                   <div className="text-sm text-zinc-400 mt-1">
                     <span className="capitalize">{element.source_type.replace(/_/g, " ")}</span>
                     <span className="mx-2">|</span>
-                    <span>{element.dependencies_count} dependencies</span>
+                    <span>{element.dependencies_count} dependências</span>
                   </div>
                 </button>
               ))}
             </div>
           )}
         </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
-            <p className="text-sm text-rose-400">{error.message}</p>
-          </div>
-        )}
       </div>
 
       {/* Footer */}
       <div className="flex justify-end gap-3 p-6 border-t border-zinc-800">
         <Dialog.Close asChild>
-          <Button variant="outline" disabled={isPending}>
-            Cancel
+          <Button variant="outline">
+            Cancelar
           </Button>
         </Dialog.Close>
-        <Button onClick={handleCreate} disabled={isPending || !isFormValid}>
-          {isPending ? "Creating..." : "Create Milestone"}
+        <Button onClick={handleStartConversion} disabled={!isFormValid}>
+          Iniciar Conversão
         </Button>
       </div>
     </>
@@ -209,7 +185,7 @@ export function CreateMilestoneModal({
   existingMilestoneElementIds,
   isOpen,
   onClose,
-  onCreated,
+  onStartConversion,
 }: CreateMilestoneModalProps) {
   // Track open transitions to remount form with fresh state
   const [openKey, setOpenKey] = useState(0);
@@ -236,7 +212,7 @@ export function CreateMilestoneModal({
                 kbId={kbId}
                 existingMilestoneElementIds={existingMilestoneElementIds}
                 onClose={onClose}
-                onCreated={onCreated}
+                onStartConversion={onStartConversion}
               />
             )}
           </div>

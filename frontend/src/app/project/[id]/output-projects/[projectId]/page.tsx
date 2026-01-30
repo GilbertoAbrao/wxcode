@@ -360,7 +360,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     }
   }, [project?.status]);
 
-  // Handle milestone initialization
+  // Handle milestone initialization (legacy - for existing PENDING milestones)
   const handleInitializeMilestone = useCallback(async (milestoneId: string) => {
     if (!terminalRef.current?.isConnected()) {
       console.error("Terminal not connected");
@@ -392,6 +392,40 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       setIsInitializingMilestone(false);
     }
   }, [simulateTyping]);
+
+  // Handle starting conversion for a new element (no pre-existing milestone)
+  const handleStartConversion = useCallback(async (element: { id: string; source_name: string }) => {
+    if (!terminalRef.current?.isConnected()) {
+      console.error("Terminal not connected");
+      return;
+    }
+
+    setIsInitializingMilestone(true);
+    try {
+      // Call prepare-conversion endpoint to get context path
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
+      const response = await fetch(
+        `${apiUrl}/api/output-projects/${projectId}/prepare-conversion/${encodeURIComponent(element.source_name)}`,
+        { method: "POST" }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Prepare conversion failed:", error);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Conversion prepared:", data);
+
+      // Simulate typing the command - Claude will create the milestone via MCP
+      await simulateTyping(`/wx-convert:phase ${data.context_path}`);
+    } catch (error) {
+      console.error("Error starting conversion:", error);
+    } finally {
+      setIsInitializingMilestone(false);
+    }
+  }, [projectId, simulateTyping]);
 
   if (isLoading) {
     return (
@@ -711,8 +745,8 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         existingMilestoneElementIds={milestonesData?.milestones.map((m) => m.element_id) || []}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreated={(milestone) => {
-          setSelectedMilestoneId(milestone.id);
+        onStartConversion={(element) => {
+          handleStartConversion(element);
         }}
       />
     </div>
