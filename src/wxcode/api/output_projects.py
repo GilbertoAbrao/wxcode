@@ -100,6 +100,12 @@ class FilesListResponse(BaseModel):
     total: int
 
 
+class DashboardResponse(BaseModel):
+    """Dashboard data from .planning/dashboard.json."""
+    # Using dict to allow flexible schema - frontend defines the types
+    pass  # Pydantic V2: empty model passes through raw dict
+
+
 # === Helper Functions ===
 
 
@@ -240,6 +246,42 @@ async def get_output_project(id: str) -> OutputProjectResponse:
         raise HTTPException(status_code=404, detail="Output project nao encontrado")
 
     return await _build_output_project_response(output_project)
+
+
+@router.get("/{id}/dashboard")
+async def get_output_project_dashboard(id: str):
+    """
+    Retorna dados do dashboard do projeto.
+
+    Le o arquivo .planning/dashboard.json do workspace do output project.
+    Retorna 404 se o arquivo nao existir.
+    """
+    import json
+
+    try:
+        output_project_oid = PydanticObjectId(id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de output project invalido")
+
+    output_project = await OutputProject.get(output_project_oid)
+    if not output_project:
+        raise HTTPException(status_code=404, detail="Output project nao encontrado")
+
+    # Check for dashboard.json in .planning folder
+    workspace = Path(output_project.workspace_path)
+    dashboard_file = workspace / ".planning" / "dashboard.json"
+
+    if not dashboard_file.exists():
+        raise HTTPException(status_code=404, detail="Dashboard nao encontrado")
+
+    try:
+        with open(dashboard_file, "r", encoding="utf-8") as f:
+            dashboard_data = json.load(f)
+        return dashboard_data
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao ler dashboard.json: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao acessar dashboard: {e}")
 
 
 @router.get("/{id}/files", response_model=FilesListResponse)

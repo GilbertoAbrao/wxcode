@@ -28,6 +28,8 @@ import {
   MilestonesTree,
   CreateMilestoneModal,
 } from "@/components/milestone";
+import { ProjectDashboard } from "@/components/dashboard";
+import { useProjectDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
 import { Loader2, Play } from "lucide-react";
 
 interface OutputProjectPageProps {
@@ -104,6 +106,21 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const selectedMilestone = milestonesData?.milestones.find(
     (m) => m.id === selectedMilestoneId
   );
+
+  // Dashboard hook - fetches .planning/dashboard.json
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+    lastUpdated: dashboardLastUpdated,
+    refresh: refreshDashboard,
+    notifyUpdate: notifyDashboardUpdate,
+  } = useProjectDashboard({
+    outputProjectId: projectId,
+    workspacePath: project?.workspace_path,
+    pollInterval: 10000, // Poll every 10 seconds
+    enablePolling: true,
+  });
 
   // Refetch project data when initialization completes
   useEffect(() => {
@@ -254,6 +271,10 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         case "assistant_banner":
           // Display the banner as-is (it's already formatted)
           content = event.text;
+          // Check for dashboard update notification
+          if (parseDashboardNotification(event.text)) {
+            notifyDashboardUpdate();
+          }
           break;
         default:
           return;
@@ -268,7 +289,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       messageType: "info",
     };
     setChatMessages((prev) => [...prev, progressMsg]);
-  }, []);
+  }, [notifyDashboardUpdate]);
 
   // Simulate typing character by character (like real user input)
   const simulateTyping = useCallback(async (text: string) => {
@@ -512,22 +533,15 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                   </div>
                 ) : (
                   <div className="h-full flex flex-col">
-                    {/* Show files created during initialization */}
-                    {files.length > 0 ? (
-                      <div className="flex-1 overflow-y-auto">
-                        <FileTree
-                          files={files}
-                          workspacePath={project.workspace_path}
-                          className="h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-sm text-zinc-500">
-                          Selecione um elemento para ver os detalhes
-                        </p>
-                      </div>
-                    )}
+                    {/* Show Project Dashboard when no milestone selected */}
+                    <ProjectDashboard
+                      data={dashboardData}
+                      isLoading={isDashboardLoading}
+                      error={dashboardError}
+                      lastUpdated={dashboardLastUpdated}
+                      onRefresh={refreshDashboard}
+                      className="flex-1"
+                    />
                   </div>
                 )}
               </div>
