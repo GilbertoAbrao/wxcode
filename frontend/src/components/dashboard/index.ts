@@ -1,2 +1,3 @@
 export { ProjectDashboard } from "./ProjectDashboard";
-export type { DashboardData } from "@/types/dashboard";
+export { MilestoneDashboard } from "./MilestoneDashboard";
+export type { DashboardData, MilestoneDashboardData } from "@/types/dashboard";

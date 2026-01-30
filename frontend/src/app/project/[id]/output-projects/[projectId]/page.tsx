@@ -28,8 +28,8 @@ import {
   MilestonesTree,
   CreateMilestoneModal,
 } from "@/components/milestone";
-import { ProjectDashboard } from "@/components/dashboard";
-import { useProjectDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
+import { ProjectDashboard, MilestoneDashboard } from "@/components/dashboard";
+import { useProjectDashboard, useMilestoneDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
 import { Loader2, Play, LayoutDashboard } from "lucide-react";
 
 interface OutputProjectPageProps {
@@ -119,7 +119,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     (m) => m.id === selectedMilestoneId
   );
 
-  // Dashboard hook - fetches .planning/dashboard.json
+  // Dashboard hook - fetches .planning/dashboard.json (project-level)
   const {
     data: dashboardData,
     isLoading: isDashboardLoading,
@@ -131,6 +131,20 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     outputProjectId: projectId,
     pollInterval: 10000, // Poll every 10 seconds
     enablePolling: true,
+  });
+
+  // Milestone dashboard hook - fetches .planning/dashboard_<folder>.json
+  const {
+    data: milestoneDashboardData,
+    isLoading: isMilestoneDashboardLoading,
+    error: milestoneDashboardError,
+    lastUpdated: milestoneDashboardLastUpdated,
+    refresh: refreshMilestoneDashboard,
+  } = useMilestoneDashboard({
+    outputProjectId: projectId,
+    milestoneFolderName: selectedMilestone?.milestone_folder_name || null,
+    pollInterval: 10000,
+    enablePolling: !!selectedMilestone?.milestone_folder_name,
   });
 
   // Refetch project data when initialization completes
@@ -564,34 +578,15 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                     className="h-full"
                   />
                 ) : selectedMilestone ? (
-                  <div className="p-4 space-y-4">
-                    {/* Milestone details */}
-                    <div className="rounded-lg border border-zinc-800 p-4">
-                      <h3 className="text-sm font-medium text-zinc-400 mb-3">Detalhes</h3>
-                      <dl className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <dt className="text-zinc-500">Element ID</dt>
-                          <dd className="font-mono text-xs text-zinc-300 truncate">
-                            {selectedMilestone.element_id}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-zinc-500">Criado em</dt>
-                          <dd className="text-zinc-300">
-                            {new Date(selectedMilestone.created_at).toLocaleString()}
-                          </dd>
-                        </div>
-                        {selectedMilestone.completed_at && (
-                          <div>
-                            <dt className="text-zinc-500">Concluído em</dt>
-                            <dd className="text-zinc-300">
-                              {new Date(selectedMilestone.completed_at).toLocaleString()}
-                            </dd>
-                          </div>
-                        )}
-                      </dl>
-                    </div>
-                  </div>
+                  <MilestoneDashboard
+                    data={milestoneDashboardData}
+                    milestone={selectedMilestone}
+                    isLoading={isMilestoneDashboardLoading}
+                    error={milestoneDashboardError}
+                    lastUpdated={milestoneDashboardLastUpdated}
+                    onRefresh={refreshMilestoneDashboard}
+                    className="h-full"
+                  />
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center">
                     <p className="text-sm text-zinc-500">

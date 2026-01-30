@@ -19,6 +19,8 @@ export interface Milestone {
   element_id: string;
   element_name: string;
   status: MilestoneStatus;
+  wxcode_version?: string;
+  milestone_folder_name?: string;
   created_at: string;
   completed_at?: string;
 }

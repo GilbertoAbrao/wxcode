@@ -53,6 +53,8 @@ class MilestoneResponse(BaseModel):
     element_id: str
     element_name: str
     status: MilestoneStatus
+    wxcode_version: Optional[str] = None
+    milestone_folder_name: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime]
 
@@ -77,6 +79,8 @@ def _build_milestone_response(milestone: Milestone) -> MilestoneResponse:
         element_id=str(milestone.element_id),
         element_name=milestone.element_name,
         status=milestone.status,
+        wxcode_version=milestone.wxcode_version,
+        milestone_folder_name=milestone.milestone_folder_name,
         created_at=milestone.created_at,
         completed_at=milestone.completed_at,
     )
