@@ -85,7 +85,7 @@ export interface MilestoneDashboardMilestone {
 export interface MilestoneDashboardPosition {
   phase_number: number | null;
   phase_name: string | null;
-  plan_number: number | null;
+  plan_number: string | null;  // e.g., "1.2"
   plan_total: number | null;
   status: DashboardStatus;
 }
@@ -95,19 +95,35 @@ export interface MilestoneDashboardProgress {
   phases_complete: number;
   phases_total: number;
   phases_percentage: number;
+  plans_complete: number;
+  plans_total: number;
+  plans_percentage: number;
+  tasks_complete: number;
+  tasks_total: number;
+  tasks_percentage: number;
   requirements_complete: number;
   requirements_total: number;
   requirements_percentage: number;
 }
 
+/** Task within a plan */
+export interface DashboardTask {
+  id: string;           // e.g., "1.1.1"
+  name: string;         // e.g., "Create AcessoUsuario Model"
+  file: string | null;  // target file path
+  status: DashboardStatus;
+  description: string;
+}
+
 /** Plan within a phase */
 export interface DashboardPlan {
-  number: number;
+  number: string;  // e.g., "1.1"
   name: string;
   status: DashboardStatus;
-  tasks_complete: number;
-  tasks_total: number;
+  tasks_complete?: number;  // legacy support
+  tasks_total?: number;     // legacy support
   summary: string | null;
+  tasks?: DashboardTask[];  // new: detailed tasks
 }
 
 /** Phase in the roadmap */

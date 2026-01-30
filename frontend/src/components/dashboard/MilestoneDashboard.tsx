@@ -3,14 +3,17 @@
 /**
  * WXCODE Milestone Dashboard
  *
- * Displays detailed milestone progress with phases, requirements, and blockers.
- * Uses the same Mission Control aesthetic as ProjectDashboard.
+ * Displays detailed milestone progress with phases, plans, tasks, and requirements.
+ * Uses Mission Control aesthetic with expandable hierarchy.
+ *
+ * Schema: .planning/dashboard_<milestone>.json
  */
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronRight,
+  ChevronDown,
   Check,
   Circle,
   AlertTriangle,
@@ -21,26 +24,30 @@ import {
   Zap,
   ArrowRight,
   RefreshCw,
+  FileCode,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   MilestoneDashboardData,
   DashboardPhase,
   DashboardPlan,
+  DashboardTask,
   DashboardRequirementCategory,
   DashboardStatus,
 } from "@/types/dashboard";
 import type { Milestone } from "@/types/milestone";
 
 // ============================================================================
-// Sub-Components (reused patterns from ProjectDashboard)
+// Sub-Components
 // ============================================================================
 
 /** Circular progress ring with glow effect */
 function ProgressRing({
   percentage,
-  size = 80,
-  strokeWidth = 6,
+  size = 64,
+  strokeWidth = 5,
   label,
   sublabel,
   color = "violet",
@@ -90,23 +97,23 @@ function ProgressRing({
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
           transition={{ duration: 1, ease: "easeOut" }}
-          style={{ filter: `drop-shadow(0 0 8px ${glow})` }}
+          style={{ filter: `drop-shadow(0 0 6px ${glow})` }}
           className={cn(pulse && "animate-pulse")}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
-          className="text-lg font-mono font-bold text-zinc-100"
-          style={{ textShadow: `0 0 10px ${glow}` }}
+          className="text-sm font-mono font-bold text-zinc-100"
+          style={{ textShadow: `0 0 8px ${glow}` }}
         >
           {percentage}%
         </span>
       </div>
-      <span className="mt-2 text-xs font-medium text-zinc-400 uppercase tracking-wider">
+      <span className="mt-1.5 text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
         {label}
       </span>
       {sublabel && (
-        <span className="text-[10px] text-zinc-500 font-mono">{sublabel}</span>
+        <span className="text-[9px] text-zinc-500 font-mono">{sublabel}</span>
       )}
     </div>
   );
@@ -148,92 +155,272 @@ function StatusBadge({
   );
 }
 
-/** Mini progress bar */
-function MiniProgressBar({
-  current,
-  total,
-  color = "violet",
-}: {
-  current: number;
-  total: number;
-  color?: "violet" | "cyan" | "emerald" | "amber";
-}) {
-  const percentage = total > 0 ? (current / total) * 100 : 0;
-  const colorMap = { violet: "bg-violet-500", cyan: "bg-cyan-500", emerald: "bg-emerald-500", amber: "bg-amber-500" };
+/** Task row within a plan */
+function TaskRow({ task }: { task: DashboardTask }) {
+  const statusColors = {
+    complete: "text-emerald-400",
+    in_progress: "text-amber-400",
+    pending: "text-zinc-500",
+    blocked: "text-rose-400",
+    failed: "text-rose-400",
+    not_started: "text-zinc-500",
+  };
+
+  const StatusIcon = task.status === "complete" ? CheckCircle2
+    : task.status === "in_progress" ? Loader2
+    : Clock;
 
   return (
-    <div className="flex items-center gap-2 flex-1">
-      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        <motion.div
-          className={cn("h-full rounded-full", colorMap[color])}
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 0.5 }}
-        />
+    <div className="flex items-start gap-2 py-1.5 pl-4 border-l border-zinc-800 ml-2">
+      <StatusIcon
+        className={cn(
+          "w-3.5 h-3.5 mt-0.5 flex-shrink-0",
+          statusColors[task.status] || statusColors.pending,
+          task.status === "in_progress" && "animate-spin"
+        )}
+      />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-zinc-500">{task.id}</span>
+          <span className={cn(
+            "text-xs truncate",
+            task.status === "complete" ? "text-zinc-400" : "text-zinc-200"
+          )}>
+            {task.name}
+          </span>
+        </div>
+        {task.file && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <FileCode className="w-3 h-3 text-zinc-600" />
+            <span className="text-[10px] font-mono text-zinc-500 truncate">{task.file}</span>
+          </div>
+        )}
       </div>
-      <span className="text-xs font-mono text-zinc-500">{current}/{total}</span>
     </div>
   );
 }
 
-/** Plan row */
-function PlanRow({ plan, isLast }: { plan: DashboardPlan; isLast: boolean }) {
-  const colorByStatus: Record<DashboardStatus, "emerald" | "amber" | "violet"> = {
-    complete: "emerald", in_progress: "amber", pending: "violet", blocked: "amber", failed: "amber", not_started: "violet",
-  };
+/** Plan row within a phase */
+function PlanRow({
+  plan,
+  isExpanded,
+  onToggle,
+  isLast
+}: {
+  plan: DashboardPlan;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isLast: boolean;
+}) {
+  const hasTasks = plan.tasks && plan.tasks.length > 0;
+  const tasksComplete = plan.tasks?.filter(t => t.status === "complete").length || plan.tasks_complete || 0;
+  const tasksTotal = plan.tasks?.length || plan.tasks_total || 0;
 
   return (
-    <div className="flex items-start gap-3 py-2 pl-8 relative">
+    <div className="relative">
+      {/* Tree connector */}
       <div className="absolute left-3 top-0 bottom-0 w-px bg-zinc-800" />
-      <div className={cn("absolute left-2 top-3 w-3 h-px", plan.status === "complete" ? "bg-emerald-500/50" : "bg-zinc-700")} />
-      {!isLast && <div className="absolute left-3 top-3 bottom-0 w-px bg-zinc-800" />}
-      <div className="flex-shrink-0 mt-0.5"><StatusBadge status={plan.status} size="xs" /></div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-mono text-zinc-500">P{plan.number}</span>
-          <span className={cn("text-sm truncate", plan.status === "complete" ? "text-zinc-400" : "text-zinc-200")}>{plan.name}</span>
-        </div>
-        {plan.tasks_total > 0 && (
-          <div className="mt-1"><MiniProgressBar current={plan.tasks_complete} total={plan.tasks_total} color={colorByStatus[plan.status]} /></div>
+      <div className={cn(
+        "absolute left-2 top-4 w-3 h-px",
+        plan.status === "complete" ? "bg-emerald-500/50" : "bg-zinc-700"
+      )} />
+      {!isLast && <div className="absolute left-3 top-4 bottom-0 w-px bg-zinc-800" />}
+
+      {/* Plan header */}
+      <button
+        onClick={onToggle}
+        disabled={!hasTasks}
+        className={cn(
+          "w-full flex items-start gap-3 py-2 pl-8 pr-2 text-left transition-colors",
+          hasTasks && "hover:bg-zinc-800/30 cursor-pointer"
         )}
-        {plan.summary && <p className="mt-1 text-xs text-zinc-500 line-clamp-2">{plan.summary}</p>}
-      </div>
+      >
+        {/* Expand icon */}
+        {hasTasks ? (
+          <motion.div
+            animate={{ rotate: isExpanded ? 90 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="mt-0.5"
+          >
+            <ChevronRight className="w-3 h-3 text-zinc-500" />
+          </motion.div>
+        ) : (
+          <div className="w-3" />
+        )}
+
+        {/* Status */}
+        <div className="flex-shrink-0 mt-0.5">
+          <StatusBadge status={plan.status} size="xs" />
+        </div>
+
+        {/* Plan content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono text-violet-400/70">P{plan.number}</span>
+            <span className={cn(
+              "text-sm truncate",
+              plan.status === "complete" ? "text-zinc-400" : "text-zinc-200"
+            )}>
+              {plan.name}
+            </span>
+          </div>
+
+          {/* Tasks progress bar */}
+          {tasksTotal > 0 && (
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden max-w-[120px]">
+                <motion.div
+                  className={cn(
+                    "h-full rounded-full",
+                    plan.status === "complete" ? "bg-emerald-500" : "bg-amber-500"
+                  )}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(tasksComplete / tasksTotal) * 100}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+              <span className="text-[10px] font-mono text-zinc-500">
+                {tasksComplete}/{tasksTotal}
+              </span>
+            </div>
+          )}
+
+          {/* Summary if complete */}
+          {plan.summary && (
+            <p className="mt-1 text-[11px] text-zinc-500 line-clamp-1 italic">
+              {plan.summary}
+            </p>
+          )}
+        </div>
+      </button>
+
+      {/* Tasks list */}
+      <AnimatePresence>
+        {isExpanded && hasTasks && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="pl-10 pb-2 space-y-0.5">
+              {plan.tasks!.map((task) => (
+                <TaskRow key={task.id} task={task} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 /** Phase card */
-function PhaseCard({ phase, isExpanded, onToggle, isCurrent }: { phase: DashboardPhase; isExpanded: boolean; onToggle: () => void; isCurrent: boolean; }) {
+function PhaseCard({
+  phase,
+  isExpanded,
+  onToggle,
+  isCurrent,
+  expandedPlans,
+  onTogglePlan,
+}: {
+  phase: DashboardPhase;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isCurrent: boolean;
+  expandedPlans: Set<string>;
+  onTogglePlan: (planId: string) => void;
+}) {
   const completedPlans = phase.plans.filter((p) => p.status === "complete").length;
   const totalPlans = phase.plans.length;
 
   return (
-    <div className={cn("rounded-lg border transition-all duration-200", isCurrent ? "border-violet-500/50 bg-violet-500/5 shadow-[0_0_15px_rgba(139,92,246,0.15)]" : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700")}>
+    <div className={cn(
+      "rounded-lg border transition-all duration-200",
+      isCurrent
+        ? "border-violet-500/50 bg-violet-500/5 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+        : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
+    )}>
+      {/* Phase header */}
       <button onClick={onToggle} className="w-full flex items-center gap-3 p-3 text-left">
-        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}><ChevronRight className="w-4 h-4 text-zinc-500" /></motion.div>
-        <div className={cn("flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center font-mono text-xs font-bold", phase.status === "complete" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : phase.status === "in_progress" ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-zinc-800 text-zinc-400 border border-zinc-700")}>{phase.number}</div>
+        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronRight className="w-4 h-4 text-zinc-500" />
+        </motion.div>
+
+        {/* Phase number badge */}
+        <div className={cn(
+          "flex-shrink-0 w-7 h-7 rounded-md flex items-center justify-center font-mono text-xs font-bold",
+          phase.status === "complete"
+            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+            : phase.status === "in_progress"
+            ? "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+            : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+        )}>
+          {phase.number}
+        </div>
+
+        {/* Phase info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={cn("font-medium truncate", phase.status === "complete" ? "text-zinc-400" : "text-zinc-100")}>{phase.name}</span>
-            {isCurrent && <span className="px-1.5 py-0.5 text-[10px] font-mono uppercase bg-violet-500/30 text-violet-300 rounded">Current</span>}
+            <span className={cn(
+              "font-medium truncate",
+              phase.status === "complete" ? "text-zinc-400" : "text-zinc-100"
+            )}>
+              {phase.name}
+            </span>
+            {isCurrent && (
+              <span className="px-1.5 py-0.5 text-[10px] font-mono uppercase bg-violet-500/30 text-violet-300 rounded">
+                Current
+              </span>
+            )}
           </div>
           <p className="text-xs text-zinc-500 truncate">{phase.goal}</p>
         </div>
+
+        {/* Status and progress */}
         <div className="flex items-center gap-3">
-          {totalPlans > 0 && <span className="text-xs font-mono text-zinc-500">{completedPlans}/{totalPlans}</span>}
+          {totalPlans > 0 && (
+            <span className="text-xs font-mono text-zinc-500">{completedPlans}/{totalPlans}</span>
+          )}
           <StatusBadge status={phase.status} />
         </div>
       </button>
+
+      {/* Plans list */}
       <AnimatePresence>
         {isExpanded && phase.plans.length > 0 && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
             <div className="px-3 pb-3 border-t border-zinc-800/50">
-              {phase.plans.map((plan, idx) => (<PlanRow key={plan.number} plan={plan} isLast={idx === phase.plans.length - 1} />))}
+              {phase.plans.map((plan, idx) => (
+                <PlanRow
+                  key={plan.number}
+                  plan={plan}
+                  isExpanded={expandedPlans.has(`${phase.number}-${plan.number}`)}
+                  onToggle={() => onTogglePlan(`${phase.number}-${plan.number}`)}
+                  isLast={idx === phase.plans.length - 1}
+                />
+              ))}
             </div>
+
+            {/* Requirements covered */}
             {phase.requirements_covered.length > 0 && (
               <div className="px-3 pb-3 border-t border-zinc-800/50 pt-2">
                 <div className="flex flex-wrap gap-1">
-                  {phase.requirements_covered.map((req) => (<span key={req} className="px-1.5 py-0.5 text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded">{req}</span>))}
+                  {phase.requirements_covered.map((req) => (
+                    <span
+                      key={req}
+                      className="px-1.5 py-0.5 text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded"
+                    >
+                      {req}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
@@ -245,30 +432,60 @@ function PhaseCard({ phase, isExpanded, onToggle, isCurrent }: { phase: Dashboar
 }
 
 /** Requirements category row */
-function RequirementCategoryRow({ category, isExpanded, onToggle }: { category: DashboardRequirementCategory; isExpanded: boolean; onToggle: () => void; }) {
+function RequirementCategoryRow({
+  category,
+  isExpanded,
+  onToggle
+}: {
+  category: DashboardRequirementCategory;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
   return (
     <div className="border-b border-zinc-800/50 last:border-0">
-      <button onClick={onToggle} className="w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-zinc-800/30 transition-colors">
-        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}><ChevronRight className="w-3 h-3 text-zinc-500" /></motion.div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 py-2.5 px-3 text-left hover:bg-zinc-800/30 transition-colors"
+      >
+        <motion.div animate={{ rotate: isExpanded ? 90 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronRight className="w-3 h-3 text-zinc-500" />
+        </motion.div>
         <span className="text-xs font-mono text-cyan-400 w-12">{category.id}</span>
         <span className="flex-1 text-sm text-zinc-300">{category.name}</span>
         <div className="flex items-center gap-2">
           <div className="w-16 h-1 bg-zinc-800 rounded-full overflow-hidden">
-            <div className="h-full bg-cyan-500 rounded-full transition-all" style={{ width: `${category.percentage}%` }} />
+            <div
+              className="h-full bg-cyan-500 rounded-full transition-all"
+              style={{ width: `${category.percentage}%` }}
+            />
           </div>
-          <span className="text-xs font-mono text-zinc-500 w-10 text-right">{category.complete}/{category.total}</span>
+          <span className="text-xs font-mono text-zinc-500 w-10 text-right">
+            {category.complete}/{category.total}
+          </span>
         </div>
       </button>
       <AnimatePresence>
         {isExpanded && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden bg-zinc-900/50">
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden bg-zinc-900/50"
+          >
             <div className="py-2 px-3 space-y-1">
               {category.items.map((item) => (
                 <div key={item.id} className="flex items-start gap-2 py-1 pl-6">
-                  {item.complete ? <Check className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" /> : <Circle className="w-3 h-3 text-zinc-600 mt-0.5 flex-shrink-0" />}
+                  {item.complete
+                    ? <Check className="w-3 h-3 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    : <Circle className="w-3 h-3 text-zinc-600 mt-0.5 flex-shrink-0" />
+                  }
                   <span className="text-xs font-mono text-zinc-500 w-16 flex-shrink-0">{item.id}</span>
-                  <span className={cn("text-xs", item.complete ? "text-zinc-500" : "text-zinc-400")}>{item.description}</span>
-                  {item.phase && <span className="text-[10px] font-mono text-zinc-600 ml-auto">P{item.phase}</span>}
+                  <span className={cn("text-xs", item.complete ? "text-zinc-500" : "text-zinc-400")}>
+                    {item.description}
+                  </span>
+                  {item.phase && (
+                    <span className="text-[10px] font-mono text-zinc-600 ml-auto">P{item.phase}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -303,6 +520,7 @@ export function MilestoneDashboard({
   className,
 }: MilestoneDashboardProps) {
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(new Set());
+  const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Auto-expand current phase
@@ -317,6 +535,15 @@ export function MilestoneDashboard({
       const next = new Set(prev);
       if (next.has(num)) next.delete(num);
       else next.add(num);
+      return next;
+    });
+  };
+
+  const togglePlan = (planId: string) => {
+    setExpandedPlans((prev) => {
+      const next = new Set(prev);
+      if (next.has(planId)) next.delete(planId);
+      else next.add(planId);
       return next;
     });
   };
@@ -350,7 +577,10 @@ export function MilestoneDashboard({
         <AlertTriangle className="w-12 h-12 text-rose-400 mb-4" />
         <p className="text-sm text-rose-400">{error}</p>
         {onRefresh && (
-          <button onClick={onRefresh} className="mt-4 px-4 py-2 text-xs font-mono text-zinc-300 bg-zinc-800 rounded hover:bg-zinc-700 transition-colors">
+          <button
+            onClick={onRefresh}
+            className="mt-4 px-4 py-2 text-xs font-mono text-zinc-300 bg-zinc-800 rounded hover:bg-zinc-700 transition-colors"
+          >
             Tentar novamente
           </button>
         )}
@@ -369,7 +599,10 @@ export function MilestoneDashboard({
               <p className="text-sm text-zinc-500">{milestone.wxcode_version || "Sem versão"}</p>
             </div>
             {onRefresh && (
-              <button onClick={onRefresh} className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors">
+              <button
+                onClick={onRefresh}
+                className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors"
+              >
                 <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
               </button>
             )}
@@ -390,7 +623,9 @@ export function MilestoneDashboard({
           <div className="flex flex-col items-center justify-center py-8">
             <Target className="w-12 h-12 text-zinc-600 mb-4" />
             <p className="text-sm text-zinc-500">Dashboard ainda não gerado</p>
-            <p className="text-xs text-zinc-600 mt-1">Aguardando execução de <code className="text-violet-400">/wxcode:plan-phase</code></p>
+            <p className="text-xs text-zinc-600 mt-1">
+              Aguardando execução de <code className="text-violet-400">/wxcode:plan-phase</code>
+            </p>
           </div>
         </div>
       </div>
@@ -420,14 +655,17 @@ export function MilestoneDashboard({
             </div>
           </div>
           {onRefresh && (
-            <button onClick={onRefresh} className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors">
+            <button
+              onClick={onRefresh}
+              className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors"
+            >
               <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
             </button>
           )}
         </div>
 
-        {/* Progress Overview */}
-        <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900/30">
+        {/* Progress Overview - 4 rings */}
+        <div className="grid grid-cols-4 gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900/30">
           <div className="flex flex-col items-center">
             <ProgressRing
               percentage={data.progress.phases_percentage}
@@ -435,6 +673,22 @@ export function MilestoneDashboard({
               sublabel={`${data.progress.phases_complete}/${data.progress.phases_total}`}
               color="violet"
               pulse={data.current_position?.status === "in_progress"}
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <ProgressRing
+              percentage={data.progress.plans_percentage || 0}
+              label="Planos"
+              sublabel={`${data.progress.plans_complete || 0}/${data.progress.plans_total || 0}`}
+              color="amber"
+            />
+          </div>
+          <div className="flex flex-col items-center">
+            <ProgressRing
+              percentage={data.progress.tasks_percentage || 0}
+              label="Tasks"
+              sublabel={`${data.progress.tasks_complete || 0}/${data.progress.tasks_total || 0}`}
+              color="emerald"
             />
           </div>
           <div className="flex flex-col items-center">
@@ -456,13 +710,19 @@ export function MilestoneDashboard({
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-mono font-bold text-zinc-100">{data.current_position.phase_number}</span>
+                <span className="text-2xl font-mono font-bold text-zinc-100">
+                  {data.current_position.phase_number}
+                </span>
                 <span className="text-zinc-500">/</span>
-                <span className="text-lg font-mono text-zinc-500">{data.progress.phases_total}</span>
+                <span className="text-lg font-mono text-zinc-500">
+                  {data.progress.phases_total}
+                </span>
               </div>
               <ArrowRight className="w-4 h-4 text-zinc-600" />
               <div className="flex-1">
-                <span className="text-sm font-medium text-zinc-200">{data.current_position.phase_name}</span>
+                <span className="text-sm font-medium text-zinc-200">
+                  {data.current_position.phase_name}
+                </span>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-zinc-500">
                     Plano {data.current_position.plan_number} de {data.current_position.plan_total}
@@ -489,6 +749,8 @@ export function MilestoneDashboard({
                   isExpanded={expandedPhases.has(phase.number)}
                   onToggle={() => togglePhase(phase.number)}
                   isCurrent={phase.number === data.current_position?.phase_number}
+                  expandedPlans={expandedPlans}
+                  onTogglePlan={togglePlan}
                 />
               ))}
             </div>
@@ -524,7 +786,10 @@ export function MilestoneDashboard({
             </div>
             <ul className="space-y-1">
               {data.blockers.map((blocker, idx) => (
-                <li key={idx} className="text-sm text-rose-300/80 pl-5 relative before:content-['•'] before:absolute before:left-1.5 before:text-rose-500">
+                <li
+                  key={idx}
+                  className="text-sm text-rose-300/80 pl-5 relative before:content-['•'] before:absolute before:left-1.5 before:text-rose-500"
+                >
                   {blocker}
                 </li>
               ))}

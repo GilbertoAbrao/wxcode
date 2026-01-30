@@ -498,10 +498,10 @@ function PlanRow({ plan, isLast }: { plan: DashboardPlan; isLast: boolean }) {
             {plan.name}
           </span>
         </div>
-        {plan.tasks_total > 0 && (
+        {plan.tasks_total != null && plan.tasks_total > 0 && (
           <div className="mt-1">
             <MiniProgressBar
-              current={plan.tasks_complete}
+              current={plan.tasks_complete ?? 0}
               total={plan.tasks_total}
               color={colorByStatus[plan.status]}
             />

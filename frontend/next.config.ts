@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: false,
   turbopack: {
-    root: path.resolve(__dirname),
     resolveAlias: {
       tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
       "tw-animate-css": path.resolve(__dirname, "node_modules/tw-animate-css"),
