@@ -394,6 +394,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   }, [simulateTyping]);
 
   // Handle starting conversion for a new element (no pre-existing milestone)
+  // Claude will gather context via MCP tools, no need for prepare-conversion endpoint
   const handleStartConversion = useCallback(async (element: { id: string; source_name: string }) => {
     if (!terminalRef.current?.isConnected()) {
       console.error("Terminal not connected");
@@ -402,24 +403,8 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
 
     setIsInitializingMilestone(true);
     try {
-      // Call prepare-conversion endpoint to get context path
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
-      const response = await fetch(
-        `${apiUrl}/api/output-projects/${projectId}/prepare-conversion/${encodeURIComponent(element.source_name)}`,
-        { method: "POST" }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error("Prepare conversion failed:", error);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Conversion prepared:", data);
-
-      // Simulate typing the command - Claude will create the milestone via MCP
-      await simulateTyping(`/wx-convert:phase ${data.context_path}`);
+      // Send command directly - Claude gathers context via MCP and creates milestone
+      await simulateTyping(`/wxcode:new-milestone --element=${element.source_name} --output-project=${projectId}`);
     } catch (error) {
       console.error("Error starting conversion:", error);
     } finally {

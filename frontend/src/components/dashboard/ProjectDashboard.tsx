@@ -36,11 +36,215 @@ import type {
   DashboardTodo,
   DashboardStatus,
   ProjectDashboardData,
+  ProjectDashboardMilestone,
 } from "@/types/dashboard";
 
 // Type guard to check if data is the legacy DashboardData format
 function isDashboardData(data: ProjectDashboardData | DashboardData): data is DashboardData {
   return "phases" in data && "current_position" in data;
+}
+
+// Type guard to check if data is the new ProjectDashboardData format
+function isProjectDashboardData(data: ProjectDashboardData | DashboardData): data is ProjectDashboardData {
+  return "milestones" in data && !("phases" in data);
+}
+
+// ============================================================================
+// Project Overview Component (for new ProjectDashboardData format)
+// ============================================================================
+
+/** Milestone status badge */
+function MilestoneStatusBadge({ status }: { status: ProjectDashboardMilestone["status"] }) {
+  const config: Record<ProjectDashboardMilestone["status"], {
+    icon: typeof Check;
+    bg: string;
+    border: string;
+    text: string;
+    spin?: boolean;
+  }> = {
+    pending: { icon: Circle, bg: "bg-zinc-700/40", border: "border-zinc-600/40", text: "text-zinc-500" },
+    in_progress: { icon: Loader2, bg: "bg-amber-500/20", border: "border-amber-500/40", text: "text-amber-400", spin: true },
+    completed: { icon: Check, bg: "bg-emerald-500/20", border: "border-emerald-500/40", text: "text-emerald-400" },
+    failed: { icon: AlertTriangle, bg: "bg-rose-500/20", border: "border-rose-500/40", text: "text-rose-400" },
+  };
+
+  const statusConfig = config[status] || config.pending;
+  const { icon: Icon, bg, border, text, spin } = statusConfig;
+
+  return (
+    <div className={cn("flex items-center justify-center rounded-full border p-1", bg, border)}>
+      <Icon className={cn("w-3 h-3", text, spin && "animate-spin")} />
+    </div>
+  );
+}
+
+/** Project overview for new ProjectDashboardData format */
+function ProjectOverview({
+  data,
+  isLoading,
+  onRefresh,
+  lastUpdated,
+  className,
+}: {
+  data: ProjectDashboardData;
+  isLoading?: boolean;
+  onRefresh?: () => void;
+  lastUpdated?: Date | null;
+  className?: string;
+}) {
+  const conversionPercentage = data.conversion.elements_total
+    ? Math.round((data.conversion.elements_converted || 0) / data.conversion.elements_total * 100)
+    : 0;
+
+  return (
+    <div
+      className={cn("h-full overflow-y-auto bg-[#0a0a0f] text-zinc-100", className)}
+      style={{
+        backgroundImage: `
+          radial-gradient(ellipse at top, rgba(139, 92, 246, 0.05), transparent 50%),
+          radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.03), transparent 50%)
+        `,
+      }}
+    >
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-zinc-100 tracking-tight">
+              {data.project.name}
+            </h1>
+            <p className="mt-1 text-sm text-zinc-500">{data.project.core_value}</p>
+          </div>
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50 rounded transition-colors"
+              title="Atualizar"
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+            </button>
+          )}
+        </div>
+
+        {/* Conversion Progress */}
+        {data.conversion.is_conversion_project && (
+          <div className="p-4 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
+            <div className="flex items-center gap-2 text-xs text-cyan-400 uppercase tracking-wider mb-3">
+              <Box className="w-3 h-3" />
+              <span>Conversão WinDev → {data.conversion.stack}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-zinc-400">Elementos convertidos</span>
+                  <span className="text-sm font-mono text-zinc-300">
+                    {data.conversion.elements_converted || 0} / {data.conversion.elements_total || 0}
+                  </span>
+                </div>
+                <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-cyan-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${conversionPercentage}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+              <div className="text-2xl font-mono font-bold text-cyan-400">
+                {conversionPercentage}%
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Milestones Progress */}
+        <div className="p-4 rounded-lg border border-violet-500/30 bg-violet-500/5">
+          <div className="flex items-center gap-2 text-xs text-violet-400 uppercase tracking-wider mb-3">
+            <Target className="w-3 h-3" />
+            <span>Milestones</span>
+          </div>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-zinc-400">Progresso</span>
+                <span className="text-sm font-mono text-zinc-300">
+                  {data.progress.milestones_complete} / {data.progress.milestones_total}
+                </span>
+              </div>
+              <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-violet-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${data.progress.milestones_percentage}%` }}
+                  transition={{ duration: 0.5 }}
+                />
+              </div>
+            </div>
+            <div className="text-2xl font-mono font-bold text-violet-400">
+              {data.progress.milestones_percentage}%
+            </div>
+          </div>
+
+          {/* Milestones List */}
+          {data.milestones.length > 0 ? (
+            <div className="space-y-2">
+              {data.milestones.map((milestone) => (
+                <div
+                  key={milestone.folder_name}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-lg border transition-colors",
+                    milestone.folder_name === data.current_milestone
+                      ? "border-violet-500/50 bg-violet-500/10"
+                      : "border-zinc-800 bg-zinc-900/50"
+                  )}
+                >
+                  <MilestoneStatusBadge status={milestone.status} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-zinc-200 truncate">
+                        {milestone.element_name}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-500">
+                        {milestone.wxcode_version}
+                      </span>
+                      {milestone.folder_name === data.current_milestone && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-mono uppercase bg-violet-500/30 text-violet-300 rounded">
+                          Atual
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      {new Date(milestone.created_at).toLocaleDateString("pt-BR")}
+                      {milestone.completed_at && (
+                        <span className="ml-2 text-emerald-500">
+                          ✓ {new Date(milestone.completed_at).toLocaleDateString("pt-BR")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-zinc-500">Nenhum milestone iniciado</p>
+              <p className="text-xs text-zinc-600 mt-1">
+                Use o botão "Novo Milestone" para iniciar
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between text-[10px] text-zinc-600 font-mono pt-2 border-t border-zinc-800/50">
+          <span>WXCODE v{data.meta.wxcode_version}</span>
+          {lastUpdated && (
+            <span>Atualizado: {lastUpdated.toLocaleTimeString("pt-BR")}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ============================================================================
@@ -656,10 +860,8 @@ export function ProjectDashboard({
     );
   }
 
-  // Empty state - check for data AND required fields for legacy DashboardData format
-  // The new ProjectDashboardData format doesn't have phases/current_position (it's a project overview)
-  // This component displays detailed milestone progress, which requires the legacy format
-  if (!data || !isDashboardData(data)) {
+  // Empty state - no data at all
+  if (!data) {
     return (
       <div
         className={cn(
@@ -678,7 +880,20 @@ export function ProjectDashboard({
     );
   }
 
-  // At this point, TypeScript knows data is DashboardData
+  // New ProjectDashboardData format - show project overview with milestones
+  if (isProjectDashboardData(data)) {
+    return (
+      <ProjectOverview
+        data={data}
+        isLoading={isLoading}
+        onRefresh={onRefresh}
+        lastUpdated={lastUpdated}
+        className={className}
+      />
+    );
+  }
+
+  // Legacy DashboardData format - show detailed milestone view with phases
   const dashboardData = data;
 
   // Main dashboard
