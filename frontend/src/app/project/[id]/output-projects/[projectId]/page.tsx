@@ -129,7 +129,6 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     notifyUpdate: notifyDashboardUpdate,
   } = useProjectDashboard({
     outputProjectId: projectId,
-    workspacePath: project?.workspace_path,
     pollInterval: 10000, // Poll every 10 seconds
     enablePolling: true,
   });
@@ -284,8 +283,9 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
           // Display the banner as-is (it's already formatted)
           content = event.text;
           // Check for dashboard update notification
-          if (parseDashboardNotification(event.text)) {
-            notifyDashboardUpdate();
+          const dashboardNotification = parseDashboardNotification(event.text);
+          if (dashboardNotification) {
+            notifyDashboardUpdate(dashboardNotification);
           }
           break;
         default:

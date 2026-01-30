@@ -34,7 +34,14 @@ import type {
   DashboardPlan,
   DashboardRequirementCategory,
   DashboardTodo,
+  DashboardStatus,
+  ProjectDashboardData,
 } from "@/types/dashboard";
+
+// Type guard to check if data is the legacy DashboardData format
+function isDashboardData(data: ProjectDashboardData | DashboardData): data is DashboardData {
+  return "phases" in data && "current_position" in data;
+}
 
 // ============================================================================
 // Sub-Components
@@ -127,10 +134,10 @@ function StatusBadge({
   status,
   size = "sm",
 }: {
-  status: "pending" | "in_progress" | "complete" | "blocked";
+  status: DashboardStatus;
   size?: "xs" | "sm" | "md";
 }) {
-  const config: Record<string, {
+  const config: Record<DashboardStatus, {
     icon: typeof Check;
     bg: string;
     border: string;
@@ -166,6 +173,20 @@ function StatusBadge({
       border: "border-rose-500/40",
       text: "text-rose-400",
       glow: "shadow-[0_0_8px_rgba(244,63,94,0.3)]",
+    },
+    failed: {
+      icon: AlertTriangle,
+      bg: "bg-rose-500/20",
+      border: "border-rose-500/40",
+      text: "text-rose-400",
+      glow: "shadow-[0_0_8px_rgba(244,63,94,0.3)]",
+    },
+    not_started: {
+      icon: Circle,
+      bg: "bg-zinc-700/40",
+      border: "border-zinc-600/40",
+      text: "text-zinc-500",
+      glow: "",
     },
   };
 
@@ -230,11 +251,13 @@ function MiniProgressBar({
 
 /** Plan row within a phase */
 function PlanRow({ plan, isLast }: { plan: DashboardPlan; isLast: boolean }) {
-  const colorByStatus = {
-    complete: "emerald" as const,
-    in_progress: "amber" as const,
-    pending: "violet" as const,
-    blocked: "amber" as const,
+  const colorByStatus: Record<DashboardStatus, "emerald" | "amber" | "violet"> = {
+    complete: "emerald",
+    in_progress: "amber",
+    pending: "violet",
+    blocked: "amber",
+    failed: "amber",
+    not_started: "violet",
   };
 
   return (
@@ -541,7 +564,7 @@ function TodoRow({ todo }: { todo: DashboardTodo }) {
 // ============================================================================
 
 interface ProjectDashboardProps {
-  data: DashboardData | null;
+  data: ProjectDashboardData | DashboardData | null;
   isLoading?: boolean;
   error?: string | null;
   lastUpdated?: Date | null;
@@ -563,10 +586,10 @@ export function ProjectDashboard({
 
   // Auto-expand current phase
   useEffect(() => {
-    if (data?.current_position?.phase_number) {
+    if (data && isDashboardData(data) && data.current_position?.phase_number) {
       setExpandedPhases(new Set([data.current_position.phase_number]));
     }
-  }, [data?.current_position?.phase_number]);
+  }, [data]);
 
   const togglePhase = (num: number) => {
     setExpandedPhases((prev) => {
@@ -633,10 +656,10 @@ export function ProjectDashboard({
     );
   }
 
-  // Empty state - check for data AND required fields
-  const isValidData = data && data.project && data.progress && data.current_position && data.phases;
-
-  if (!isValidData) {
+  // Empty state - check for data AND required fields for legacy DashboardData format
+  // The new ProjectDashboardData format doesn't have phases/current_position (it's a project overview)
+  // This component displays detailed milestone progress, which requires the legacy format
+  if (!data || !isDashboardData(data)) {
     return (
       <div
         className={cn(
@@ -654,6 +677,9 @@ export function ProjectDashboard({
       </div>
     );
   }
+
+  // At this point, TypeScript knows data is DashboardData
+  const dashboardData = data;
 
   // Main dashboard
   return (
@@ -689,13 +715,13 @@ export function ProjectDashboard({
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h1 className="text-xl font-bold text-zinc-100 tracking-tight">
-                {data.project.name}
+                {dashboardData.project.name}
               </h1>
               <span className="px-2 py-0.5 text-xs font-mono bg-violet-500/20 text-violet-300 border border-violet-500/30 rounded">
-                {data.project.current_milestone}
+                {dashboardData.project.current_milestone}
               </span>
             </div>
-            <p className="mt-1 text-sm text-zinc-500">{data.project.core_value}</p>
+            <p className="mt-1 text-sm text-zinc-500">{dashboardData.project.core_value}</p>
           </div>
 
           {/* Refresh button */}
@@ -714,18 +740,18 @@ export function ProjectDashboard({
         <div className="grid grid-cols-2 gap-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900/30">
           <div className="flex flex-col items-center">
             <ProgressRing
-              percentage={data.progress.phases_percentage}
+              percentage={dashboardData.progress.phases_percentage}
               label="Fases"
-              sublabel={`${data.progress.phases_complete}/${data.progress.phases_total}`}
+              sublabel={`${dashboardData.progress.phases_complete}/${dashboardData.progress.phases_total}`}
               color="violet"
-              pulse={data.current_position.status === "in_progress"}
+              pulse={dashboardData.current_position.status === "in_progress"}
             />
           </div>
           <div className="flex flex-col items-center">
             <ProgressRing
-              percentage={data.progress.requirements_percentage}
+              percentage={dashboardData.progress.requirements_percentage}
               label="Requisitos"
-              sublabel={`${data.progress.requirements_complete}/${data.progress.requirements_total}`}
+              sublabel={`${dashboardData.progress.requirements_complete}/${dashboardData.progress.requirements_total}`}
               color="cyan"
             />
           </div>
@@ -740,23 +766,23 @@ export function ProjectDashboard({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl font-mono font-bold text-zinc-100">
-                {data.current_position.phase_number}
+                {dashboardData.current_position.phase_number}
               </span>
               <span className="text-zinc-500">/</span>
               <span className="text-lg font-mono text-zinc-500">
-                {data.current_position.phase_total}
+                {dashboardData.current_position.phase_total}
               </span>
             </div>
             <ArrowRight className="w-4 h-4 text-zinc-600" />
             <div className="flex-1">
               <span className="text-sm font-medium text-zinc-200">
-                {data.current_position.phase_name}
+                {dashboardData.current_position.phase_name}
               </span>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-zinc-500">
-                  Plano {data.current_position.plan_number} de {data.current_position.plan_total}
+                  Plano {dashboardData.current_position.plan_number} de {dashboardData.current_position.plan_total}
                 </span>
-                <StatusBadge status={data.current_position.status} size="xs" />
+                <StatusBadge status={dashboardData.current_position.status} size="xs" />
               </div>
             </div>
           </div>
@@ -769,13 +795,13 @@ export function ProjectDashboard({
             <span>Fases do Projeto</span>
           </div>
           <div className="space-y-2">
-            {data.phases.map((phase) => (
+            {dashboardData.phases.map((phase) => (
               <PhaseCard
                 key={phase.number}
                 phase={phase}
                 isExpanded={expandedPhases.has(phase.number)}
                 onToggle={() => togglePhase(phase.number)}
-                isCurrent={phase.number === data.current_position.phase_number}
+                isCurrent={phase.number === dashboardData.current_position.phase_number}
               />
             ))}
           </div>
@@ -788,7 +814,7 @@ export function ProjectDashboard({
             <span>Requisitos por Categoria</span>
           </div>
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 overflow-hidden">
-            {data.requirements.categories.map((category) => (
+            {dashboardData.requirements.categories.map((category) => (
               <RequirementCategoryRow
                 key={category.id}
                 category={category}
@@ -800,14 +826,14 @@ export function ProjectDashboard({
         </div>
 
         {/* ============ BLOCKERS ============ */}
-        {data.blockers.length > 0 && (
+        {dashboardData.blockers.length > 0 && (
           <div className="p-3 rounded-lg border border-rose-500/30 bg-rose-500/5">
             <div className="flex items-center gap-2 text-xs text-rose-400 uppercase tracking-wider mb-2">
               <AlertTriangle className="w-3 h-3" />
-              <span>Bloqueios ({data.blockers.length})</span>
+              <span>Bloqueios ({dashboardData.blockers.length})</span>
             </div>
             <ul className="space-y-1">
-              {data.blockers.map((blocker, idx) => (
+              {dashboardData.blockers.map((blocker, idx) => (
                 <li
                   key={idx}
                   className="text-sm text-rose-300/80 pl-5 relative before:content-['•'] before:absolute before:left-1.5 before:text-rose-500"
@@ -820,14 +846,14 @@ export function ProjectDashboard({
         )}
 
         {/* ============ TODOS ============ */}
-        {data.todos.length > 0 && (
+        {dashboardData.todos.length > 0 && (
           <div>
             <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wider mb-2 px-1">
               <Clock className="w-3 h-3" />
-              <span>TODOs ({data.todos.length})</span>
+              <span>TODOs ({dashboardData.todos.length})</span>
             </div>
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-3">
-              {data.todos.map((todo) => (
+              {dashboardData.todos.map((todo) => (
                 <TodoRow key={todo.id} todo={todo} />
               ))}
             </div>
@@ -835,7 +861,7 @@ export function ProjectDashboard({
         )}
 
         {/* ============ CONVERSION INFO ============ */}
-        {data.conversion.is_conversion_project && (
+        {dashboardData.conversion.is_conversion_project && (
           <div className="p-3 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
             <div className="flex items-center gap-2 text-xs text-cyan-400 uppercase tracking-wider mb-2">
               <Box className="w-3 h-3" />
@@ -844,16 +870,16 @@ export function ProjectDashboard({
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-lg font-mono font-bold text-zinc-100">
-                  {data.conversion.elements_converted}
+                  {dashboardData.conversion.elements_converted}
                 </span>
                 <span className="text-zinc-500 mx-1">/</span>
                 <span className="text-sm font-mono text-zinc-500">
-                  {data.conversion.elements_total}
+                  {dashboardData.conversion.elements_total}
                 </span>
                 <span className="text-xs text-zinc-500 ml-2">elementos</span>
               </div>
               <span className="px-2 py-1 text-xs font-mono bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded">
-                {data.conversion.stack}
+                {dashboardData.conversion.stack}
               </span>
             </div>
             <div className="mt-2 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
@@ -861,7 +887,7 @@ export function ProjectDashboard({
                 className="h-full bg-cyan-500 rounded-full"
                 initial={{ width: 0 }}
                 animate={{
-                  width: `${(data.conversion.elements_converted / data.conversion.elements_total) * 100}%`,
+                  width: `${(dashboardData.conversion.elements_converted / dashboardData.conversion.elements_total) * 100}%`,
                 }}
                 transition={{ duration: 0.5 }}
               />
@@ -871,7 +897,7 @@ export function ProjectDashboard({
 
         {/* ============ FOOTER ============ */}
         <div className="flex items-center justify-between text-[10px] text-zinc-600 font-mono pt-2 border-t border-zinc-800/50">
-          <span>WXCODE v{data.meta.wxcode_version}</span>
+          <span>WXCODE v{dashboardData.meta.wxcode_version}</span>
           {lastUpdated && (
             <span>
               Atualizado: {lastUpdated.toLocaleTimeString("pt-BR")}

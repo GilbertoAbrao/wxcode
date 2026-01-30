@@ -289,6 +289,46 @@ async def get_output_project_dashboard(id: str):
         raise HTTPException(status_code=500, detail=f"Erro ao acessar dashboard: {e}")
 
 
+@router.get("/{id}/milestone-dashboard/{milestone_folder_name}")
+async def get_milestone_dashboard(id: str, milestone_folder_name: str):
+    """
+    Retorna dados do dashboard de um milestone especifico.
+
+    Le o arquivo .planning/dashboard_<milestone_folder_name>.json do workspace.
+    Retorna 404 se o arquivo nao existir.
+
+    Args:
+        id: ID do OutputProject
+        milestone_folder_name: Nome da pasta do milestone (e.g., "v1.0-PAGE_Login")
+    """
+    import json
+
+    try:
+        output_project_oid = PydanticObjectId(id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de output project invalido")
+
+    output_project = await OutputProject.get(output_project_oid)
+    if not output_project:
+        raise HTTPException(status_code=404, detail="Output project nao encontrado")
+
+    # Check for milestone dashboard file
+    workspace = Path(output_project.workspace_path)
+    dashboard_file = workspace / ".planning" / f"dashboard_{milestone_folder_name}.json"
+
+    if not dashboard_file.exists():
+        raise HTTPException(status_code=404, detail=f"Dashboard do milestone '{milestone_folder_name}' nao encontrado")
+
+    try:
+        with open(dashboard_file, "r", encoding="utf-8") as f:
+            dashboard_data = json.load(f)
+        return dashboard_data
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao ler dashboard do milestone: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao acessar dashboard do milestone: {e}")
+
+
 @router.get("/{id}/files", response_model=FilesListResponse)
 async def list_output_project_files(id: str) -> FilesListResponse:
     """
