@@ -5,14 +5,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: false,
   turbopack: {
+    // Set root to wxcode workspace to prevent inferring /Users/gilberto
     root: path.resolve(__dirname, ".."),
-    resolveAlias: {
-      // Point to frontend's node_modules for packages not hoisted to workspace root
-      tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
-      "tw-animate-css": path.resolve(__dirname, "node_modules/tw-animate-css"),
-      // Path aliases for CSS imports
-      "@/*": path.resolve(__dirname, "src/*"),
-    },
   },
 };
 

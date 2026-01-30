@@ -1,6 +1,101 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@/app/tokens.css";
+
+/**
+ * Design Tokens: Obsidian Studio
+ * (inlined from tokens.css to avoid turbopack path resolution issues)
+ */
+:root {
+  /* OBSIDIAN PALETTE - Deep blacks with subtle blue undertones */
+  --obsidian-950: #09090b;
+  --obsidian-900: #0c0c0f;
+  --obsidian-850: #111114;
+  --obsidian-800: #18181b;
+  --obsidian-700: #27272a;
+  --obsidian-600: #3f3f46;
+  --obsidian-500: #52525b;
+  --obsidian-400: #71717a;
+  --obsidian-300: #a1a1aa;
+  --obsidian-200: #d4d4d8;
+  --obsidian-100: #f4f4f5;
+  --obsidian-50: #fafafa;
+
+  /* ACCENT COLORS WITH GLOW VARIANTS */
+  --accent-blue: #3b82f6;
+  --accent-blue-light: #60a5fa;
+  --accent-blue-dark: #2563eb;
+  --accent-blue-glow: rgba(59, 130, 246, 0.4);
+  --accent-blue-subtle: rgba(59, 130, 246, 0.1);
+  --accent-blue-ring: rgba(59, 130, 246, 0.5);
+
+  --accent-green: #10b981;
+  --accent-green-light: #34d399;
+  --accent-green-dark: #059669;
+  --accent-green-glow: rgba(16, 185, 129, 0.4);
+  --accent-green-subtle: rgba(16, 185, 129, 0.1);
+  --accent-green-ring: rgba(16, 185, 129, 0.5);
+
+  --accent-purple: #8b5cf6;
+  --accent-purple-light: #a78bfa;
+  --accent-purple-dark: #7c3aed;
+  --accent-purple-glow: rgba(139, 92, 246, 0.4);
+  --accent-purple-subtle: rgba(139, 92, 246, 0.1);
+  --accent-purple-ring: rgba(139, 92, 246, 0.5);
+
+  --accent-amber: #f59e0b;
+  --accent-amber-light: #fbbf24;
+  --accent-amber-dark: #d97706;
+  --accent-amber-glow: rgba(245, 158, 11, 0.4);
+  --accent-amber-subtle: rgba(245, 158, 11, 0.1);
+  --accent-amber-ring: rgba(245, 158, 11, 0.5);
+
+  --accent-rose: #f43f5e;
+  --accent-rose-light: #fb7185;
+  --accent-rose-dark: #e11d48;
+  --accent-rose-glow: rgba(244, 63, 94, 0.4);
+  --accent-rose-subtle: rgba(244, 63, 94, 0.1);
+  --accent-rose-ring: rgba(244, 63, 94, 0.5);
+
+  /* SPACING */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* SHADOWS & GLOWS */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --glow-blue: 0 0 20px var(--accent-blue-glow), 0 0 40px var(--accent-blue-subtle);
+  --glow-green: 0 0 20px var(--accent-green-glow), 0 0 40px var(--accent-green-subtle);
+  --glow-purple: 0 0 20px var(--accent-purple-glow), 0 0 40px var(--accent-purple-subtle);
+  --glow-amber: 0 0 20px var(--accent-amber-glow), 0 0 40px var(--accent-amber-subtle);
+  --glow-rose: 0 0 20px var(--accent-rose-glow), 0 0 40px var(--accent-rose-subtle);
+
+  /* TRANSITIONS */
+  --transition-fast: 150ms ease-out;
+  --transition-normal: 200ms ease-out;
+  --transition-slow: 300ms ease-out;
+  --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Z-INDEX */
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-popover: 400;
+  --z-overlay: 500;
+  --z-toast: 600;
+}
 
 @custom-variant dark (&:is(.dark *));
 
