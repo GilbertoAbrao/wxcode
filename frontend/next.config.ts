@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
       // Point to frontend's node_modules for packages not hoisted to workspace root
       tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
       "tw-animate-css": path.resolve(__dirname, "node_modules/tw-animate-css"),
-      "@/styles": path.resolve(__dirname, "src/styles"),
+      // Path aliases for CSS imports
+      "@/*": path.resolve(__dirname, "src/*"),
     },
   },
 };
