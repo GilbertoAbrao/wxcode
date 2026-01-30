@@ -36,6 +36,8 @@ import type {
   DashboardTask,
   DashboardRequirementCategory,
   DashboardStatus,
+  DashboardWorkflow,
+  WorkflowStage,
 } from "@/types/dashboard";
 import type { Milestone } from "@/types/milestone";
 
@@ -75,39 +77,41 @@ function ProgressRing({
   const { stroke, glow } = colorMap[color];
 
   return (
-    <div className="relative flex flex-col items-center">
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth={strokeWidth}
-        />
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          style={{ filter: `drop-shadow(0 0 6px ${glow})` }}
-          className={cn(pulse && "animate-pulse")}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span
-          className="text-sm font-mono font-bold text-zinc-100"
-          style={{ textShadow: `0 0 8px ${glow}` }}
-        >
-          {percentage}%
-        </span>
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg width={size} height={size} className="transform -rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth={strokeWidth}
+          />
+          <motion.circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={stroke}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            style={{ filter: `drop-shadow(0 0 6px ${glow})` }}
+            className={cn(pulse && "animate-pulse")}
+          />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span
+            className="text-sm font-mono font-bold text-zinc-100"
+            style={{ textShadow: `0 0 8px ${glow}` }}
+          >
+            {percentage}%
+          </span>
+        </div>
       </div>
       <span className="mt-1.5 text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
         {label}
@@ -496,6 +500,69 @@ function RequirementCategoryRow({
   );
 }
 
+/** Workflow stepper showing milestone lifecycle stages */
+function WorkflowStepper({ workflow }: { workflow: DashboardWorkflow }) {
+  const stageIcons: Record<string, string> = {
+    complete: "✓",
+    in_progress: "●",
+    pending: "○",
+  };
+
+  const stageColors: Record<string, { text: string; bg: string; border: string }> = {
+    complete: { text: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/40" },
+    in_progress: { text: "text-amber-400", bg: "bg-amber-500/20", border: "border-amber-500/40" },
+    pending: { text: "text-zinc-500", bg: "bg-zinc-800/40", border: "border-zinc-700/40" },
+  };
+
+  // Short labels for compact display
+  const shortLabels: Record<string, string> = {
+    created: "Created",
+    requirements: "Reqs",
+    roadmap: "Roadmap",
+    planning: "Planning",
+    executing: "Executing",
+    verified: "Verified",
+    archived: "Archived",
+  };
+
+  return (
+    <div className="flex items-center gap-1 py-2 px-3 rounded-lg border border-zinc-800 bg-zinc-900/30 overflow-x-auto">
+      {workflow.stages.map((stage, idx) => {
+        const colors = stageColors[stage.status];
+        const isCurrent = stage.id === workflow.current_stage;
+
+        return (
+          <div key={stage.id} className="flex items-center">
+            {/* Stage pill */}
+            <div
+              className={cn(
+                "flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-medium border transition-all",
+                colors.bg,
+                colors.border,
+                colors.text,
+                isCurrent && "ring-1 ring-amber-500/50"
+              )}
+              title={`${stage.name}: ${stage.description}`}
+            >
+              <span>{stageIcons[stage.status]}</span>
+              <span>{shortLabels[stage.id]}</span>
+            </div>
+            {/* Connector line */}
+            {idx < workflow.stages.length - 1 && (
+              <div
+                className={cn(
+                  "w-3 h-px mx-0.5",
+                  stage.status === "complete" ? "bg-emerald-500/50" : "bg-zinc-700"
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -652,6 +719,16 @@ export function MilestoneDashboard({
               <span className="px-2 py-0.5 text-xs font-mono bg-violet-500/20 text-violet-300 border border-violet-500/30 rounded">
                 {data.milestone.wxcode_version}
               </span>
+              {/* Status badge */}
+              <span className={cn(
+                "px-2 py-0.5 text-xs font-medium rounded capitalize",
+                data.milestone.status === "completed" && "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
+                data.milestone.status === "in_progress" && "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+                data.milestone.status === "pending" && "bg-zinc-700/40 text-zinc-400 border border-zinc-600/40",
+                data.milestone.status === "failed" && "bg-rose-500/20 text-rose-400 border border-rose-500/30"
+              )}>
+                {data.milestone.status.replace("_", " ")}
+              </span>
             </div>
           </div>
           {onRefresh && (
@@ -664,41 +741,36 @@ export function MilestoneDashboard({
           )}
         </div>
 
+        {/* Workflow Stepper */}
+        {data.workflow && <WorkflowStepper workflow={data.workflow} />}
+
         {/* Progress Overview - 4 rings */}
-        <div className="grid grid-cols-4 gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900/30">
-          <div className="flex flex-col items-center">
-            <ProgressRing
-              percentage={data.progress.phases_percentage}
-              label="Fases"
-              sublabel={`${data.progress.phases_complete}/${data.progress.phases_total}`}
-              color="violet"
-              pulse={data.current_position?.status === "in_progress"}
-            />
-          </div>
-          <div className="flex flex-col items-center">
-            <ProgressRing
-              percentage={data.progress.plans_percentage || 0}
-              label="Planos"
-              sublabel={`${data.progress.plans_complete || 0}/${data.progress.plans_total || 0}`}
-              color="amber"
-            />
-          </div>
-          <div className="flex flex-col items-center">
-            <ProgressRing
-              percentage={data.progress.tasks_percentage || 0}
-              label="Tasks"
-              sublabel={`${data.progress.tasks_complete || 0}/${data.progress.tasks_total || 0}`}
-              color="emerald"
-            />
-          </div>
-          <div className="flex flex-col items-center">
-            <ProgressRing
-              percentage={data.progress.requirements_percentage}
-              label="Requisitos"
-              sublabel={`${data.progress.requirements_complete}/${data.progress.requirements_total}`}
-              color="cyan"
-            />
-          </div>
+        <div className="flex justify-center gap-6 p-4 rounded-lg border border-zinc-800 bg-zinc-900/30">
+          <ProgressRing
+            percentage={data.progress.phases_percentage}
+            label="Fases"
+            sublabel={`${data.progress.phases_complete}/${data.progress.phases_total}`}
+            color="violet"
+            pulse={data.current_position?.status === "in_progress"}
+          />
+          <ProgressRing
+            percentage={data.progress.plans_percentage || 0}
+            label="Planos"
+            sublabel={`${data.progress.plans_complete || 0}/${data.progress.plans_total || 0}`}
+            color="amber"
+          />
+          <ProgressRing
+            percentage={data.progress.tasks_percentage || 0}
+            label="Tasks"
+            sublabel={`${data.progress.tasks_complete || 0}/${data.progress.tasks_total || 0}`}
+            color="emerald"
+          />
+          <ProgressRing
+            percentage={data.progress.requirements_percentage}
+            label="Requisitos"
+            sublabel={`${data.progress.requirements_complete}/${data.progress.requirements_total}`}
+            color="cyan"
+          />
         </div>
 
         {/* Current Position */}

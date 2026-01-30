@@ -530,42 +530,6 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
           >
             {/* Content Viewer */}
             <div className="h-full bg-zinc-950 flex flex-col">
-              {/* Header - changes based on view */}
-              {!showDashboard && (
-                <div className="flex-shrink-0 px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-zinc-300">
-                      {selectedMilestone?.element_name || "Selecione um elemento"}
-                    </h3>
-                    <p className="text-xs text-zinc-500">
-                      {selectedMilestone
-                        ? `Status: ${selectedMilestone.status.replace("_", " ")}`
-                        : ""}
-                    </p>
-                  </div>
-                  {/* Botao de inicializacao para milestones PENDING */}
-                  {selectedMilestone?.status === "pending" && (
-                    <button
-                      onClick={() => handleInitializeMilestone(selectedMilestone.id)}
-                      disabled={isInitializingMilestone}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
-                    >
-                      {isInitializingMilestone ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Preparando...
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-4 h-4" />
-                          Iniciar Conversao
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              )}
-
               <div className="flex-1 overflow-y-auto">
                 {/* Dashboard view */}
                 {showDashboard ? (

@@ -161,9 +161,28 @@ export interface DashboardRequirements {
   categories: DashboardRequirementCategory[];
 }
 
+/** Workflow stage status */
+export type WorkflowStageStatus = "pending" | "in_progress" | "complete";
+
+/** Workflow stage */
+export interface WorkflowStage {
+  id: "created" | "requirements" | "roadmap" | "planning" | "executing" | "verified" | "archived";
+  name: string;
+  description: string;
+  status: WorkflowStageStatus;
+  completed_at: string | null;
+}
+
+/** Workflow tracking */
+export interface DashboardWorkflow {
+  current_stage: string;
+  stages: WorkflowStage[];
+}
+
 /** Complete milestone dashboard data structure */
 export interface MilestoneDashboardData {
   milestone: MilestoneDashboardMilestone;
+  workflow?: DashboardWorkflow;  // v1.2.5+
   current_position: MilestoneDashboardPosition;
   progress: MilestoneDashboardProgress;
   phases: DashboardPhase[];
