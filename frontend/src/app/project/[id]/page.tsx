@@ -107,6 +107,10 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   // Get elements for graph view
   const { data: elements } = useElements(projectId);
 
+  // Get tables and queries for Analysis views
+  const { data: tables } = useElements(projectId, { type: "table" });
+  const { data: queries } = useElements(projectId, { type: "query" });
+
   // Graph data calculation
   const { nodes, edges } = useMemo(() => {
     if (!elements) return { nodes: [], edges: [] };
@@ -250,22 +254,25 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
               isExpanded={expandedSections.includes("analysis")}
               onToggle={() => toggleSection("analysis")}
             >
+              {/* Tables with count */}
               <MenuItem
-                label="Tables"
+                label={`Tables (${tables?.length || 0})`}
                 icon={<Table2 className="w-3.5 h-3.5" />}
                 isActive={activeView === "tables"}
                 onClick={() => setActiveView("tables")}
                 depth={1}
               />
+              {/* Queries with count */}
               <MenuItem
-                label="Queries"
+                label={`Queries (${queries?.length || 0})`}
                 icon={<Database className="w-3.5 h-3.5" />}
                 isActive={activeView === "queries"}
                 onClick={() => setActiveView("queries")}
                 depth={1}
               />
+              {/* Connections - placeholder count */}
               <MenuItem
-                label="Connections"
+                label="Connections (0)"
                 icon={<Link2 className="w-3.5 h-3.5" />}
                 isActive={activeView === "connections"}
                 onClick={() => setActiveView("connections")}
@@ -320,39 +327,73 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                 )}
               </div>
             ) : activeView === "tables" ? (
-              /* Tables view - direct list without nested tree */
+              /* Tables view - show actual tables */
               <div className="h-full p-6 overflow-y-auto">
                 <div className="max-w-4xl">
                   <div className="flex items-center gap-3 mb-6">
                     <Table2 className="w-6 h-6 text-zinc-400" />
                     <h2 className="text-xl font-semibold text-zinc-100">Tables</h2>
+                    <span className="text-sm text-zinc-500">({tables?.length || 0})</span>
                   </div>
-                  <p className="text-sm text-zinc-500 mb-4">
-                    Database tables from the WinDev Analysis (.wda) file.
-                  </p>
-                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
-                    <Table2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                    <p className="text-zinc-400">Table schema viewer coming soon</p>
-                    <p className="text-xs text-zinc-600 mt-2">Use the Dependency Graph to explore table relationships</p>
-                  </div>
+                  {tables && tables.length > 0 ? (
+                    <div className="space-y-2">
+                      {tables.map((table) => (
+                        <div
+                          key={table.id}
+                          className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                        >
+                          <Table2 className="w-4 h-4 text-zinc-500" />
+                          <span className="text-sm text-zinc-200 font-medium">{table.name}</span>
+                          {table.dependencies !== undefined && table.dependencies > 0 && (
+                            <span className="text-xs text-zinc-500 ml-auto">
+                              {table.dependencies} deps
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
+                      <Table2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                      <p className="text-zinc-400">Nenhuma tabela encontrada</p>
+                      <p className="text-xs text-zinc-600 mt-2">Execute wxcode parse-schema para importar as tabelas</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : activeView === "queries" ? (
-              /* Queries view - direct list without nested tree */
+              /* Queries view - show actual queries */
               <div className="h-full p-6 overflow-y-auto">
                 <div className="max-w-4xl">
                   <div className="flex items-center gap-3 mb-6">
                     <Database className="w-6 h-6 text-zinc-400" />
                     <h2 className="text-xl font-semibold text-zinc-100">Queries</h2>
+                    <span className="text-sm text-zinc-500">({queries?.length || 0})</span>
                   </div>
-                  <p className="text-sm text-zinc-500 mb-4">
-                    SQL queries defined in the WinDev project (.WDR files).
-                  </p>
-                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
-                    <Database className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                    <p className="text-zinc-400">Query browser coming soon</p>
-                    <p className="text-xs text-zinc-600 mt-2">View and analyze embedded SQL queries</p>
-                  </div>
+                  {queries && queries.length > 0 ? (
+                    <div className="space-y-2">
+                      {queries.map((query) => (
+                        <div
+                          key={query.id}
+                          className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
+                        >
+                          <Database className="w-4 h-4 text-zinc-500" />
+                          <span className="text-sm text-zinc-200 font-medium">{query.name}</span>
+                          {query.sourceFile && (
+                            <span className="text-xs text-zinc-600 font-mono ml-auto">
+                              {query.sourceFile}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
+                      <Database className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                      <p className="text-zinc-400">Nenhuma query encontrada</p>
+                      <p className="text-xs text-zinc-600 mt-2">Queries são importadas de arquivos .WDR</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : activeView === "connections" ? (
