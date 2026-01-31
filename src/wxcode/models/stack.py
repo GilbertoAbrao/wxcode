@@ -5,8 +5,23 @@ Representa uma combinacao de tecnologias (framework, ORM, template engine)
 que Claude Code usa para gerar codigo idiomatico.
 """
 
+from typing import Optional
+
 from beanie import Document
-from pydantic import Field
+from pydantic import BaseModel, Field
+
+
+class StartDevTemplate(BaseModel):
+    """Template for development server startup script."""
+
+    ports: dict[str, int] = Field(
+        default_factory=dict,
+        description="Port assignments: {'backend': 7300, 'frontend': 3000}"
+    )
+    script: str = Field(
+        default="",
+        description="Shell script template with {{PORT_BACKEND}} placeholders"
+    )
 
 
 class Stack(Document):
@@ -89,6 +104,12 @@ class Stack(Document):
     typescript_types: dict[str, str] = Field(
         default_factory=dict,
         description="HyperFile to TypeScript types for SPA frontend"
+    )
+
+    # Development server startup template
+    start_dev_template: Optional[StartDevTemplate] = Field(
+        default=None,
+        description="Template for starting the development server"
     )
 
     class Settings:

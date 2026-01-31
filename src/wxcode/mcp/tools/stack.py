@@ -165,10 +165,11 @@ async def get_stack_conventions(
     Args:
         output_project_id: ID of the Output Project
         category: Optional filter: "naming", "structure", "patterns", "templates",
-                  "legacy_mapping", "types", "examples", or "all" (default: "all")
+                  "legacy_mapping", "types", "examples", "dev_server", or "all" (default: "all")
 
     Returns:
-        Stack conventions organized by category with examples and suggestions
+        Stack conventions organized by category with examples and suggestions.
+        When category is "all" or "dev_server", includes start_dev_template if available.
     """
     try:
         # Find Output Project
@@ -249,6 +250,11 @@ async def get_stack_conventions(
             # Add TypeScript types if available
             if stack.typescript_types:
                 response["examples"]["typescript_types"] = stack.typescript_types
+
+        # Add start_dev_template
+        if category in ("all", "dev_server"):
+            if stack.start_dev_template:
+                response["start_dev_template"] = stack.start_dev_template.model_dump()
 
         return response
 

@@ -52,7 +52,7 @@ from wxcode.models.class_definition import (
 from wxcode.models.token_usage import TokenUsageLog
 from wxcode.models.product import Product, ProductType, ProductStatus
 from wxcode.models.conversion_history import ConversionHistoryEntry
-from wxcode.models.stack import Stack
+from wxcode.models.stack import Stack, StartDevTemplate
 from wxcode.models.output_project import OutputProject, OutputProjectStatus
 from wxcode.models.milestone import Milestone, MilestoneStatus
 
