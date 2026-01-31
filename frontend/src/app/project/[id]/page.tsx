@@ -8,9 +8,10 @@ import { DependencyGraph, type GraphNode, type GraphEdge } from "@/components/gr
 import { Button } from "@/components/ui/button";
 import { useElements } from "@/hooks/useElements";
 import { useProject } from "@/hooks/useProject";
+import { useSchema } from "@/hooks/useSchema";
 import type { ElementType } from "@/types/project";
 import { elementTypeConfig } from "@/types/project";
-import { Plus, GitGraph, Filter, ChevronRight, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
+import { Plus, GitGraph, Filter, ChevronRight, ChevronDown, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
 
 interface WorkspacePageProps {
   params: Promise<{ id: string }>;
@@ -18,7 +19,8 @@ interface WorkspacePageProps {
 
 // Navigation types for KB internal menu
 type NavSection = "graphs" | "analysis" | "configurations";
-type ActiveView = "dependency-graph" | "tables" | "queries" | "connections" | "configuration";
+type ExpandableSection = "tables" | "queries" | "connections";
+type ActiveView = "dependency-graph" | "table-detail" | "query-detail" | "connection-detail" | "configuration";
 
 const elementTypes: ElementType[] = ["page", "procedure", "class", "query", "table"];
 
@@ -81,6 +83,43 @@ function MenuSection({ title, icon, isExpanded, onToggle, children }: MenuSectio
   );
 }
 
+// Expandable submenu with items
+interface ExpandableMenuProps {
+  label: string;
+  icon: React.ReactNode;
+  count: number;
+  isExpanded: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  depth?: number;
+}
+
+function ExpandableMenu({ label, icon, count, isExpanded, onToggle, children, depth = 1 }: ExpandableMenuProps) {
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 rounded-md transition-colors"
+        style={{ paddingLeft: `${12 + depth * 16}px` }}
+      >
+        {isExpanded ? (
+          <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />
+        ) : (
+          <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+        )}
+        {icon}
+        <span className="flex-1 text-left">{label}</span>
+        <span className="text-xs text-zinc-600">({count})</span>
+      </button>
+      {isExpanded && (
+        <div className="ml-2">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WorkspacePage({ params }: WorkspacePageProps) {
   const { id: projectId } = use(params);
   const router = useRouter();
@@ -89,8 +128,10 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   // Navigation state - start with all sections expanded and dependency graph active
   const [expandedSections, setExpandedSections] = useState<NavSection[]>(["graphs", "analysis", "configurations"]);
+  const [expandedSubmenus, setExpandedSubmenus] = useState<ExpandableSection[]>(["tables", "queries", "connections"]);
   const [activeView, setActiveView] = useState<ActiveView>("dependency-graph");
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   // Toggle section expansion
   const toggleSection = useCallback((section: NavSection) => {
@@ -101,15 +142,26 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     );
   }, []);
 
+  // Toggle submenu expansion
+  const toggleSubmenu = useCallback((submenu: ExpandableSection) => {
+    setExpandedSubmenus(prev =>
+      prev.includes(submenu)
+        ? prev.filter(s => s !== submenu)
+        : [...prev, submenu]
+    );
+  }, []);
+
   // Get project data for modal context
   const { data: project } = useProject(projectId);
 
   // Get elements for graph view
   const { data: elements } = useElements(projectId);
 
-  // Get tables and queries for Analysis views
-  const { data: tables } = useElements(projectId, { type: "table" });
+  // Get queries from elements
   const { data: queries } = useElements(projectId, { type: "query" });
+
+  // Get schema for tables and connections
+  const { data: schema } = useSchema(project?.name);
 
   // Graph data calculation
   const { nodes, edges } = useMemo(() => {
@@ -168,18 +220,23 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     (node: GraphNode) => {
       // Navigate to appropriate view based on node type
       if (node.type === "table") {
-        setActiveView("tables");
+        setActiveView("table-detail");
+        setSelectedItemId(node.label);
+        if (!expandedSubmenus.includes("tables")) {
+          setExpandedSubmenus(prev => [...prev, "tables"]);
+        }
       } else if (node.type === "query") {
-        setActiveView("queries");
-      } else {
-        setActiveView("tables"); // Default to tables
+        setActiveView("query-detail");
+        setSelectedItemId(node.id);
+        if (!expandedSubmenus.includes("queries")) {
+          setExpandedSubmenus(prev => [...prev, "queries"]);
+        }
       }
       if (!expandedSections.includes("analysis")) {
         setExpandedSections(prev => [...prev, "analysis"]);
       }
-      // TODO: Select the element in the tree
     },
-    [expandedSections]
+    [expandedSections, expandedSubmenus]
   );
 
   // Project display name for UI
@@ -254,30 +311,74 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
               isExpanded={expandedSections.includes("analysis")}
               onToggle={() => toggleSection("analysis")}
             >
-              {/* Tables with count */}
-              <MenuItem
-                label={`Tables (${tables?.length || 0})`}
+              {/* Tables - expandable with items */}
+              <ExpandableMenu
+                label="Tables"
                 icon={<Table2 className="w-3.5 h-3.5" />}
-                isActive={activeView === "tables"}
-                onClick={() => setActiveView("tables")}
-                depth={1}
-              />
-              {/* Queries with count */}
-              <MenuItem
-                label={`Queries (${queries?.length || 0})`}
+                count={schema?.tables?.length || 0}
+                isExpanded={expandedSubmenus.includes("tables")}
+                onToggle={() => toggleSubmenu("tables")}
+              >
+                {schema?.tables?.map((table) => (
+                  <MenuItem
+                    key={table.name}
+                    label={table.name}
+                    icon={<Table2 className="w-3 h-3" />}
+                    isActive={activeView === "table-detail" && selectedItemId === table.name}
+                    onClick={() => {
+                      setActiveView("table-detail");
+                      setSelectedItemId(table.name);
+                    }}
+                    depth={2}
+                  />
+                ))}
+              </ExpandableMenu>
+
+              {/* Queries - expandable with items */}
+              <ExpandableMenu
+                label="Queries"
                 icon={<Database className="w-3.5 h-3.5" />}
-                isActive={activeView === "queries"}
-                onClick={() => setActiveView("queries")}
-                depth={1}
-              />
-              {/* Connections - placeholder count */}
-              <MenuItem
-                label="Connections (0)"
+                count={queries?.length || 0}
+                isExpanded={expandedSubmenus.includes("queries")}
+                onToggle={() => toggleSubmenu("queries")}
+              >
+                {queries?.map((query) => (
+                  <MenuItem
+                    key={query.id}
+                    label={query.name}
+                    icon={<Database className="w-3 h-3" />}
+                    isActive={activeView === "query-detail" && selectedItemId === query.id}
+                    onClick={() => {
+                      setActiveView("query-detail");
+                      setSelectedItemId(query.id);
+                    }}
+                    depth={2}
+                  />
+                ))}
+              </ExpandableMenu>
+
+              {/* Connections - expandable with items */}
+              <ExpandableMenu
+                label="Connections"
                 icon={<Link2 className="w-3.5 h-3.5" />}
-                isActive={activeView === "connections"}
-                onClick={() => setActiveView("connections")}
-                depth={1}
-              />
+                count={schema?.connections?.length || 0}
+                isExpanded={expandedSubmenus.includes("connections")}
+                onToggle={() => toggleSubmenu("connections")}
+              >
+                {schema?.connections?.map((conn) => (
+                  <MenuItem
+                    key={conn.name}
+                    label={conn.name}
+                    icon={<Link2 className="w-3 h-3" />}
+                    isActive={activeView === "connection-detail" && selectedItemId === conn.name}
+                    onClick={() => {
+                      setActiveView("connection-detail");
+                      setSelectedItemId(conn.name);
+                    }}
+                    depth={2}
+                  />
+                ))}
+              </ExpandableMenu>
             </MenuSection>
 
             {/* Configurations Section */}
@@ -326,93 +427,111 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   </div>
                 )}
               </div>
-            ) : activeView === "tables" ? (
-              /* Tables view - show actual tables */
+            ) : activeView === "table-detail" && selectedItemId ? (
+              /* Table detail view */
               <div className="h-full p-6 overflow-y-auto">
-                <div className="max-w-4xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Table2 className="w-6 h-6 text-zinc-400" />
-                    <h2 className="text-xl font-semibold text-zinc-100">Tables</h2>
-                    <span className="text-sm text-zinc-500">({tables?.length || 0})</span>
-                  </div>
-                  {tables && tables.length > 0 ? (
-                    <div className="space-y-2">
-                      {tables.map((table) => (
-                        <div
-                          key={table.id}
-                          className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
-                        >
-                          <Table2 className="w-4 h-4 text-zinc-500" />
-                          <span className="text-sm text-zinc-200 font-medium">{table.name}</span>
-                          {table.dependencies !== undefined && table.dependencies > 0 && (
-                            <span className="text-xs text-zinc-500 ml-auto">
-                              {table.dependencies} deps
-                            </span>
-                          )}
+                {(() => {
+                  const table = schema?.tables?.find(t => t.name === selectedItemId);
+                  if (!table) return <p className="text-zinc-500">Tabela não encontrada</p>;
+                  return (
+                    <div className="max-w-2xl">
+                      <div className="flex items-center gap-3 mb-6">
+                        <Table2 className="w-6 h-6 text-zinc-400" />
+                        <h2 className="text-xl font-semibold text-zinc-100">{table.name}</h2>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Physical Name</label>
+                          <p className="text-sm text-zinc-300 font-mono mt-1">{table.physical_name}</p>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
-                      <Table2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                      <p className="text-zinc-400">Nenhuma tabela encontrada</p>
-                      <p className="text-xs text-zinc-600 mt-2">Execute wxcode parse-schema para importar as tabelas</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : activeView === "queries" ? (
-              /* Queries view - show actual queries */
-              <div className="h-full p-6 overflow-y-auto">
-                <div className="max-w-4xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Database className="w-6 h-6 text-zinc-400" />
-                    <h2 className="text-xl font-semibold text-zinc-100">Queries</h2>
-                    <span className="text-sm text-zinc-500">({queries?.length || 0})</span>
-                  </div>
-                  {queries && queries.length > 0 ? (
-                    <div className="space-y-2">
-                      {queries.map((query) => (
-                        <div
-                          key={query.id}
-                          className="flex items-center gap-3 px-4 py-3 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
-                        >
-                          <Database className="w-4 h-4 text-zinc-500" />
-                          <span className="text-sm text-zinc-200 font-medium">{query.name}</span>
-                          {query.sourceFile && (
-                            <span className="text-xs text-zinc-600 font-mono ml-auto">
-                              {query.sourceFile}
-                            </span>
-                          )}
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Connection</label>
+                          <p className="text-sm text-zinc-300 mt-1">{table.connection_name}</p>
                         </div>
-                      ))}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Columns</label>
+                            <p className="text-lg text-zinc-200 mt-1">{table.column_count}</p>
+                          </div>
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Indexes</label>
+                            <p className="text-lg text-zinc-200 mt-1">{table.index_count}</p>
+                          </div>
+                        </div>
+                        {table.primary_key.length > 0 && (
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Primary Key</label>
+                            <p className="text-sm text-zinc-300 font-mono mt-1">{table.primary_key.join(", ")}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
-                      <Database className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                      <p className="text-zinc-400">Nenhuma query encontrada</p>
-                      <p className="text-xs text-zinc-600 mt-2">Queries são importadas de arquivos .WDR</p>
-                    </div>
-                  )}
-                </div>
+                  );
+                })()}
               </div>
-            ) : activeView === "connections" ? (
-              /* Connections view - direct list without nested tree */
+            ) : activeView === "query-detail" && selectedItemId ? (
+              /* Query detail view */
               <div className="h-full p-6 overflow-y-auto">
-                <div className="max-w-4xl">
-                  <div className="flex items-center gap-3 mb-6">
-                    <Link2 className="w-6 h-6 text-zinc-400" />
-                    <h2 className="text-xl font-semibold text-zinc-100">Connections</h2>
-                  </div>
-                  <p className="text-sm text-zinc-500 mb-4">
-                    Database connections configured in the WinDev project.
-                  </p>
-                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
-                    <Link2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                    <p className="text-zinc-400">Connection manager coming soon</p>
-                    <p className="text-xs text-zinc-600 mt-2">View configured database connections</p>
-                  </div>
-                </div>
+                {(() => {
+                  const query = queries?.find(q => q.id === selectedItemId);
+                  if (!query) return <p className="text-zinc-500">Query não encontrada</p>;
+                  return (
+                    <div className="max-w-2xl">
+                      <div className="flex items-center gap-3 mb-6">
+                        <Database className="w-6 h-6 text-zinc-400" />
+                        <h2 className="text-xl font-semibold text-zinc-100">{query.name}</h2>
+                      </div>
+                      <div className="space-y-4">
+                        {query.sourceFile && (
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Source File</label>
+                            <p className="text-sm text-zinc-300 font-mono mt-1">{query.sourceFile}</p>
+                          </div>
+                        )}
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Status</label>
+                          <p className="text-sm text-zinc-300 mt-1">{query.status}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : activeView === "connection-detail" && selectedItemId ? (
+              /* Connection detail view */
+              <div className="h-full p-6 overflow-y-auto">
+                {(() => {
+                  const conn = schema?.connections?.find(c => c.name === selectedItemId);
+                  if (!conn) return <p className="text-zinc-500">Conexão não encontrada</p>;
+                  return (
+                    <div className="max-w-2xl">
+                      <div className="flex items-center gap-3 mb-6">
+                        <Link2 className="w-6 h-6 text-zinc-400" />
+                        <h2 className="text-xl font-semibold text-zinc-100">{conn.name}</h2>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Database Type</label>
+                          <p className="text-sm text-zinc-300 mt-1">{conn.driver_name || conn.database_type}</p>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Server</label>
+                          <p className="text-sm text-zinc-300 font-mono mt-1">{conn.source}:{conn.port}</p>
+                        </div>
+                        <div className="bg-zinc-800/50 rounded-lg p-4">
+                          <label className="text-xs text-zinc-500 uppercase tracking-wide">Database</label>
+                          <p className="text-sm text-zinc-300 mt-1">{conn.database}</p>
+                        </div>
+                        {conn.user && (
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">User</label>
+                            <p className="text-sm text-zinc-300 mt-1">{conn.user}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ) : activeView === "configuration" && selectedConfigId ? (
               /* Configuration view */
