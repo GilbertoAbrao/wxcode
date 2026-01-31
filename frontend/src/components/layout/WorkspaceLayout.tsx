@@ -16,6 +16,8 @@ export interface WorkspaceLayoutProps {
   sidebarCollapsed?: boolean;
   /** Callback when sidebar collapse changes */
   onSidebarCollapsedChange?: (collapsed: boolean) => void;
+  /** Expand sidebar on mouse hover when collapsed */
+  expandOnHover?: boolean;
   className?: string;
 }
 
@@ -28,6 +30,7 @@ export function WorkspaceLayout({
   sidebarDefaultCollapsed,
   sidebarCollapsed,
   onSidebarCollapsedChange,
+  expandOnHover,
   className,
 }: WorkspaceLayoutProps) {
   return (
@@ -45,6 +48,7 @@ export function WorkspaceLayout({
             defaultCollapsed={sidebarDefaultCollapsed}
             collapsed={sidebarCollapsed}
             onCollapsedChange={onSidebarCollapsedChange}
+            expandOnHover={expandOnHover}
           />
         )}
 

@@ -30,6 +30,8 @@ export interface SidebarProps {
   collapsed?: boolean;
   /** Callback when collapse state changes (for controlled mode) */
   onCollapsedChange?: (collapsed: boolean) => void;
+  /** Expand sidebar on mouse hover when collapsed */
+  expandOnHover?: boolean;
   className?: string;
 }
 
@@ -39,14 +41,19 @@ export function Sidebar({
   defaultCollapsed = false,
   collapsed: controlledCollapsed,
   onCollapsedChange,
+  expandOnHover = false,
   className,
 }: SidebarProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(defaultCollapsed);
+  const [isHovering, setIsHovering] = useState(false);
   const pathname = usePathname();
 
   // Use controlled state if provided, otherwise internal
   const isControlled = controlledCollapsed !== undefined;
-  const isCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
+  const actuallyCollapsed = isControlled ? controlledCollapsed : internalCollapsed;
+
+  // Visual state: collapsed but hovering with expandOnHover shows expanded visually
+  const isCollapsed = actuallyCollapsed && !(expandOnHover && isHovering);
 
   const toggleCollapsed = useCallback(() => {
     if (isControlled) {
@@ -65,6 +72,8 @@ export function Sidebar({
         transition-all duration-200
         ${className || ""}
       `}
+      onMouseEnter={() => expandOnHover && setIsHovering(true)}
+      onMouseLeave={() => expandOnHover && setIsHovering(false)}
     >
       {/* Collapse button */}
       <div className="flex-shrink-0 h-12 flex items-center justify-end px-2 border-b border-zinc-800">

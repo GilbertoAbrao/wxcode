@@ -6,7 +6,7 @@ import { useProject } from "@/hooks/useProject";
 import { useOutputProject } from "@/hooks/useOutputProjects";
 import { useMilestones } from "@/hooks/useMilestones";
 import { WorkspaceLayout, type SidebarSection } from "@/components/layout";
-import { TokenUsageCard, DeleteProjectModal } from "@/components/project";
+import { DeleteProjectModal } from "@/components/project";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -141,9 +141,9 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
     <WorkspaceLayout
       breadcrumbs={breadcrumbs}
       sidebarSections={sidebarSections}
-      sidebarFooter={<TokenUsageCard projectId={projectId} showDetails={false} />}
       sidebarCollapsed={sidebarCollapsed}
       onSidebarCollapsedChange={handleSidebarCollapsedChange}
+      expandOnHover
       headerActions={
         <Button
           variant="ghost"

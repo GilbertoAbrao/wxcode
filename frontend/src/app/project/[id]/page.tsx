@@ -16,7 +16,7 @@ import { useProject } from "@/hooks/useProject";
 import type { TreeNode } from "@/types/tree";
 import type { ElementType } from "@/types/project";
 import { elementTypeConfig } from "@/types/project";
-import { Plus, List, GitGraph, Filter, ChevronUp, ChevronDown, Terminal as TerminalIcon, ChevronRight, Settings, FolderTree } from "lucide-react";
+import { Plus, GitGraph, Filter, ChevronUp, ChevronDown, Terminal as TerminalIcon, ChevronRight, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
 
 interface WorkspacePageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +24,7 @@ interface WorkspacePageProps {
 
 // Navigation types for KB internal menu
 type NavSection = "graphs" | "analysis" | "configurations";
-type ActiveView = "dependency-graph" | "elements" | "configuration";
+type ActiveView = "dependency-graph" | "tables" | "queries" | "connections" | "configuration";
 
 const elementTypes: ElementType[] = ["page", "procedure", "class", "query", "table"];
 
@@ -94,8 +94,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<ElementType | "all">("all");
 
-  // Navigation state - start with graphs expanded and dependency graph active
-  const [expandedSections, setExpandedSections] = useState<NavSection[]>(["graphs"]);
+  // Navigation state - start with all sections expanded and dependency graph active
+  const [expandedSections, setExpandedSections] = useState<NavSection[]>(["graphs", "analysis", "configurations"]);
   const [activeView, setActiveView] = useState<ActiveView>("dependency-graph");
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
 
@@ -271,7 +271,14 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   const handleNodeDoubleClick = useCallback(
     (node: GraphNode) => {
-      setActiveView("elements");
+      // Navigate to appropriate view based on node type
+      if (node.type === "table") {
+        setActiveView("tables");
+      } else if (node.type === "query") {
+        setActiveView("queries");
+      } else {
+        setActiveView("tables"); // Default to tables
+      }
       if (!expandedSections.includes("analysis")) {
         setExpandedSections(prev => [...prev, "analysis"]);
       }
@@ -353,10 +360,24 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
               onToggle={() => toggleSection("analysis")}
             >
               <MenuItem
-                label="Elements"
-                icon={<List className="w-3.5 h-3.5" />}
-                isActive={activeView === "elements"}
-                onClick={() => setActiveView("elements")}
+                label="Tables"
+                icon={<Table2 className="w-3.5 h-3.5" />}
+                isActive={activeView === "tables"}
+                onClick={() => setActiveView("tables")}
+                depth={1}
+              />
+              <MenuItem
+                label="Queries"
+                icon={<Database className="w-3.5 h-3.5" />}
+                isActive={activeView === "queries"}
+                onClick={() => setActiveView("queries")}
+                depth={1}
+              />
+              <MenuItem
+                label="Connections"
+                icon={<Link2 className="w-3.5 h-3.5" />}
+                isActive={activeView === "connections"}
+                onClick={() => setActiveView("connections")}
                 depth={1}
               />
             </MenuSection>
@@ -373,6 +394,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   <MenuItem
                     key={config.configuration_id}
                     label={config.name}
+                    icon={<Cog className="w-3.5 h-3.5" />}
                     isActive={activeView === "configuration" && selectedConfigId === config.configuration_id}
                     onClick={() => {
                       setActiveView("configuration");
@@ -406,8 +428,8 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   </div>
                 )}
               </div>
-            ) : activeView === "elements" ? (
-              /* Elements view */
+            ) : (activeView === "tables" || activeView === "queries" || activeView === "connections") ? (
+              /* Analysis views - Tables, Queries, Connections */
               <ResizablePanels
                 layout="horizontal"
                 defaultSizes={[25, 75]}
