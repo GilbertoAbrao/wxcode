@@ -30,7 +30,7 @@ import {
 } from "@/components/milestone";
 import { ProjectDashboard, MilestoneDashboard } from "@/components/dashboard";
 import { useProjectDashboard, useMilestoneDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
-import { Loader2, Play, LayoutDashboard } from "lucide-react";
+import { Loader2, Play, LayoutDashboard, ChevronUp, ChevronDown, Terminal as TerminalIcon } from "lucide-react";
 
 interface OutputProjectPageProps {
   params: Promise<{ id: string; projectId: string }>;
@@ -88,6 +88,9 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
 
   // Dashboard view state - show dashboard in center panel
   const [showDashboard, setShowDashboard] = useState(!urlMilestoneId);
+
+  // Terminal collapsed state - collapsed by default
+  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(true);
 
   // Sync URL with selected milestone
   const setSelectedMilestoneId = useCallback((id: string | null) => {
@@ -515,19 +518,15 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         </div>
 
         {/* Right: Content + Chat + Terminal */}
-        <ResizablePanels
-          layout="vertical"
-          defaultSizes={[70, 30]}
-          minSizes={[30, 20]}
-          autoSaveId="output-project-vertical"
-        >
-          {/* Top: Content + Chat */}
-          <ResizablePanels
-            layout="horizontal"
-            defaultSizes={[60, 40]}
-            minSizes={[30, 25]}
-            autoSaveId="output-project-content-chat"
-          >
+        <div className="h-full flex flex-col">
+          {/* Top: Content + Chat - takes remaining space */}
+          <div className="flex-1 min-h-0">
+            <ResizablePanels
+              layout="horizontal"
+              defaultSizes={[60, 40]}
+              minSizes={[30, 25]}
+              autoSaveId="output-project-content-chat"
+            >
             {/* Content Viewer */}
             <div className="h-full bg-zinc-950 flex flex-col">
               <div className="flex-1 overflow-y-auto">
@@ -656,19 +655,44 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               />
             </div>
           </ResizablePanels>
+          </div>
 
-          {/* Bottom: Terminal */}
-          <div className="h-full bg-zinc-950 border-t border-zinc-800 flex flex-col">
-            <div className="flex-shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
+          {/* Bottom: Terminal - fixed height when collapsed, percentage when expanded */}
+          <div
+            className={`
+              flex-shrink-0 bg-zinc-950 border-t border-zinc-800 flex flex-col
+              transition-all duration-200 ease-in-out
+              ${isTerminalCollapsed ? "h-10" : "h-[35%] min-h-[200px]"}
+            `}
+          >
+            <button
+              onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
+              className="flex-shrink-0 h-10 px-4 flex items-center justify-between hover:bg-zinc-900/50 transition-colors cursor-pointer w-full"
+            >
               <div className="flex items-center gap-2">
+                <TerminalIcon className="w-4 h-4 text-zinc-500" />
                 <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
-                {/* Status é mostrado pelo ConnectionStatus dentro do InteractiveTerminal */}
+                {project?.workspace_path && (
+                  <span className="text-xs text-zinc-600 font-mono">
+                    {project.workspace_path}
+                  </span>
+                )}
               </div>
-              {/* TODO: Implementar cancel via SIGTERM ao PTY */}
-            </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {/* Terminal continuo por workspace - SEMPRE usa outputProjectId */}
-              {/* A sessao PTY eh unica por output_project, milestones enviam comandos */}
+              <div className="flex items-center gap-2 text-zinc-500">
+                {isTerminalCollapsed ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </div>
+            </button>
+            {/* Terminal sempre renderizado para manter WebSocket ativo, apenas escondido quando colapsado */}
+            <div
+              className={`
+                flex-1 min-h-0 overflow-hidden border-t border-zinc-800
+                ${isTerminalCollapsed ? "h-0 opacity-0" : ""}
+              `}
+            >
               <InteractiveTerminal
                 ref={terminalRef}
                 outputProjectId={projectId}
@@ -679,7 +703,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               />
             </div>
           </div>
-        </ResizablePanels>
+        </div>
       </ResizablePanels>
 
       {/* Create Milestone Modal */}

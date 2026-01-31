@@ -10,9 +10,6 @@ import { TokenUsageCard, DeleteProjectModal } from "@/components/project";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
-  GitGraph,
-  GitBranch,
-  Package,
   Layers,
   Loader2,
   Trash2,
@@ -83,31 +80,13 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
       items: [
         {
           id: "workspace",
-          label: "Workspace",
+          label: "Knowledge Base",
           href: `/project/${projectId}`,
           icon: LayoutDashboard,
         },
         {
-          id: "graph",
-          label: "Grafo",
-          href: `/project/${projectId}/graph`,
-          icon: GitGraph,
-        },
-        {
-          id: "conversions",
-          label: "Conversões",
-          href: `/project/${projectId}/conversions`,
-          icon: GitBranch,
-        },
-        {
-          id: "produtos",
-          label: "Produtos",
-          href: `/project/${projectId}/factory`,
-          icon: Package,
-        },
-        {
           id: "output-projects",
-          label: "Output Projects",
+          label: "Projects",
           href: `/project/${projectId}/output-projects`,
           icon: Layers,
         },
@@ -123,7 +102,7 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
         return [
           { label: "Knowledge Base", href: "/dashboard" },
           { label: project?.name || "Projeto", href: `/project/${projectId}` },
-          { label: "Output Projects", href: `/project/${projectId}/output-projects` },
+          { label: "Projects", href: `/project/${projectId}/output-projects` },
           { label: outputProject?.name || "...", href: `/project/${projectId}/output-projects/${outputProjectId}` },
           { label: selectedMilestone.element_name },
         ];
@@ -131,7 +110,7 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
         return [
           { label: "Knowledge Base", href: "/dashboard" },
           { label: project?.name || "Projeto", href: `/project/${projectId}` },
-          { label: "Output Projects", href: `/project/${projectId}/output-projects` },
+          { label: "Projects", href: `/project/${projectId}/output-projects` },
           { label: outputProject?.name || "..." },
         ];
       }

@@ -77,6 +77,8 @@ export interface UseTerminalWebSocketTarget {
   milestoneId?: string | null;
   /** Output Project ID to connect to (uses /api/output-projects/{id}/terminal) */
   outputProjectId?: string | null;
+  /** Knowledge Base ID to connect to (uses /api/projects/{id}/terminal) */
+  kbId?: string | null;
 }
 
 export interface UseTerminalWebSocketReturn {
@@ -116,9 +118,9 @@ export function useTerminalWebSocket(
       ? { milestoneId: target }
       : target || {};
 
-  const { milestoneId, outputProjectId } = normalizedTarget;
-  const targetId = milestoneId || outputProjectId;
-  const targetType = milestoneId ? "milestone" : outputProjectId ? "output-project" : null;
+  const { milestoneId, outputProjectId, kbId } = normalizedTarget;
+  const targetId = milestoneId || outputProjectId || kbId;
+  const targetType = milestoneId ? "milestone" : outputProjectId ? "output-project" : kbId ? "kb" : null;
 
   const wsRef = useRef<WebSocket | null>(null);
   const isConnectingRef = useRef(false);
@@ -171,9 +173,15 @@ export function useTerminalWebSocket(
     const apiHost = apiUrl.replace(/^https?:\/\//, "");
 
     // Build URL based on target type
-    const endpoint = targetType === "milestone"
-      ? `/api/milestones/${targetId}/terminal`
-      : `/api/output-projects/${targetId}/terminal`;
+    let endpoint: string;
+    if (targetType === "milestone") {
+      endpoint = `/api/milestones/${targetId}/terminal`;
+    } else if (targetType === "output-project") {
+      endpoint = `/api/output-projects/${targetId}/terminal`;
+    } else {
+      // kb type
+      endpoint = `/api/projects/${targetId}/terminal`;
+    }
     const wsUrl = `${wsProtocol}//${apiHost}${endpoint}`;
 
     console.log("[useTerminalWebSocket] Connecting to:", wsUrl);
