@@ -191,8 +191,9 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
       terminalRef.current.sendInput(char);
       await new Promise(resolve => setTimeout(resolve, 10));
     }
-    await new Promise(resolve => setTimeout(resolve, 50));
-    terminalRef.current.sendInput("\r");
+    // Send Enter (newline) - increased delay to ensure PTY processes all chars
+    await new Promise(resolve => setTimeout(resolve, 200));
+    terminalRef.current.sendInput("\n");
   }, []);
 
   // Handle AskUserQuestion events from WebSocket

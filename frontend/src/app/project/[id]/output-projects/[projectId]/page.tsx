@@ -382,9 +382,9 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       terminalRef.current.sendInput(char);
       await new Promise(resolve => setTimeout(resolve, 10)); // 10ms between chars
     }
-    // Send Enter (carriage return)
-    await new Promise(resolve => setTimeout(resolve, 50)); // small pause before Enter
-    terminalRef.current.sendInput("\r");
+    // Send Enter (newline) - increased delay to ensure PTY processes all chars
+    await new Promise(resolve => setTimeout(resolve, 200));
+    terminalRef.current.sendInput("\n");
   }, []);
 
   // Handle project initialization
