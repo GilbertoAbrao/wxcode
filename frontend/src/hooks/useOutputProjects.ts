@@ -13,6 +13,7 @@ import type {
   OutputProjectListResponse,
   CreateOutputProjectRequest,
 } from "@/types/output-project";
+import { getBackendWsUrl } from "@/lib/api";
 
 /**
  * Message from WebSocket stream during initialization.
@@ -186,10 +187,9 @@ export function useInitializeProject(projectId: string) {
     setIsComplete(false);
 
     // Build WebSocket URL - connect directly to backend (WebSocket can't go through Next.js API proxy)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
-    const wsUrl = apiUrl.replace(/^http/, "ws");
+    const wsBaseUrl = getBackendWsUrl();
     const ws = new WebSocket(
-      `${wsUrl}/api/output-projects/${projectId}/initialize`
+      `${wsBaseUrl}/api/output-projects/${projectId}/initialize`
     );
 
     ws.onmessage = (event) => {

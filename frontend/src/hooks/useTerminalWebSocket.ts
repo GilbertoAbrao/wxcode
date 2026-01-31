@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { getBackendWsUrl } from "@/lib/api";
 import type {
   IncomingTerminalMessage,
   OutgoingTerminalMessage,
@@ -169,9 +170,7 @@ export function useTerminalWebSocket(
     setErrorCode(null);
 
     // Build WebSocket URL (Next.js doesn't proxy WS, connect directly to backend)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8035";
-    const wsProtocol = apiUrl.startsWith("https") ? "wss:" : "ws:";
-    const apiHost = apiUrl.replace(/^https?:\/\//, "");
+    const wsBaseUrl = getBackendWsUrl();
 
     // Build URL based on target type
     let endpoint: string;
@@ -183,7 +182,7 @@ export function useTerminalWebSocket(
       // kb type
       endpoint = `/api/projects/${targetId}/terminal`;
     }
-    const wsUrl = `${wsProtocol}//${apiHost}${endpoint}`;
+    const wsUrl = `${wsBaseUrl}${endpoint}`;
 
     console.log("[useTerminalWebSocket] Connecting to:", wsUrl);
 

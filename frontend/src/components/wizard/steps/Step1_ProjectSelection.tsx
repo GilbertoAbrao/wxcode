@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { FolderOpen, Upload, Loader2, X, FileText, AlertCircle, CheckCircle } from "lucide-react";
+import { getBackendHttpUrl } from "@/lib/api";
 
 interface Step1Props {
   onNext: (projectPath: string, pdfDocsPath?: string) => void;
@@ -18,9 +19,9 @@ export function Step1_ProjectSelection({ onNext }: Step1Props) {
   // Verificar se backend está acessível
   React.useEffect(() => {
     const checkBackend = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
+      const backendUrl = getBackendHttpUrl();
       try {
-        const response = await fetch(`${apiUrl}/docs`, { method: "HEAD" });
+        const response = await fetch(`${backendUrl}/docs`, { method: "HEAD" });
         setBackendStatus(response.ok ? "online" : "offline");
       } catch {
         setBackendStatus("offline");
@@ -49,11 +50,11 @@ export function Step1_ProjectSelection({ onNext }: Step1Props) {
       console.log("Uploading project file:", projectFile.name, projectFile.size, "bytes");
 
       // Upload direto para o backend (não passa pelo proxy Next.js para evitar problemas com arquivos grandes)
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
+      const backendUrl = getBackendHttpUrl();
 
       let projectResponse;
       try {
-        projectResponse = await fetch(`${apiUrl}/api/import-wizard/upload/project`, {
+        projectResponse = await fetch(`${backendUrl}/api/import-wizard/upload/project`, {
           method: "POST",
           body: projectFormData,
         });
@@ -98,7 +99,7 @@ export function Step1_ProjectSelection({ onNext }: Step1Props) {
           pdfFormData.append("files", file);
         });
 
-        const pdfResponse = await fetch(`${apiUrl}/api/import-wizard/upload/pdfs`, {
+        const pdfResponse = await fetch(`${backendUrl}/api/import-wizard/upload/pdfs`, {
           method: "POST",
           body: pdfFormData,
         });

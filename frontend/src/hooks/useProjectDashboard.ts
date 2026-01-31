@@ -116,9 +116,8 @@ export function useProjectDashboard({
     if (!outputProjectId) return;
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
       const response = await fetch(
-        `${apiUrl}/api/output-projects/${outputProjectId}/dashboard`
+        `/api/output-projects/${outputProjectId}/dashboard`
       );
 
       if (!response.ok) {
@@ -144,7 +143,10 @@ export function useProjectDashboard({
       }
     } catch (err) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        // Network errors (e.g. backend unreachable) - treat as "no dashboard" not a fatal error
+        console.warn("Dashboard fetch failed:", err instanceof Error ? err.message : err);
+        setData(null);
+        setError(null);
         setIsLoading(false);
       }
     }
@@ -257,9 +259,8 @@ export function useMilestoneDashboard({
     }
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
       const response = await fetch(
-        `${apiUrl}/api/output-projects/${outputProjectId}/milestone-dashboard/${encodeURIComponent(milestoneFolderName)}`
+        `/api/output-projects/${outputProjectId}/milestone-dashboard/${encodeURIComponent(milestoneFolderName)}`
       );
 
       if (!response.ok) {
@@ -285,7 +286,10 @@ export function useMilestoneDashboard({
       }
     } catch (err) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        // Network errors - treat as "no dashboard" not a fatal error
+        console.warn("Milestone dashboard fetch failed:", err instanceof Error ? err.message : err);
+        setData(null);
+        setError(null);
         setIsLoading(false);
       }
     }

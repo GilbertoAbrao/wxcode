@@ -46,6 +46,8 @@ export interface InteractiveTerminalProps {
   onAskUserQuestion?: (event: AskUserQuestionEvent) => void;
   /** Called when progress events are received (tasks, file operations, summaries) */
   onProgress?: (event: ClaudeProgressEvent) => void;
+  /** Only connect WebSocket when true (default: true). Set to false to render terminal without connecting. */
+  enabled?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -62,6 +64,7 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       onProcessClosed,
       onAskUserQuestion,
       onProgress,
+      enabled = true,
       className,
     },
     ref
@@ -217,7 +220,9 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       // Focus terminal to receive keyboard input
       terminal.focus();
       // Connect WebSocket AFTER terminal is ready (Pitfall 4 from research)
-      connectRef.current();
+      if (enabled) {
+        connectRef.current();
+      }
       // Send initial dimensions
       sendResizeDebounced(terminal.rows, terminal.cols);
     });
@@ -254,6 +259,16 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       fitAddonRef.current = null;
     };
   }, [milestoneId, outputProjectId, kbId, sendResizeDebounced]); // Only re-run if target changes
+
+  // Connect/disconnect when enabled changes after mount
+  useEffect(() => {
+    if (!xtermRef.current) return; // Terminal not mounted yet
+    if (enabled) {
+      connectRef.current();
+    } else {
+      disconnectRef.current();
+    }
+  }, [enabled]);
 
   // Sync connection state and sessionId to context for navigation persistence
   useEffect(() => {

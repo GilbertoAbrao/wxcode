@@ -29,8 +29,7 @@ export default function ImportPage() {
 
   const handleProjectSelection = async (projectPath: string, pdfDocsPath?: string) => {
     try {
-      // Create session with FormData - chamada direta ao backend
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
+      // Create session with FormData via Next.js proxy
       const formData = new FormData();
       formData.append("project_path", projectPath);
       if (pdfDocsPath) {
@@ -39,7 +38,7 @@ export default function ImportPage() {
 
       console.log("Creating session with:", { projectPath, pdfDocsPath });
 
-      const response = await fetch(`${apiUrl}/api/import-wizard/sessions`, {
+      const response = await fetch(`/api/import-wizard/sessions`, {
         method: "POST",
         body: formData,
       });

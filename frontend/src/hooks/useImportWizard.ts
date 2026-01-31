@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { getBackendWsUrl } from "@/lib/api";
 
 export interface WizardLog {
   level: "info" | "warning" | "error" | "debug";
@@ -73,7 +74,7 @@ export function useImportWizard(sessionId?: string) {
       return;
     }
 
-    const wsBaseUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8052";
+    const wsBaseUrl = getBackendWsUrl();
     const wsUrl = `${wsBaseUrl}/api/import-wizard/ws/${sessionId}`;
     console.log("[HOOK] Creating WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);

@@ -389,16 +389,23 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
 
   // Handle project initialization
   const handleInitialize = useCallback(async () => {
+    setIsInitializing(true);
+
+    // Wait for terminal to connect (enabled flag will trigger connection)
+    const maxWait = 10000;
+    const start = Date.now();
+    while (!terminalRef.current?.isConnected() && Date.now() - start < maxWait) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
     if (!terminalRef.current?.isConnected()) {
-      console.error("Terminal not connected");
+      console.error("Terminal failed to connect");
+      setIsInitializing(false);
       return;
     }
 
-    setIsInitializing(true);
     try {
-      // Call prepare-initialization endpoint
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
-      const response = await fetch(`${apiUrl}/api/output-projects/${projectId}/prepare-initialization`, {
+      // Call prepare-initialization endpoint (via Next.js proxy)
+      const response = await fetch(`/api/output-projects/${projectId}/prepare-initialization`, {
         method: "POST",
       });
 
@@ -439,9 +446,8 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
 
     setIsInitializingMilestone(true);
     try {
-      // Call prepare endpoint to get context path
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
-      const response = await fetch(`${apiUrl}/api/milestones/${milestoneId}/prepare`, {
+      // Call prepare endpoint to get context path (via Next.js proxy)
+      const response = await fetch(`/api/milestones/${milestoneId}/prepare`, {
         method: "POST",
       });
 
@@ -768,6 +774,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                 ref={terminalRef}
                 outputProjectId={projectId}
                 className="h-full"
+                enabled={!!project && (project.status !== "created" || isInitializing)}
                 onError={(msg) => console.error("Terminal error:", msg)}
                 onAskUserQuestion={handleAskUserQuestion}
                 onProgress={handleProgress}

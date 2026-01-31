@@ -13,6 +13,7 @@ import type {
   MilestoneListResponse,
   CreateMilestoneRequest,
 } from "@/types/milestone";
+import { getBackendWsUrl } from "@/lib/api";
 
 /**
  * Fetch milestones for an output project.
@@ -115,10 +116,9 @@ export function useInitializeMilestone(milestoneId: string) {
     setIsComplete(false);
 
     // Build WebSocket URL - connect directly to backend (WebSocket can't go through Next.js API proxy)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8052";
-    const wsUrl = apiUrl.replace(/^http/, "ws");
+    const wsBaseUrl = getBackendWsUrl();
     const ws = new WebSocket(
-      `${wsUrl}/api/milestones/${milestoneId}/initialize`
+      `${wsBaseUrl}/api/milestones/${milestoneId}/initialize`
     );
 
     ws.onmessage = (event) => {

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useRef, useCallback, useState } from "react";
+import { getBackendWsUrl } from "@/lib/api";
 
 export interface StreamMessage {
   type: "log" | "status" | "complete" | "error" | "ping" | "question" | "multi_question" | "info" | "tool_result" | "checkpoint";
@@ -101,13 +102,11 @@ export function useConversionStream(
     isConnectingRef.current = true;
 
     // Use backend URL directly for WebSocket (Next.js doesn't proxy WS)
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8035";
-    const wsProtocol = apiUrl.startsWith("https") ? "wss:" : "ws:";
-    const apiHost = apiUrl.replace(/^https?:\/\//, "");
+    const wsBaseUrl = getBackendWsUrl();
     const basePath = endpointType === "product"
       ? "/api/products/ws/"
       : "/api/conversions/ws/";
-    const wsUrl = `${wsProtocol}//${apiHost}${basePath}${conversionId}`;
+    const wsUrl = `${wsBaseUrl}${basePath}${conversionId}`;
 
     console.log("[useConversionStream] Connecting to:", wsUrl);
 
