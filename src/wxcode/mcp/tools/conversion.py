@@ -6,6 +6,7 @@ identify elements ready for conversion, and mark elements/projects as converted.
 Write operations:
 - mark_converted: Mark an element as converted
 - mark_project_initialized: Mark an OutputProject as initialized
+- create_milestone: Create a milestone associated with WXCODE structure
 """
 
 import logging
@@ -23,6 +24,7 @@ from wxcode.config import get_settings
 from wxcode.mcp.instance import mcp
 from wxcode.models import Element, Project
 from wxcode.models.element import ConversionStatus
+from wxcode.models.milestone import Milestone, MilestoneStatus
 from wxcode.models.output_project import OutputProject, OutputProjectStatus
 
 
@@ -672,6 +674,132 @@ async def mark_project_initialized(
         audit_logger.error(
             "mark_project_initialized failed: output_project_id=%s error=%s",
             output_project_id,
+            str(e),
+        )
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
+
+
+@mcp.tool
+async def create_milestone(
+    ctx: Context,
+    output_project_id: str,
+    element_name: str,
+    wxcode_version: str,
+    milestone_folder_name: str,
+    element_id: str | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """
+    Create a milestone associated with WXCODE structure.
+
+    Creates a new Milestone record linking an OutputProject to a KB Element,
+    with WXCODE version and folder name metadata. Unlike the REST API endpoint,
+    this allows multiple milestones for the same element (different versions).
+
+    This is a write operation that requires explicit confirm=True to execute.
+    Calling with confirm=False returns a preview of the change.
+
+    Args:
+        output_project_id: ID of the OutputProject
+        element_name: Name of the element to convert
+        wxcode_version: WXCODE milestone version (e.g., v1.0, v1.1)
+        milestone_folder_name: Name of the milestone folder in .planning/milestones/
+        element_id: Optional element ID (if not provided, searches by name)
+        confirm: Set to True to execute the change (default: False for preview)
+
+    Returns:
+        Preview dict (confirm=False) or execution result (confirm=True)
+    """
+    try:
+        # Validate OutputProject exists
+        output_project = await OutputProject.get(output_project_id)
+        if not output_project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"OutputProject '{output_project_id}' not found",
+            }
+
+        # Find element by ID or name
+        element = None
+        if element_id:
+            element = await Element.get(element_id)
+            if not element:
+                return {
+                    "error": True,
+                    "code": "NOT_FOUND",
+                    "message": f"Element with ID '{element_id}' not found",
+                }
+        else:
+            # Search by name using helper
+            element, error = await _find_element(ctx, element_name, project_name=None)
+            if error:
+                return {
+                    "error": True,
+                    "code": "NOT_FOUND",
+                    "message": error,
+                }
+
+        # Preview mode
+        if not confirm:
+            return {
+                "error": False,
+                "requires_confirmation": True,
+                "preview": {
+                    "output_project_id": output_project_id,
+                    "output_project_name": output_project.name,
+                    "element_id": str(element.id),
+                    "element_name": element.source_name,
+                    "wxcode_version": wxcode_version,
+                    "milestone_folder_name": milestone_folder_name,
+                    "status": MilestoneStatus.IN_PROGRESS.value,
+                    "instruction": (
+                        "Call create_milestone again with confirm=True to execute this change"
+                    ),
+                },
+            }
+
+        # Execute mode - create the milestone
+        milestone = Milestone(
+            output_project_id=output_project.id,
+            element_id=element.id,
+            element_name=element.source_name,
+            status=MilestoneStatus.IN_PROGRESS,
+            wxcode_version=wxcode_version,
+            milestone_folder_name=milestone_folder_name,
+        )
+        await milestone.insert()
+
+        # Audit log
+        audit_logger.info(
+            "create_milestone executed: output_project_id=%s element=%s version=%s folder=%s milestone_id=%s",
+            output_project_id,
+            element.source_name,
+            wxcode_version,
+            milestone_folder_name,
+            str(milestone.id),
+        )
+
+        return {
+            "error": False,
+            "milestone_id": str(milestone.id),
+            "element_name": element.source_name,
+            "wxcode_version": wxcode_version,
+            "milestone_folder_name": milestone_folder_name,
+            "status": MilestoneStatus.IN_PROGRESS.value,
+            "created": True,
+        }
+
+    except Exception as e:
+        audit_logger.error(
+            "create_milestone failed: output_project_id=%s element=%s error=%s",
+            output_project_id,
+            element_name,
             str(e),
         )
         return {

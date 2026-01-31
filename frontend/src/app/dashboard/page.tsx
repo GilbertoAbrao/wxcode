@@ -30,15 +30,15 @@ export default function DashboardPage() {
           "
         >
           <Plus className="w-4 h-4" />
-          Novo Projeto
+          Importar Projeto WinDev
         </button>
       </Header>
 
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-zinc-100">Projetos</h1>
+          <h1 className="text-2xl font-bold text-zinc-100">Knowledge Base</h1>
           <p className="text-zinc-500 mt-1">
-            Gerencie seus projetos de conversão WinDev/WebDev
+            Gerencie suas bases de conhecimento WinDev/WebDev
           </p>
         </div>
 

@@ -5,12 +5,8 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: false,
   turbopack: {
-    root: path.resolve(__dirname),
-    resolveAlias: {
-      tailwindcss: path.resolve(__dirname, "node_modules/tailwindcss"),
-      "tw-animate-css": path.resolve(__dirname, "node_modules/tw-animate-css"),
-      "@/styles": path.resolve(__dirname, "src/styles"),
-    },
+    // Set root to wxcode workspace to prevent inferring /Users/gilberto
+    root: path.resolve(__dirname, ".."),
   },
 };
 

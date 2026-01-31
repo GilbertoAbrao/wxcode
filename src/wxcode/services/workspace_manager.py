@@ -239,3 +239,57 @@ class WorkspaceManager:
 
         logger.info(f"Output project workspace criado: {workspace_path}")
         return workspace_path
+
+    @classmethod
+    def create_kb_workspace(
+        cls,
+        project_name: str,
+        imported_from: str,
+    ) -> Path:
+        """
+        Cria workspace para uma Knowledge Base.
+
+        Knowledge Bases sao armazenadas em:
+        ~/.wxcode/workspaces/knowledge-bases/{project_name}_{id}/
+
+        Args:
+            project_name: Nome do projeto/KB
+            imported_from: Caminho do arquivo .wwp de origem
+
+        Returns:
+            Path do diretorio do workspace
+        """
+        cls.ensure_base_directory()
+
+        # Knowledge bases vao em subdiretorio separado
+        kb_base = cls.WORKSPACES_BASE / "knowledge-bases"
+        try:
+            kb_base.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.error(f"Falha ao criar diretorio base de knowledge-bases: {e}")
+            raise
+
+        workspace_id = secrets.token_hex(4)
+        sanitized_name = cls._sanitize_name(project_name)
+        dir_name = f"{sanitized_name}_{workspace_id}"
+        workspace_path = kb_base / dir_name
+
+        try:
+            workspace_path.mkdir(parents=True, exist_ok=True)
+        except OSError as e:
+            logger.error(f"Falha ao criar workspace de knowledge base: {e}")
+            raise
+
+        # Cria arquivo de metadados
+        meta_file = workspace_path / ".knowledge-base.json"
+        import json
+        meta_data = {
+            "workspace_id": workspace_id,
+            "project_name": project_name,
+            "imported_from": imported_from,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        meta_file.write_text(json.dumps(meta_data, indent=2))
+
+        logger.info(f"Knowledge base workspace criado: {workspace_path}")
+        return workspace_path

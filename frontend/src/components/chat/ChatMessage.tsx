@@ -3,6 +3,8 @@
 import React, { memo, useState, useMemo, useCallback } from "react";
 import { User, Bot, HelpCircle, ChevronDown, ChevronRight, ChevronLeft, AlertCircle, Wrench, Check, Send, Play } from "lucide-react";
 import type { MessageType, MessageOption, SelectionType, QuestionItem } from "@/types/chat";
+import { getCommandLabel } from "@/utils/wxcode-commands";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 export interface ChatMessageProps {
   role: "user" | "assistant";
@@ -272,10 +274,11 @@ function ChatMessageComponent({
               <button
                 key={inlineMatch.index}
                 onClick={() => onSkillClick?.(codeContent)}
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-700/50 hover:bg-purple-600/50 text-purple-200 rounded text-xs font-mono transition-colors"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-700/50 hover:bg-purple-600/50 text-purple-200 rounded text-xs font-medium transition-colors"
+                title={codeContent}
               >
                 <Play className="w-2.5 h-2.5" />
-                {codeContent}
+                {getCommandLabel(codeContent)}
               </button>
             );
           } else {
@@ -291,10 +294,11 @@ function ChatMessageComponent({
             <button
               key={inlineMatch.index}
               onClick={() => onSkillClick?.(matched)}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-700/50 hover:bg-purple-600/50 text-purple-200 rounded text-xs font-mono transition-colors"
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-700/50 hover:bg-purple-600/50 text-purple-200 rounded text-xs font-medium transition-colors"
+              title={matched}
             >
               <Play className="w-2.5 h-2.5" />
-              {matched}
+              {getCommandLabel(matched)}
             </button>
           );
         }
@@ -373,9 +377,10 @@ function ChatMessageComponent({
                 key={idx}
                 onClick={() => onSkillClick?.(cmd.skill)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-700/40 hover:bg-purple-600/50 text-purple-200 rounded-lg text-sm font-medium transition-colors border border-purple-600/30"
+                title={cmd.skill}
               >
                 <Play className="w-3.5 h-3.5" />
-                {cmd.skill}
+                {getCommandLabel(cmd.skill)}
               </button>
             ))}
           </div>
@@ -421,14 +426,12 @@ function ChatMessageComponent({
       return null;
     }
 
-    // Se tem formatação markdown ou comandos de skill, usa renderização formatada
-    if (hasMarkdownFormatting(content) || extractSkillCommands(content).length > 0) {
-      return renderFormattedContent(content);
-    }
-
-    // Texto simples
+    // Usa MarkdownRenderer para todo o conteúdo (suporta texto simples também)
     return (
-      <p className="text-sm whitespace-pre-wrap break-words">{content}</p>
+      <MarkdownRenderer
+        content={content}
+        onSkillClick={onSkillClick}
+      />
     );
   };
 

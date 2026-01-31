@@ -28,7 +28,9 @@ import {
   MilestonesTree,
   CreateMilestoneModal,
 } from "@/components/milestone";
-import { Loader2, Play } from "lucide-react";
+import { ProjectDashboard, MilestoneDashboard } from "@/components/dashboard";
+import { useProjectDashboard, useMilestoneDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
+import { Loader2, Play, LayoutDashboard, ChevronUp, ChevronDown, Terminal as TerminalIcon } from "lucide-react";
 
 interface OutputProjectPageProps {
   params: Promise<{ id: string; projectId: string }>;
@@ -84,9 +86,18 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const urlMilestoneId = searchParams.get("milestone");
   const [selectedMilestoneId, setSelectedMilestoneIdState] = useState<string | null>(urlMilestoneId);
 
+  // Dashboard view state - show dashboard in center panel
+  const [showDashboard, setShowDashboard] = useState(!urlMilestoneId);
+
+  // Terminal collapsed state - collapsed by default
+  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(true);
+
   // Sync URL with selected milestone
   const setSelectedMilestoneId = useCallback((id: string | null) => {
     setSelectedMilestoneIdState(id);
+    if (id) {
+      setShowDashboard(false); // Hide dashboard when milestone selected
+    }
     const url = new URL(window.location.href);
     if (id) {
       url.searchParams.set("milestone", id);
@@ -96,6 +107,12 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     router.replace(url.pathname + url.search, { scroll: false });
   }, [router]);
 
+  // Show dashboard handler
+  const handleShowDashboard = useCallback(() => {
+    setShowDashboard(true);
+    setSelectedMilestoneId(null);
+  }, [setSelectedMilestoneId]);
+
   // Milestone hooks
   // Note: useInitializeMilestone is no longer used - terminal handles initialization
   const { data: milestonesData } = useMilestones(projectId);
@@ -104,6 +121,34 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const selectedMilestone = milestonesData?.milestones.find(
     (m) => m.id === selectedMilestoneId
   );
+
+  // Dashboard hook - fetches .planning/dashboard.json (project-level)
+  const {
+    data: dashboardData,
+    isLoading: isDashboardLoading,
+    error: dashboardError,
+    lastUpdated: dashboardLastUpdated,
+    refresh: refreshDashboard,
+    notifyUpdate: notifyDashboardUpdate,
+  } = useProjectDashboard({
+    outputProjectId: projectId,
+    pollInterval: 10000, // Poll every 10 seconds
+    enablePolling: true,
+  });
+
+  // Milestone dashboard hook - fetches .planning/dashboard_<folder>.json
+  const {
+    data: milestoneDashboardData,
+    isLoading: isMilestoneDashboardLoading,
+    error: milestoneDashboardError,
+    lastUpdated: milestoneDashboardLastUpdated,
+    refresh: refreshMilestoneDashboard,
+  } = useMilestoneDashboard({
+    outputProjectId: projectId,
+    milestoneFolderName: selectedMilestone?.milestone_folder_name || null,
+    pollInterval: 10000,
+    enablePolling: !!selectedMilestone?.milestone_folder_name,
+  });
 
   // Refetch project data when initialization completes
   useEffect(() => {
@@ -254,6 +299,11 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         case "assistant_banner":
           // Display the banner as-is (it's already formatted)
           content = event.text;
+          // Check for dashboard update notification
+          const dashboardNotification = parseDashboardNotification(event.text);
+          if (dashboardNotification) {
+            notifyDashboardUpdate(dashboardNotification);
+          }
           break;
         default:
           return;
@@ -268,7 +318,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       messageType: "info",
     };
     setChatMessages((prev) => [...prev, progressMsg]);
-  }, []);
+  }, [notifyDashboardUpdate]);
 
   // Simulate typing character by character (like real user input)
   const simulateTyping = useCallback(async (text: string) => {
@@ -327,7 +377,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     }
   }, [project?.status]);
 
-  // Handle milestone initialization
+  // Handle milestone initialization (legacy - for existing PENDING milestones)
   const handleInitializeMilestone = useCallback(async (milestoneId: string) => {
     if (!terminalRef.current?.isConnected()) {
       console.error("Terminal not connected");
@@ -359,6 +409,25 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
       setIsInitializingMilestone(false);
     }
   }, [simulateTyping]);
+
+  // Handle starting conversion for a new element (no pre-existing milestone)
+  // Claude will gather context via MCP tools, no need for prepare-conversion endpoint
+  const handleStartConversion = useCallback(async (element: { id: string; source_name: string }) => {
+    if (!terminalRef.current?.isConnected()) {
+      console.error("Terminal not connected");
+      return;
+    }
+
+    setIsInitializingMilestone(true);
+    try {
+      // Send command directly - Claude gathers context via MCP and creates milestone
+      await simulateTyping(`/wxcode:new-milestone --element=${element.source_name} --output-project=${projectId}`);
+    } catch (error) {
+      console.error("Error starting conversion:", error);
+    } finally {
+      setIsInitializingMilestone(false);
+    }
+  }, [projectId, simulateTyping]);
 
   if (isLoading) {
     return (
@@ -414,6 +483,23 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
             )}
           </div>
 
+          {/* Dashboard button */}
+          <div className="px-3 py-2 border-b border-zinc-800">
+            <button
+              onClick={handleShowDashboard}
+              className={`
+                w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                ${showDashboard
+                  ? "bg-violet-600/20 text-violet-300 border border-violet-500/30"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                }
+              `}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Dashboard
+            </button>
+          </div>
+
           {/* Milestones list */}
           <div className="flex-1 overflow-y-auto">
             <MilestonesTree
@@ -432,102 +518,43 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         </div>
 
         {/* Right: Content + Chat + Terminal */}
-        <ResizablePanels
-          layout="vertical"
-          defaultSizes={[70, 30]}
-          minSizes={[30, 20]}
-          autoSaveId="output-project-vertical"
-        >
-          {/* Top: Content + Chat */}
-          <ResizablePanels
-            layout="horizontal"
-            defaultSizes={[60, 40]}
-            minSizes={[30, 25]}
-            autoSaveId="output-project-content-chat"
-          >
+        <div className="h-full flex flex-col">
+          {/* Top: Content + Chat - takes remaining space */}
+          <div className="flex-1 min-h-0">
+            <ResizablePanels
+              layout="horizontal"
+              defaultSizes={[60, 40]}
+              minSizes={[30, 25]}
+              autoSaveId="output-project-content-chat"
+            >
             {/* Content Viewer */}
             <div className="h-full bg-zinc-950 flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 border-b border-zinc-800 flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-zinc-300">
-                    {selectedMilestone?.element_name || "Selecione um elemento"}
-                  </h3>
-                  <p className="text-xs text-zinc-500">
-                    {selectedMilestone
-                      ? `Status: ${selectedMilestone.status.replace("_", " ")}`
-                      : ""}
-                  </p>
-                </div>
-                {/* Botao de inicializacao para milestones PENDING */}
-                {selectedMilestone?.status === "pending" && (
-                  <button
-                    onClick={() => handleInitializeMilestone(selectedMilestone.id)}
-                    disabled={isInitializingMilestone}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors"
-                  >
-                    {isInitializingMilestone ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Preparando...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-4 h-4" />
-                        Iniciar Conversao
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-
               <div className="flex-1 overflow-y-auto">
-                {selectedMilestone ? (
-                  <div className="p-4 space-y-4">
-                    {/* Milestone details */}
-                    <div className="rounded-lg border border-zinc-800 p-4">
-                      <h3 className="text-sm font-medium text-zinc-400 mb-3">Detalhes</h3>
-                      <dl className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <dt className="text-zinc-500">Element ID</dt>
-                          <dd className="font-mono text-xs text-zinc-300 truncate">
-                            {selectedMilestone.element_id}
-                          </dd>
-                        </div>
-                        <div>
-                          <dt className="text-zinc-500">Criado em</dt>
-                          <dd className="text-zinc-300">
-                            {new Date(selectedMilestone.created_at).toLocaleString()}
-                          </dd>
-                        </div>
-                        {selectedMilestone.completed_at && (
-                          <div>
-                            <dt className="text-zinc-500">Concluído em</dt>
-                            <dd className="text-zinc-300">
-                              {new Date(selectedMilestone.completed_at).toLocaleString()}
-                            </dd>
-                          </div>
-                        )}
-                      </dl>
-                    </div>
-                  </div>
+                {/* Dashboard view */}
+                {showDashboard ? (
+                  <ProjectDashboard
+                    data={dashboardData}
+                    isLoading={isDashboardLoading}
+                    error={dashboardError}
+                    lastUpdated={dashboardLastUpdated}
+                    onRefresh={refreshDashboard}
+                    className="h-full"
+                  />
+                ) : selectedMilestone ? (
+                  <MilestoneDashboard
+                    data={milestoneDashboardData}
+                    milestone={selectedMilestone}
+                    isLoading={isMilestoneDashboardLoading}
+                    error={milestoneDashboardError}
+                    lastUpdated={milestoneDashboardLastUpdated}
+                    onRefresh={refreshMilestoneDashboard}
+                    className="h-full"
+                  />
                 ) : (
-                  <div className="h-full flex flex-col">
-                    {/* Show files created during initialization */}
-                    {files.length > 0 ? (
-                      <div className="flex-1 overflow-y-auto">
-                        <FileTree
-                          files={files}
-                          workspacePath={project.workspace_path}
-                          className="h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <p className="text-sm text-zinc-500">
-                          Selecione um elemento para ver os detalhes
-                        </p>
-                      </div>
-                    )}
+                  <div className="h-full flex flex-col items-center justify-center">
+                    <p className="text-sm text-zinc-500">
+                      Selecione um milestone ou clique em Dashboard
+                    </p>
                   </div>
                 )}
               </div>
@@ -628,19 +655,44 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               />
             </div>
           </ResizablePanels>
+          </div>
 
-          {/* Bottom: Terminal */}
-          <div className="h-full bg-zinc-950 border-t border-zinc-800 flex flex-col">
-            <div className="flex-shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center justify-between">
+          {/* Bottom: Terminal - fixed height when collapsed, percentage when expanded */}
+          <div
+            className={`
+              flex-shrink-0 bg-zinc-950 border-t border-zinc-800 flex flex-col
+              transition-all duration-200 ease-in-out
+              ${isTerminalCollapsed ? "h-10" : "h-[35%] min-h-[200px]"}
+            `}
+          >
+            <button
+              onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
+              className="flex-shrink-0 h-10 px-4 flex items-center justify-between hover:bg-zinc-900/50 transition-colors cursor-pointer w-full"
+            >
               <div className="flex items-center gap-2">
+                <TerminalIcon className="w-4 h-4 text-zinc-500" />
                 <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
-                {/* Status é mostrado pelo ConnectionStatus dentro do InteractiveTerminal */}
+                {project?.workspace_path && (
+                  <span className="text-xs text-zinc-600 font-mono">
+                    {project.workspace_path.replace(/^.*\/workspaces\//, "")}
+                  </span>
+                )}
               </div>
-              {/* TODO: Implementar cancel via SIGTERM ao PTY */}
-            </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
-              {/* Terminal continuo por workspace - SEMPRE usa outputProjectId */}
-              {/* A sessao PTY eh unica por output_project, milestones enviam comandos */}
+              <div className="flex items-center gap-2 text-zinc-500">
+                {isTerminalCollapsed ? (
+                  <ChevronUp className="w-4 h-4" />
+                ) : (
+                  <ChevronDown className="w-4 h-4" />
+                )}
+              </div>
+            </button>
+            {/* Terminal sempre renderizado para manter WebSocket ativo, apenas escondido quando colapsado */}
+            <div
+              className={`
+                flex-1 min-h-0 overflow-hidden border-t border-zinc-800
+                ${isTerminalCollapsed ? "h-0 opacity-0" : ""}
+              `}
+            >
               <InteractiveTerminal
                 ref={terminalRef}
                 outputProjectId={projectId}
@@ -651,7 +703,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               />
             </div>
           </div>
-        </ResizablePanels>
+        </div>
       </ResizablePanels>
 
       {/* Create Milestone Modal */}
@@ -661,8 +713,8 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
         existingMilestoneElementIds={milestonesData?.milestones.map((m) => m.element_id) || []}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreated={(milestone) => {
-          setSelectedMilestoneId(milestone.id);
+        onStartConversion={(element) => {
+          handleStartConversion(element);
         }}
       />
     </div>

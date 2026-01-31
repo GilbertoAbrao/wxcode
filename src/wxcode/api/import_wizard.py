@@ -181,18 +181,21 @@ async def create_session(
     # Extrair nome do projeto do path do .wwp
     project_name = Path(project_path).stem
 
-    # Criar workspace PRIMEIRO (antes da sessao)
-    workspace_path, metadata = WorkspaceManager.create_workspace(
+    # Criar workspace para Knowledge Base
+    kb_workspace_path = WorkspaceManager.create_kb_workspace(
         project_name=project_name,
         imported_from=project_path
     )
+
+    # Extrair workspace_id do nome da pasta (últimos 8 chars antes do _)
+    workspace_id = kb_workspace_path.name.split("_")[-1]
 
     # Criar sessao com referencia ao workspace
     session = ImportSession(
         project_path=project_path,
         pdf_docs_path=pdf_docs_path,
-        workspace_id=metadata.workspace_id,
-        workspace_path=str(workspace_path),
+        workspace_id=workspace_id,
+        workspace_path=str(kb_workspace_path),
         project_name=project_name,
     )
 
@@ -217,8 +220,8 @@ async def create_session(
 
     return CreateSessionResponse(
         session_id=session.session_id,
-        workspace_id=metadata.workspace_id,
-        workspace_path=str(workspace_path),
+        workspace_id=workspace_id,
+        workspace_path=str(kb_workspace_path),
     )
 
 

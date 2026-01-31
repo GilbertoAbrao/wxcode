@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { Header } from "@/components/layout";
 import { WizardStepper } from "@/components/wizard/WizardStepper";
 import { LogViewer } from "@/components/wizard/LogViewer";
 import { StepSummary } from "@/components/wizard/StepSummary";
@@ -69,12 +71,47 @@ export default function ImportPage() {
 
   // Step 1: Project Selection
   if (!sessionId) {
-    return <Step1_ProjectSelection onNext={handleProjectSelection} />;
+    return (
+      <div className="min-h-screen bg-zinc-950">
+        <Header
+          breadcrumbs={[
+            { label: "Knowledge Base", href: "/dashboard" },
+            { label: "Importar Projeto" },
+          ]}
+        >
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </button>
+        </Header>
+        <Step1_ProjectSelection onNext={handleProjectSelection} />
+      </div>
+    );
   }
 
   // Steps 2-6: Running wizard
   return (
     <div className="min-h-screen bg-zinc-950">
+      <Header
+        breadcrumbs={[
+          { label: "Knowledge Base", href: "/dashboard" },
+          { label: "Importar Projeto" },
+        ]}
+      >
+        {status !== "running" && (
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </button>
+        )}
+      </Header>
+
       {/* Stepper */}
       <WizardStepper currentStep={currentStep} stepResults={stepResults} stepProgress={stepProgress} />
 

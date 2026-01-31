@@ -69,10 +69,10 @@ export default function OutputProjectsPage({ params }: OutputProjectsPageProps) 
     <div className="h-full flex flex-col">
       {/* Page header with action button */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-100">Output Projects</h1>
+        <h1 className="text-lg font-semibold text-zinc-100">Projects</h1>
         <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
           <Plus className="w-4 h-4" />
-          New Output Project
+          Create Project
         </Button>
       </div>
 
@@ -87,15 +87,15 @@ export default function OutputProjectsPage({ params }: OutputProjectsPageProps) 
               <Layers className="w-12 h-12 text-zinc-600" />
             </div>
             <h2 className="text-xl font-semibold text-zinc-300 mb-2">
-              No Output Projects
+              No Projects Yet
             </h2>
             <p className="text-zinc-500 text-center max-w-md mb-6">
-              Create your first output project to start converting elements from
+              Create your first project to start converting elements from
               this Knowledge Base to a modern stack.
             </p>
             <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" />
-              Create Output Project
+              Create Project
             </Button>
           </div>
         ) : (

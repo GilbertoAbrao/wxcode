@@ -32,6 +32,8 @@ export interface InteractiveTerminalProps {
   milestoneId?: string;
   /** Output Project ID to connect to (uses /api/output-projects/{id}/terminal) */
   outputProjectId?: string;
+  /** Knowledge Base ID to connect to (uses /api/projects/{id}/terminal) */
+  kbId?: string;
   /** Called when WebSocket connects */
   onConnected?: () => void;
   /** Called when WebSocket disconnects */
@@ -53,6 +55,7 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
     {
       milestoneId,
       outputProjectId,
+      kbId,
       onConnected,
       onDisconnected,
       onError,
@@ -68,6 +71,8 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
     ? { milestoneId }
     : outputProjectId
     ? { outputProjectId }
+    : kbId
+    ? { kbId }
     : null;
   // Terminal and addon refs
   const containerRef = useRef<HTMLDivElement>(null);
@@ -248,7 +253,7 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       xtermRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [milestoneId, outputProjectId, sendResizeDebounced]); // Only re-run if target changes
+  }, [milestoneId, outputProjectId, kbId, sendResizeDebounced]); // Only re-run if target changes
 
   // Sync connection state and sessionId to context for navigation persistence
   useEffect(() => {

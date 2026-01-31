@@ -65,6 +65,12 @@ class Project(Document):
         description="Caminho completo do diretorio do workspace"
     )
 
+    # Claude Code session
+    claude_session_id: Optional[str] = Field(
+        default=None,
+        description="ID da sessao Claude Code para resume"
+    )
+
     # Versão WinDev
     major_version: int = Field(default=26, description="Versão principal do WinDev")
     minor_version: int = Field(default=0, description="Versão secundária")
