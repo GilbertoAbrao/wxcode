@@ -1,26 +1,30 @@
 "use client";
 
-import { use, useState, useCallback, useMemo } from "react";
+import { use, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ResizablePanels } from "@/components/layout";
 import { CreateProjectModal } from "@/components/output-project";
 import { DependencyGraph, type GraphNode, type GraphEdge } from "@/components/graph";
+import { ChatDisplay, type ChatDisplayMessage } from "@/components/chat";
+import { InteractiveTerminal, type InteractiveTerminalHandle } from "@/components/terminal";
+import type { AskUserQuestionEvent, ClaudeProgressEvent } from "@/hooks/useTerminalWebSocket";
 import { Button } from "@/components/ui/button";
 import { useElements } from "@/hooks/useElements";
 import { useProject } from "@/hooks/useProject";
 import { useSchema } from "@/hooks/useSchema";
+import { useServerProcedureGroups, useBrowserProcedureGroups, useProcedures } from "@/hooks/useProcedures";
 import type { ElementType } from "@/types/project";
 import { elementTypeConfig } from "@/types/project";
-import { Plus, GitGraph, Filter, ChevronRight, ChevronDown, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
+import { Plus, GitGraph, Filter, ChevronRight, ChevronDown, Settings, FolderTree, Table2, Database, Link2, Cog, FileCode, Code, Terminal as TerminalIcon, ChevronUp } from "lucide-react";
 
 interface WorkspacePageProps {
   params: Promise<{ id: string }>;
 }
 
 // Navigation types for KB internal menu
-type NavSection = "graphs" | "analysis" | "configurations";
-type ExpandableSection = "tables" | "queries" | "connections";
-type ActiveView = "dependency-graph" | "table-detail" | "query-detail" | "connection-detail" | "configuration";
+type NavSection = "graphs" | "analysis" | "configurations" | "serverProcedures" | "browserProcedures";
+type ExpandableSection = "tables" | "queries" | "connections" | `proc_${string}`;
+type ActiveView = "dependency-graph" | "table-detail" | "query-detail" | "connection-detail" | "configuration" | "procedure-detail";
 
 const elementTypes: ElementType[] = ["page", "procedure", "class", "query", "table"];
 
@@ -109,7 +113,7 @@ function ExpandableMenu({ label, icon, count, isExpanded, onToggle, children, de
         )}
         {icon}
         <span className="flex-1 text-left">{label}</span>
-        <span className="text-xs text-zinc-600">({count})</span>
+        {count >= 0 && <span className="text-xs text-zinc-600">({count})</span>}
       </button>
       {isExpanded && (
         <div className="ml-2">
@@ -127,11 +131,20 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const [typeFilter, setTypeFilter] = useState<ElementType | "all">("all");
 
   // Navigation state - start with all sections expanded and dependency graph active
-  const [expandedSections, setExpandedSections] = useState<NavSection[]>(["graphs", "analysis", "configurations"]);
-  const [expandedSubmenus, setExpandedSubmenus] = useState<ExpandableSection[]>(["tables", "queries", "connections"]);
+  const [expandedSections, setExpandedSections] = useState<NavSection[]>(["graphs", "analysis", "configurations", "serverProcedures", "browserProcedures"]);
+  const [expandedSubmenus, setExpandedSubmenus] = useState<ExpandableSection[]>([]);
   const [activeView, setActiveView] = useState<ActiveView>("dependency-graph");
   const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedProcedureGroupId, setSelectedProcedureGroupId] = useState<string | null>(null);
+
+  // Terminal and Chat state
+  const terminalRef = useRef<InteractiveTerminalHandle>(null);
+  const [chatMessages, setChatMessages] = useState<ChatDisplayMessage[]>([]);
+  const messageIdCounter = useRef(0);
+  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(true);
+  const [isWorking, setIsWorking] = useState(false);
+  const workingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Toggle section expansion
   const toggleSection = useCallback((section: NavSection) => {
@@ -162,6 +175,178 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
 
   // Get schema for tables and connections
   const { data: schema } = useSchema(project?.name);
+
+  // Get procedure groups
+  const { data: serverProcGroups } = useServerProcedureGroups(projectId);
+  const { data: browserProcGroups } = useBrowserProcedureGroups(projectId);
+
+  // Get procedures for selected group
+  const { data: procedures } = useProcedures(selectedProcedureGroupId);
+
+  // Simulate typing character by character (like real user input)
+  const simulateTyping = useCallback(async (text: string) => {
+    if (!terminalRef.current?.isConnected()) return;
+
+    for (const char of text) {
+      terminalRef.current.sendInput(char);
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+    terminalRef.current.sendInput("\r");
+  }, []);
+
+  // Handle AskUserQuestion events from WebSocket
+  const handleAskUserQuestion = useCallback((event: AskUserQuestionEvent) => {
+    setIsWorking(false);
+    if (workingTimeoutRef.current) {
+      clearTimeout(workingTimeoutRef.current);
+      workingTimeoutRef.current = null;
+    }
+
+    if (event.questions.length > 1) {
+      const questions = event.questions.map((q) => ({
+        header: q.header || "",
+        question: q.question,
+        options: q.options.map((opt, idx) => ({
+          label: opt.label,
+          value: String(idx + 1),
+          description: opt.description || undefined,
+        })),
+        multiSelect: q.multiSelect || false,
+      }));
+
+      const assistantMsg: ChatDisplayMessage = {
+        id: `assistant_${++messageIdCounter.current}`,
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        messageType: "multi_question",
+        questions,
+        toolUseId: event.tool_use_id,
+      };
+      setChatMessages((prev) => [...prev, assistantMsg]);
+      return;
+    }
+
+    for (const q of event.questions) {
+      const options = q.options.map((opt, idx) => ({
+        label: `${idx + 1}. ${opt.label}`,
+        value: String(idx + 1),
+        description: opt.description || undefined,
+      }));
+
+      const assistantMsg: ChatDisplayMessage = {
+        id: `assistant_${++messageIdCounter.current}`,
+        role: "assistant",
+        content: q.question,
+        timestamp: new Date(),
+        messageType: options.length > 0 ? "multi_question" : "question",
+        options: options.length > 0 ? options : undefined,
+        selectionType: q.multiSelect ? "multiple" : "single",
+        toolUseId: event.tool_use_id,
+      };
+      setChatMessages((prev) => [...prev, assistantMsg]);
+    }
+  }, []);
+
+  // Handle progress events from WebSocket
+  const handleProgress = useCallback((event: ClaudeProgressEvent) => {
+    let content = "";
+    let icon = "";
+
+    if (event.type === "summary") {
+      setIsWorking(false);
+      if (workingTimeoutRef.current) {
+        clearTimeout(workingTimeoutRef.current);
+        workingTimeoutRef.current = null;
+      }
+      icon = "\u{1F4CA}";
+      content = `${icon} **${event.summary}**`;
+    } else {
+      setIsWorking(true);
+
+      if (workingTimeoutRef.current) {
+        clearTimeout(workingTimeoutRef.current);
+      }
+      workingTimeoutRef.current = setTimeout(() => {
+        setIsWorking(false);
+        workingTimeoutRef.current = null;
+      }, 8000);
+
+      switch (event.type) {
+        case "task_create":
+          icon = "\u{1F4CB}";
+          content = `${icon} **Tarefa:** ${event.subject}`;
+          break;
+        case "task_update":
+          if (event.status === "completed") {
+            icon = "\u{2705}";
+            content = `${icon} **Concluído:** ${event.subject || `Tarefa #${event.task_id}`}`;
+          } else if (event.status === "in_progress") {
+            icon = "\u{23F3}";
+            content = `${icon} **Em progresso:** ${event.subject || `Tarefa #${event.task_id}`}`;
+          } else {
+            return;
+          }
+          break;
+        case "file_write":
+          icon = "\u{1F4C4}";
+          content = `${icon} **Criado:** \`${event.file_name}\``;
+          break;
+        case "file_edit":
+          icon = "\u{270F}\u{FE0F}";
+          content = `${icon} **Editado:** \`${event.file_name}\``;
+          break;
+        case "file_read":
+          icon = "\u{1F4D6}";
+          content = `${icon} **Lendo:** \`${event.file_name}\``;
+          break;
+        case "bash":
+          icon = "\u{1F4BB}";
+          const cmdDisplay = event.description || event.command;
+          content = `${icon} **Comando:** ${cmdDisplay}`;
+          break;
+        case "task_spawn":
+          icon = "\u{1F916}";
+          content = `${icon} **Agente:** ${event.description}`;
+          break;
+        case "glob":
+          icon = "\u{1F50D}";
+          content = `${icon} **Busca:** \`${event.pattern}\``;
+          break;
+        case "grep":
+          icon = "\u{1F50E}";
+          content = `${icon} **Grep:** \`${event.pattern}\``;
+          break;
+        case "assistant_banner":
+          content = event.text;
+          break;
+        case "assistant_text":
+          // Assistant response - show as a regular message
+          const assistantMsg: ChatDisplayMessage = {
+            id: `assistant_${++messageIdCounter.current}`,
+            role: "assistant",
+            content: event.text,
+            timestamp: new Date(),
+            messageType: "text",
+          };
+          setChatMessages((prev) => [...prev, assistantMsg]);
+          setIsWorking(false);
+          return; // Return early, we added the message directly
+        default:
+          return;
+      }
+    }
+
+    const progressMsg: ChatDisplayMessage = {
+      id: `progress_${++messageIdCounter.current}`,
+      role: "assistant",
+      content,
+      timestamp: new Date(),
+      messageType: "info",
+    };
+    setChatMessages((prev) => [...prev, progressMsg]);
+  }, []);
 
   // Graph data calculation
   const { nodes, edges } = useMemo(() => {
@@ -404,11 +589,93 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                 ))}
               </MenuSection>
             )}
+
+            {/* Server Procedures Section */}
+            <MenuSection
+              title={`Server Procedures (${serverProcGroups?.total || 0})`}
+              icon={<FileCode className="w-4 h-4 text-zinc-400" />}
+              isExpanded={expandedSections.includes("serverProcedures")}
+              onToggle={() => toggleSection("serverProcedures")}
+            >
+              {serverProcGroups?.groups.map((group) => (
+                <ExpandableMenu
+                  key={group.id}
+                  label={group.name}
+                  icon={<FileCode className="w-3.5 h-3.5" />}
+                  count={selectedProcedureGroupId === group.id ? (procedures?.total || 0) : -1}
+                  isExpanded={expandedSubmenus.includes(`proc_${group.id}`)}
+                  onToggle={() => {
+                    toggleSubmenu(`proc_${group.id}`);
+                    setSelectedProcedureGroupId(group.id);
+                  }}
+                >
+                  {selectedProcedureGroupId === group.id && procedures?.procedures.map((proc) => (
+                    <MenuItem
+                      key={proc.id}
+                      label={proc.name}
+                      icon={<Code className="w-3 h-3" />}
+                      isActive={activeView === "procedure-detail" && selectedItemId === proc.id}
+                      onClick={() => {
+                        setActiveView("procedure-detail");
+                        setSelectedItemId(proc.id);
+                      }}
+                      depth={2}
+                    />
+                  ))}
+                </ExpandableMenu>
+              ))}
+            </MenuSection>
+
+            {/* Browser Procedures Section */}
+            <MenuSection
+              title={`Browser Procedures (${browserProcGroups?.total || 0})`}
+              icon={<Code className="w-4 h-4 text-zinc-400" />}
+              isExpanded={expandedSections.includes("browserProcedures")}
+              onToggle={() => toggleSection("browserProcedures")}
+            >
+              {browserProcGroups?.groups.map((group) => (
+                <ExpandableMenu
+                  key={group.id}
+                  label={group.name}
+                  icon={<FileCode className="w-3.5 h-3.5" />}
+                  count={selectedProcedureGroupId === group.id ? (procedures?.total || 0) : -1}
+                  isExpanded={expandedSubmenus.includes(`proc_${group.id}`)}
+                  onToggle={() => {
+                    toggleSubmenu(`proc_${group.id}`);
+                    setSelectedProcedureGroupId(group.id);
+                  }}
+                >
+                  {selectedProcedureGroupId === group.id && procedures?.procedures.map((proc) => (
+                    <MenuItem
+                      key={proc.id}
+                      label={proc.name}
+                      icon={<Code className="w-3 h-3" />}
+                      isActive={activeView === "procedure-detail" && selectedItemId === proc.id}
+                      onClick={() => {
+                        setActiveView("procedure-detail");
+                        setSelectedItemId(proc.id);
+                      }}
+                      depth={2}
+                    />
+                  ))}
+                </ExpandableMenu>
+              ))}
+            </MenuSection>
           </div>
 
-          {/* Right: Content Area */}
+          {/* Right: Content + Chat + Terminal */}
           <div className="h-full flex flex-col">
-            {activeView === "dependency-graph" ? (
+            {/* Top: Content + Chat */}
+            <div className="flex-1 min-h-0">
+              <ResizablePanels
+                layout="horizontal"
+                defaultSizes={[65, 35]}
+                minSizes={[40, 25]}
+                autoSaveId="kb-content-chat"
+              >
+                {/* Content Area */}
+                <div className="h-full flex flex-col">
+                  {activeView === "dependency-graph" ? (
               /* Graph view */
               <div className="h-full">
                 {nodes.length > 0 ? (
@@ -576,7 +843,151 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   );
                 })()}
               </div>
+            ) : activeView === "procedure-detail" && selectedItemId ? (
+              /* Procedure detail view */
+              <div className="h-full p-6 overflow-y-auto">
+                {(() => {
+                  const proc = procedures?.procedures.find(p => p.id === selectedItemId);
+                  if (!proc) return <p className="text-zinc-500">Procedure não encontrada</p>;
+                  return (
+                    <div className="max-w-2xl">
+                      <div className="flex items-center gap-3 mb-6">
+                        <Code className="w-6 h-6 text-zinc-400" />
+                        <h2 className="text-xl font-semibold text-zinc-100">{proc.name}</h2>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Linhas de Código</label>
+                            <p className="text-lg text-zinc-200 mt-1">{proc.codeLines}</p>
+                          </div>
+                          <div className="bg-zinc-800/50 rounded-lg p-4">
+                            <label className="text-xs text-zinc-500 uppercase tracking-wide">Visibilidade</label>
+                            <p className="text-lg text-zinc-200 mt-1">{proc.isPublic ? "Pública" : "Privada"}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
             ) : null}
+                </div>
+
+                {/* Chat Panel - Botfy WX */}
+                <div className="h-full bg-zinc-900 border-l border-zinc-800">
+                  <ChatDisplay
+                    messages={chatMessages}
+                    isProcessing={isWorking}
+                    title="Botfy WX"
+                    inputDisabled={!terminalRef.current?.isConnected()}
+                    onOptionSelect={async (option) => {
+                      const userMsg: ChatDisplayMessage = {
+                        id: `user_${++messageIdCounter.current}`,
+                        role: "user",
+                        content: option.label,
+                        timestamp: new Date(),
+                      };
+                      setChatMessages((prev) => [...prev, userMsg]);
+                      await simulateTyping(option.value);
+                    }}
+                    onMultipleOptionsSelect={async (options) => {
+                      const labels = options.map((o) => o.label).join(", ");
+                      const userMsg: ChatDisplayMessage = {
+                        id: `user_${++messageIdCounter.current}`,
+                        role: "user",
+                        content: labels,
+                        timestamp: new Date(),
+                      };
+                      setChatMessages((prev) => [...prev, userMsg]);
+                      const values = options.map((o) => o.value).join(", ");
+                      await simulateTyping(values);
+                    }}
+                    onQuestionsSubmit={async (toolUseId, answers) => {
+                      const answerSummary = Object.entries(answers)
+                        .map(([header, value]) => `${header}: ${value}`)
+                        .join(" | ");
+                      const userMsg: ChatDisplayMessage = {
+                        id: `user_${++messageIdCounter.current}`,
+                        role: "user",
+                        content: answerSummary,
+                        timestamp: new Date(),
+                      };
+                      setChatMessages((prev) => [...prev, userMsg]);
+                      const values = Object.values(answers);
+                      for (let i = 0; i < values.length; i++) {
+                        await simulateTyping(values[i]);
+                        if (i < values.length - 1) {
+                          await new Promise(resolve => setTimeout(resolve, 1000));
+                        }
+                      }
+                    }}
+                    onSendMessage={async (message) => {
+                      const userMsg: ChatDisplayMessage = {
+                        id: `user_${++messageIdCounter.current}`,
+                        role: "user",
+                        content: message,
+                        timestamp: new Date(),
+                      };
+                      setChatMessages((prev) => [...prev, userMsg]);
+                      await simulateTyping(message);
+                    }}
+                    onSkillClick={async (skill) => {
+                      const command = skill.startsWith("/") ? skill : `/${skill}`;
+                      const userMsg: ChatDisplayMessage = {
+                        id: `user_${++messageIdCounter.current}`,
+                        role: "user",
+                        content: `Executando: \`${command}\``,
+                        timestamp: new Date(),
+                      };
+                      setChatMessages((prev) => [...prev, userMsg]);
+                      await simulateTyping(command);
+                    }}
+                  />
+                </div>
+              </ResizablePanels>
+            </div>
+
+            {/* Bottom: Terminal - fixed height when collapsed, percentage when expanded */}
+            <div
+              className={`
+                flex-shrink-0 bg-zinc-950 border-t border-zinc-800 flex flex-col
+                transition-all duration-200 ease-in-out
+                ${isTerminalCollapsed ? "h-10" : "h-[35%] min-h-[200px]"}
+              `}
+            >
+              <button
+                onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
+                className="flex-shrink-0 h-10 px-4 flex items-center justify-between hover:bg-zinc-900/50 transition-colors cursor-pointer w-full"
+              >
+                <div className="flex items-center gap-2">
+                  <TerminalIcon className="w-4 h-4 text-zinc-500" />
+                  <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
+                </div>
+                <div className="flex items-center gap-2 text-zinc-500">
+                  {isTerminalCollapsed ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </div>
+              </button>
+              <div
+                className={`
+                  flex-1 min-h-0 overflow-hidden border-t border-zinc-800
+                  ${isTerminalCollapsed ? "h-0 opacity-0" : ""}
+                `}
+              >
+                <InteractiveTerminal
+                  ref={terminalRef}
+                  kbId={projectId}
+                  className="h-full"
+                  onError={(msg) => console.error("Terminal error:", msg)}
+                  onAskUserQuestion={handleAskUserQuestion}
+                  onProgress={handleProgress}
+                />
+              </div>
+            </div>
           </div>
         </ResizablePanels>
       </div>

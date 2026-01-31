@@ -33,6 +33,7 @@ __all__ = [
     "TerminalGlobMessage",
     "TerminalGrepMessage",
     "TerminalBannerMessage",
+    "TerminalAssistantTextMessage",
     # Helper models
     "AskUserQuestionItem",
     "AskUserQuestionOption",
@@ -388,6 +389,20 @@ class TerminalBannerMessage(BaseModel):
     timestamp: str | None = Field(default=None, description="Timestamp do evento")
 
 
+class TerminalAssistantTextMessage(BaseModel):
+    """
+    Mensagem de texto do assistente Claude.
+
+    Enviada quando o Claude responde com texto que não é uma tool_use
+    nem um banner especial. Representa a resposta conversacional normal.
+    O frontend exibe no chat como mensagem do assistente.
+    """
+
+    type: Literal["assistant_text"] = "assistant_text"
+    text: str = Field(..., description="Texto da resposta do assistente")
+    timestamp: str | None = Field(default=None, description="Timestamp do evento")
+
+
 # =============================================================================
 # Discriminated Unions
 # =============================================================================
@@ -423,6 +438,7 @@ OutgoingMessage = Union[
     TerminalGlobMessage,
     TerminalGrepMessage,
     TerminalBannerMessage,
+    TerminalAssistantTextMessage,
 ]
 """
 Uniao discriminada de mensagens enviadas pelo servidor.

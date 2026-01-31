@@ -193,13 +193,28 @@ def parse_claude_event(line: str) -> Optional[dict]:
             message = data.get("message", {})
             content = message.get("content", [])
 
-            # First, check for important text blocks (banners, status messages)
+            # Check if this message has any tool_use (if so, we'll handle tools, not text)
+            has_tool_use = any(
+                isinstance(block, dict) and block.get("type") == "tool_use"
+                for block in content
+            )
+
+            # First, check for text blocks
             for block in content:
                 if not isinstance(block, dict) or block.get("type") != "text":
                     continue
 
                 text = block.get("text", "")
                 text_lower = text.lower()
+
+                # Skip very short text that's likely just transitional
+                if len(text.strip()) < 10:
+                    continue
+
+                # Skip text if this message also has tool_use (it's usually just setup text)
+                if has_tool_use:
+                    continue
+
                 # Detect important status banners
                 # Case-insensitive check for WXCODE
                 has_wxcode = "wxcode" in text_lower
@@ -224,6 +239,16 @@ def parse_claude_event(line: str) -> Optional[dict]:
                         "timestamp": timestamp,
                         "uuid": uuid,
                     }
+
+                # Return regular assistant text response
+                # Limit to 3000 chars to avoid huge messages
+                response_text = text[:3000] if len(text) > 3000 else text
+                return {
+                    "type": "assistant_text",
+                    "text": response_text,
+                    "timestamp": timestamp,
+                    "uuid": uuid,
+                }
 
             for block in content:
                 if not isinstance(block, dict) or block.get("type") != "tool_use":

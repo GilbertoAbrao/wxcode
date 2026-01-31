@@ -15,11 +15,25 @@ from wxcode.models.terminal_messages import (
     TerminalStatusMessage,
     TerminalOutputMessage,
     TerminalErrorMessage,
+    TerminalAskUserQuestionMessage,
+    TerminalTaskCreateMessage,
+    TerminalTaskUpdateMessage,
+    TerminalFileWriteMessage,
+    TerminalFileEditMessage,
+    TerminalSummaryMessage,
+    TerminalBashMessage,
+    TerminalFileReadMessage,
+    TerminalTaskSpawnMessage,
+    TerminalGlobMessage,
+    TerminalGrepMessage,
+    TerminalBannerMessage,
+    TerminalAssistantTextMessage,
 )
 from wxcode.services import purge_project, PurgeStats
 from wxcode.services.bidirectional_pty import BidirectionalPTY
 from wxcode.services.pty_session_manager import get_session_manager
 from wxcode.services.terminal_handler import TerminalHandler
+from wxcode.services.session_file_watcher import session_watcher_manager
 
 
 router = APIRouter()
@@ -305,6 +319,126 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
             TerminalOutputMessage(data=replay).model_dump()
         )
 
+    # Callback to handle Claude events from JSONL files
+    async def on_claude_event(event: dict) -> None:
+        """Send Claude events to WebSocket for chat display."""
+        try:
+            event_type = event.get("type")
+
+            if event_type == "ask_user_question":
+                msg = TerminalAskUserQuestionMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    questions=event.get("questions", []),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_create":
+                msg = TerminalTaskCreateMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    subject=event.get("subject", ""),
+                    description=event.get("description", ""),
+                    active_form=event.get("active_form", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_update":
+                msg = TerminalTaskUpdateMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    task_id=event.get("task_id", ""),
+                    status=event.get("status", ""),
+                    subject=event.get("subject", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_write":
+                msg = TerminalFileWriteMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_edit":
+                msg = TerminalFileEditMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "summary":
+                msg = TerminalSummaryMessage(
+                    summary=event.get("summary", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "bash":
+                msg = TerminalBashMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    command=event.get("command", ""),
+                    description=event.get("description", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "file_read":
+                msg = TerminalFileReadMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    file_path=event.get("file_path", ""),
+                    file_name=event.get("file_name", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "task_spawn":
+                msg = TerminalTaskSpawnMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    description=event.get("description", ""),
+                    subagent_type=event.get("subagent_type", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "glob":
+                msg = TerminalGlobMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    pattern=event.get("pattern", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "grep":
+                msg = TerminalGrepMessage(
+                    tool_use_id=event.get("tool_use_id", ""),
+                    pattern=event.get("pattern", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "assistant_banner":
+                msg = TerminalBannerMessage(
+                    text=event.get("text", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "assistant_text":
+                msg = TerminalAssistantTextMessage(
+                    text=event.get("text", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error sending Claude event: {e}")
+
     # Callback to save claude_session_id for persistence across server restarts
     async def on_session_id_captured(claude_session_id: str) -> None:
         """Save captured session_id to MongoDB for resume capability."""
@@ -313,6 +447,22 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
         # Update in-memory session too
         session.claude_session_id = claude_session_id
         session_manager.update_claude_session_id(session.session_id, claude_session_id)
+        # Start file watcher now that we have a session
+        await session_watcher_manager.start_watching(
+            session_key=session_key,
+            workspace_path=str(workspace_path),
+            on_event=on_claude_event,
+            session_id=claude_session_id,
+        )
+
+    # Start file watcher for Claude events
+    # Always start watcher - it will auto-detect the active session
+    await session_watcher_manager.start_watching(
+        session_key=session_key,
+        workspace_path=str(workspace_path),
+        on_event=on_claude_event,
+        session_id=project.claude_session_id,  # May be None - watcher will auto-detect
+    )
 
     # Start bidirectional handler with session capture
     handler = TerminalHandler(
@@ -330,5 +480,7 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
             TerminalErrorMessage(message=str(e), code="HANDLER_ERROR").model_dump()
         )
     finally:
+        # Stop file watcher for this session
+        await session_watcher_manager.stop_watching(session_key)
         # Update session activity for timeout tracking
         session_manager.update_activity(session.session_id)

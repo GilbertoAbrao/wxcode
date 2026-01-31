@@ -51,7 +51,8 @@ export type ClaudeProgressEvent =
   | { type: "glob"; pattern: string; timestamp?: string | null }
   | { type: "grep"; pattern: string; timestamp?: string | null }
   | { type: "summary"; summary: string; timestamp?: string | null }
-  | { type: "assistant_banner"; text: string; timestamp?: string | null };
+  | { type: "assistant_banner"; text: string; timestamp?: string | null }
+  | { type: "assistant_text"; text: string; timestamp?: string | null };
 
 export { type AskUserQuestionItem, type AskUserQuestionOption };
 
@@ -333,6 +334,14 @@ export function useTerminalWebSocket(
             console.log("[useTerminalWebSocket] Banner received:", msg.text?.substring(0, 50));
             callbacksRef.current.onProgress?.({
               type: "assistant_banner",
+              text: msg.text,
+              timestamp: msg.timestamp,
+            });
+            break;
+          case "assistant_text":
+            console.log("[useTerminalWebSocket] Assistant text received:", msg.text?.substring(0, 50));
+            callbacksRef.current.onProgress?.({
+              type: "assistant_text",
               text: msg.text,
               timestamp: msg.timestamp,
             });

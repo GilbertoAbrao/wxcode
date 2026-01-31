@@ -33,6 +33,7 @@ from wxcode.models.terminal_messages import (
     TerminalGlobMessage,
     TerminalGrepMessage,
     TerminalBannerMessage,
+    TerminalAssistantTextMessage,
     AskUserQuestionItem,
     AskUserQuestionOption,
 )
@@ -1113,6 +1114,13 @@ async def terminal_websocket(websocket: WebSocket, id: str):
 
             elif event_type == "assistant_banner":
                 msg = TerminalBannerMessage(
+                    text=event.get("text", ""),
+                    timestamp=event.get("timestamp"),
+                )
+                await websocket.send_json(msg.model_dump())
+
+            elif event_type == "assistant_text":
+                msg = TerminalAssistantTextMessage(
                     text=event.get("text", ""),
                     timestamp=event.get("timestamp"),
                 )

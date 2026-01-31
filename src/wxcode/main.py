@@ -34,6 +34,7 @@ from wxcode.api import (
     output_projects,
     milestones,
     schema,
+    procedures,
 )
 
 
@@ -85,6 +86,7 @@ app.include_router(stacks.router, prefix="/api/stacks", tags=["Stacks"])
 app.include_router(output_projects.router, prefix="/api/output-projects", tags=["Output Projects"])
 app.include_router(milestones.router, prefix="/api/milestones", tags=["Milestones"])
 app.include_router(schema.router, prefix="/api/schema", tags=["Schema"])
+app.include_router(procedures.router, prefix="/api/procedures", tags=["Procedures"])
 
 
 @app.get("/")

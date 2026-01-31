@@ -305,6 +305,18 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
             notifyDashboardUpdate(dashboardNotification);
           }
           break;
+        case "assistant_text":
+          // Assistant response - show as a regular message
+          const assistantTextMsg: ChatDisplayMessage = {
+            id: `assistant_${++messageIdCounter.current}`,
+            role: "assistant",
+            content: event.text,
+            timestamp: new Date(),
+            messageType: "text",
+          };
+          setChatMessages((prev) => [...prev, assistantTextMsg]);
+          setIsWorking(false);
+          return; // Return early, we added the message directly
         default:
           return;
       }

@@ -294,27 +294,32 @@ export type TerminalConnectionState =
  * Keys match the error codes sent by the backend.
  */
 export const TERMINAL_ERROR_MESSAGES: Record<string, string> = {
-  NO_SESSION: "Sessao nao encontrada. Inicialize o milestone primeiro.",
-  INVALID_ID: "ID de milestone invalido.",
-  NOT_FOUND: "Milestone nao encontrado.",
-  ALREADY_FINISHED: "Milestone ja finalizado.",
+  NO_SESSION: "Sessao nao encontrada. Inicialize primeiro.",
+  INVALID_ID: "ID invalido.",
+  NOT_FOUND: "Recurso nao encontrado.",
+  ALREADY_FINISHED: "Recurso ja finalizado.",
   SESSION_ERROR: "Erro ao criar sessao. Tente novamente.",
   EXPIRED_SESSION: "Sessao expirada. Reconectando...",
+  NO_WORKSPACE: "Workspace nao configurado.",
+  WORKSPACE_NOT_FOUND: "Workspace nao encontrado no disco.",
   UNKNOWN: "Erro de conexao. Tente novamente.",
 };
 
 /**
  * Get user-friendly error message from error code.
+ * Prefers the backend message (fallback) when provided, since it's more specific.
  * @param code - Error code from backend (or null)
- * @param fallback - Optional fallback message
+ * @param fallback - Backend error message (preferred when available)
  * @returns User-friendly error message
  */
 export function getTerminalErrorMessage(
   code: string | null,
   fallback?: string
 ): string {
-  if (!code) return fallback || TERMINAL_ERROR_MESSAGES.UNKNOWN;
-  return (
-    TERMINAL_ERROR_MESSAGES[code] || fallback || TERMINAL_ERROR_MESSAGES.UNKNOWN
-  );
+  // Prefer backend message when available - it's more specific to the context
+  if (fallback && fallback !== "Erro de conexao") {
+    return fallback;
+  }
+  if (!code) return TERMINAL_ERROR_MESSAGES.UNKNOWN;
+  return TERMINAL_ERROR_MESSAGES[code] || TERMINAL_ERROR_MESSAGES.UNKNOWN;
 }
