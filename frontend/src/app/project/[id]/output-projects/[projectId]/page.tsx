@@ -124,17 +124,31 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   const handleLiveView = useCallback(async () => {
     if (isStartingDevServer) return;
 
+    // Open window synchronously to avoid popup blocker
+    // We'll update the URL after the async call
+    const newWindow = window.open("about:blank", "_blank");
+
     setIsStartingDevServer(true);
     try {
       const result = await startDevServerMutation.mutateAsync(projectId);
       if (result.success && result.url) {
-        // Open in new tab
-        window.open(result.url, "_blank");
+        // Navigate the already-opened window to the dev server URL
+        if (newWindow) {
+          newWindow.location.href = result.url;
+        }
       } else {
         console.error("Failed to start dev server:", result.message);
+        // Close the blank window on failure
+        if (newWindow) {
+          newWindow.close();
+        }
       }
     } catch (error) {
       console.error("Error starting dev server:", error);
+      // Close the blank window on error
+      if (newWindow) {
+        newWindow.close();
+      }
     } finally {
       setIsStartingDevServer(false);
     }
