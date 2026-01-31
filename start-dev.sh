@@ -38,11 +38,19 @@ if [ ! -f "setup.py" ] && [ ! -f "pyproject.toml" ]; then
     exit 1
 fi
 
-# Verifica dependências
-if ! command -v python &> /dev/null; then
+# Usa Python do .venv se disponível, senão tenta sistema
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/.venv/bin/python" ]; then
+    PYTHON="$SCRIPT_DIR/.venv/bin/python"
+elif command -v python3 &> /dev/null; then
+    PYTHON=python3
+elif command -v python &> /dev/null; then
+    PYTHON=python
+else
     echo -e "${YELLOW}❌ Python não encontrado${NC}"
     exit 1
 fi
+echo -e "  ${BLUE}Python:${NC} $PYTHON"
 
 if ! command -v npm &> /dev/null; then
     echo -e "${YELLOW}❌ npm não encontrado${NC}"
@@ -72,7 +80,7 @@ trap cleanup SIGINT SIGTERM
 
 # Inicia backend
 echo -e "${GREEN}🚀 Iniciando backend (porta 8052)...${NC}"
-DEBUG=false PYTHONDONTWRITEBYTECODE=1 python -m uvicorn wxcode.main:app --host 0.0.0.0 --port 8052 > /tmp/wxcode-backend.log 2>&1 &
+DEBUG=false PYTHONDONTWRITEBYTECODE=1 $PYTHON -m uvicorn wxcode.main:app --host 0.0.0.0 --port 8052 > /tmp/wxcode-backend.log 2>&1 &
 BACKEND_PID=$!
 echo "   PID: $BACKEND_PID"
 sleep 3
@@ -95,7 +103,7 @@ sleep 5
 MCP_PID=""
 if [ "$WITH_MCP" = true ]; then
     echo -e "${GREEN}🔌 Iniciando MCP HTTP Server (porta 8152)...${NC}"
-    PYTHONPATH=src python -m wxcode.mcp.server --http > /tmp/wxcode-mcp.log 2>&1 &
+    PYTHONPATH=src $PYTHON -m wxcode.mcp.server --http > /tmp/wxcode-mcp.log 2>&1 &
     MCP_PID=$!
     echo "   PID: $MCP_PID"
     sleep 3
@@ -120,5 +128,5 @@ echo ""
 echo -e "Pressione ${GREEN}Ctrl+C${NC} para encerrar"
 echo ""
 
-# Aguarda indefinidamente
-wait
+# Aguarda indefinidamente (|| true evita que set -e aborte quando um processo morre)
+wait || true
