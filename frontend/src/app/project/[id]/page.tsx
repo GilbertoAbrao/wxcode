@@ -37,7 +37,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
   const terminalRef = useRef<InteractiveTerminalHandle>(null);
   const [chatMessages, setChatMessages] = useState<ChatDisplayMessage[]>([]);
   const messageIdCounter = useRef(0);
-  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(true);
+  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(false);
   const [isWorking, setIsWorking] = useState(false);
   const workingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -409,7 +409,7 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                     <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
                     {project?.workspace_path && (
                       <span className="text-xs text-zinc-600 font-mono">
-                        {project.workspace_path}
+                        {project.workspace_path.replace(/^.*\/workspaces\//, "")}
                       </span>
                     )}
                   </div>

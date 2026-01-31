@@ -674,7 +674,7 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
                 <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
                 {project?.workspace_path && (
                   <span className="text-xs text-zinc-600 font-mono">
-                    {project.workspace_path}
+                    {project.workspace_path.replace(/^.*\/workspaces\//, "")}
                   </span>
                 )}
               </div>

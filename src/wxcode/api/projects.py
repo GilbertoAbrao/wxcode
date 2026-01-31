@@ -252,12 +252,12 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
             TerminalOutputMessage(data="\r\n\x1b[36m[Preparando sessao interativa...]\x1b[0m\r\n").model_dump()
         )
 
-        # Create PTY with Claude Code
-        cmd = ["claude", "-p", str(workspace_path)]
+        # Create PTY with Claude Code (match output_projects pattern)
+        cmd = ["claude", "--dangerously-skip-permissions"]
 
         # Check for existing Claude session
         if project.claude_session_id:
-            cmd = ["claude", "--resume", project.claude_session_id, "-p", str(workspace_path)]
+            cmd.extend(["--resume", project.claude_session_id])
             await websocket.send_json(
                 TerminalOutputMessage(
                     data=f"\x1b[36mRetomando sessao Claude: {project.claude_session_id[:8]}...\x1b[0m\r\n\r\n"
@@ -295,7 +295,7 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
 
     # Send status with session_id
     await websocket.send_json(
-        TerminalStatusMessage(connected=True, session_id=session.id).model_dump()
+        TerminalStatusMessage(connected=True, session_id=session.session_id).model_dump()
     )
 
     # Replay buffer for reconnections
@@ -305,11 +305,23 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
             TerminalOutputMessage(data=replay).model_dump()
         )
 
-    # Start bidirectional handler
-    handler = TerminalHandler(session.pty, websocket)
+    # Callback to save claude_session_id for persistence across server restarts
+    async def on_session_id_captured(claude_session_id: str) -> None:
+        """Save captured session_id to MongoDB for resume capability."""
+        project.claude_session_id = claude_session_id
+        await project.save()
+        # Update in-memory session too
+        session.claude_session_id = claude_session_id
+        session_manager.update_claude_session_id(session.session_id, claude_session_id)
+
+    # Start bidirectional handler with session capture
+    handler = TerminalHandler(
+        session,
+        on_session_id=on_session_id_captured if not project.claude_session_id else None,
+    )
 
     try:
-        await handler.run()
+        await handler.handle_session(websocket)
     except WebSocketDisconnect:
         # Client disconnected - session stays alive
         pass
@@ -317,3 +329,6 @@ async def kb_terminal_websocket(websocket: WebSocket, project_id: str):
         await websocket.send_json(
             TerminalErrorMessage(message=str(e), code="HANDLER_ERROR").model_dump()
         )
+    finally:
+        # Update session activity for timeout tracking
+        session_manager.update_activity(session.session_id)

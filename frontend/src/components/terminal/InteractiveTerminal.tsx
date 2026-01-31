@@ -253,7 +253,7 @@ export const InteractiveTerminal = forwardRef<InteractiveTerminalHandle, Interac
       xtermRef.current = null;
       fitAddonRef.current = null;
     };
-  }, [milestoneId, outputProjectId, sendResizeDebounced]); // Only re-run if target changes
+  }, [milestoneId, outputProjectId, kbId, sendResizeDebounced]); // Only re-run if target changes
 
   // Sync connection state and sessionId to context for navigation persistence
   useEffect(() => {

@@ -32,6 +32,7 @@ interface BackendProject {
   total_elements?: number;
   elements_by_type?: Record<string, number>;
   configurations?: BackendConfiguration[];
+  workspace_path?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -41,6 +42,7 @@ function adaptProject(data: BackendProject): Project {
     id: data.id,
     name: data.name,
     display_name: data.display_name,
+    workspace_path: data.workspace_path,
     description: `v${data.major_version || 0}.${data.minor_version || 0} - ${data.status || "imported"}`,
     configurations: data.configurations,
     elementsCount: data.total_elements || 0,
