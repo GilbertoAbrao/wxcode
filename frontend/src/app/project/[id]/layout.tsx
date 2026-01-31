@@ -28,11 +28,17 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
   const searchParams = useSearchParams();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  // UI-02: Auto-collapse sidebar on Output Project detail pages
+  // UI-02: Auto-collapse sidebar on KB page and Output Project detail pages
   // Extract output project ID from URL if present
   const outputProjectMatch = pathname.match(/\/output-projects\/([^\/]+)/);
   const outputProjectId = outputProjectMatch ? outputProjectMatch[1] : null;
   const isOutputProjectDetailPage = !!outputProjectId;
+
+  // Check if we're on the KB main page (not output-projects subpage)
+  const isKBMainPage = pathname === `/project/${projectId}` || pathname === `/project/${projectId}/`;
+
+  // Should auto-collapse on KB page or Output Project detail page
+  const shouldAutoCollapse = isKBMainPage || isOutputProjectDetailPage;
 
   // Get milestone ID from URL query params
   const milestoneId = searchParams.get("milestone");
@@ -49,20 +55,20 @@ export default function ProjectLayout({ children, params }: ProjectLayoutProps) 
   const [manuallyToggled, setManuallyToggled] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Effect to auto-collapse on Output Project pages
+  // Effect to auto-collapse on KB and Output Project pages
   useEffect(() => {
     // Only auto-collapse if user hasn't manually toggled
     if (!manuallyToggled) {
-      setSidebarCollapsed(isOutputProjectDetailPage);
+      setSidebarCollapsed(shouldAutoCollapse);
     }
-  }, [isOutputProjectDetailPage, manuallyToggled]);
+  }, [shouldAutoCollapse, manuallyToggled]);
 
-  // Reset manual toggle when leaving Output Project pages
+  // Reset manual toggle when leaving auto-collapse pages
   useEffect(() => {
-    if (!isOutputProjectDetailPage) {
+    if (!shouldAutoCollapse) {
       setManuallyToggled(false);
     }
-  }, [isOutputProjectDetailPage]);
+  }, [shouldAutoCollapse]);
 
   // Handle user manual toggle
   const handleSidebarCollapsedChange = useCallback((collapsed: boolean) => {
