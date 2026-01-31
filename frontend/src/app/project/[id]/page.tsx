@@ -1,22 +1,16 @@
 "use client";
 
-import { use, useState, useCallback, useRef, useMemo } from "react";
+import { use, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ResizablePanels } from "@/components/layout";
-import { WorkspaceTree } from "@/components/project";
-import { MonacoEditor } from "@/components/editor";
-import { ChatDisplay, type ChatDisplayMessage } from "@/components/chat";
-import { InteractiveTerminal, type InteractiveTerminalHandle } from "@/components/terminal";
-import type { AskUserQuestionEvent, ClaudeProgressEvent } from "@/hooks/useTerminalWebSocket";
 import { CreateProjectModal } from "@/components/output-project";
 import { DependencyGraph, type GraphNode, type GraphEdge } from "@/components/graph";
 import { Button } from "@/components/ui/button";
-import { useElement, useElements } from "@/hooks/useElements";
+import { useElements } from "@/hooks/useElements";
 import { useProject } from "@/hooks/useProject";
-import type { TreeNode } from "@/types/tree";
 import type { ElementType } from "@/types/project";
 import { elementTypeConfig } from "@/types/project";
-import { Plus, GitGraph, Filter, ChevronUp, ChevronDown, Terminal as TerminalIcon, ChevronRight, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
+import { Plus, GitGraph, Filter, ChevronRight, Settings, FolderTree, Table2, Database, Link2, Cog } from "lucide-react";
 
 interface WorkspacePageProps {
   params: Promise<{ id: string }>;
@@ -90,7 +84,6 @@ function MenuSection({ title, icon, isExpanded, onToggle, children }: MenuSectio
 export default function WorkspacePage({ params }: WorkspacePageProps) {
   const { id: projectId } = use(params);
   const router = useRouter();
-  const [selectedNode, setSelectedNode] = useState<TreeNode | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [typeFilter, setTypeFilter] = useState<ElementType | "all">("all");
 
@@ -108,113 +101,11 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
     );
   }, []);
 
-  // Terminal and chat state
-  const terminalRef = useRef<InteractiveTerminalHandle>(null);
-  const [chatMessages, setChatMessages] = useState<ChatDisplayMessage[]>([]);
-  const messageIdCounter = useRef(0);
-  const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(false);
-  const [isWorking, setIsWorking] = useState(false);
-  const workingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   // Get project data for modal context
   const { data: project } = useProject(projectId);
 
   // Get elements for graph view
   const { data: elements } = useElements(projectId);
-
-  // Get element ID from selected node
-  const selectedElementId = selectedNode?.metadata?.elementId || selectedNode?.id;
-
-  const { data: elementDetail } = useElement(
-    projectId,
-    selectedElementId || ""
-  );
-
-  const handleSelectElement = useCallback((node: TreeNode) => {
-    setSelectedNode(node);
-  }, []);
-
-  // Simulate typing character by character for natural feel
-  const simulateTyping = useCallback(async (text: string) => {
-    for (const char of text) {
-      terminalRef.current?.sendInput(char);
-      await new Promise((resolve) => setTimeout(resolve, 20 + Math.random() * 30));
-    }
-    terminalRef.current?.sendInput("\r");
-  }, []);
-
-  // Handle AskUserQuestion events from terminal
-  const handleAskUserQuestion = useCallback((event: AskUserQuestionEvent) => {
-    // Clear working state
-    if (workingTimeoutRef.current) {
-      clearTimeout(workingTimeoutRef.current);
-    }
-    setIsWorking(false);
-
-    // Map questions to ensure type compatibility
-    const questions = event.questions.map((q) => ({
-      header: q.header || "",
-      question: q.question,
-      options: q.options.map((opt, idx) => ({
-        label: opt.label,
-        value: String(idx + 1),
-        description: opt.description || undefined,
-      })),
-      multiSelect: q.multiSelect || false,
-    }));
-
-    // Add question as assistant message with interactive options
-    const msg: ChatDisplayMessage = {
-      id: `ask_${++messageIdCounter.current}`,
-      role: "assistant",
-      content: event.questions.length === 1 ? event.questions[0].question : "",
-      timestamp: new Date(),
-      messageType: event.questions.length > 1 ? "multi_question" : "question",
-      toolUseId: event.tool_use_id,
-      questions: event.questions.length > 1 ? questions : undefined,
-      options: event.questions.length === 1
-        ? event.questions[0].options.map((opt, idx) => ({
-            label: opt.label,
-            value: String(idx + 1),
-            description: opt.description || undefined,
-          }))
-        : undefined,
-      selectionType: event.questions.length === 1 && event.questions[0].multiSelect ? "multiple" : "single",
-    };
-    setChatMessages((prev) => [...prev, msg]);
-  }, []);
-
-  // Handle progress events from terminal
-  const handleProgress = useCallback((event: ClaudeProgressEvent) => {
-    // Reset working timeout on each event
-    if (workingTimeoutRef.current) {
-      clearTimeout(workingTimeoutRef.current);
-    }
-    setIsWorking(true);
-    workingTimeoutRef.current = setTimeout(() => setIsWorking(false), 5000);
-
-    // Convert progress events to chat messages
-    let content: string | null = null;
-
-    switch (event.type) {
-      case "summary":
-        content = event.summary;
-        break;
-      case "assistant_banner":
-        content = event.text;
-        break;
-    }
-
-    if (content) {
-      const msg: ChatDisplayMessage = {
-        id: `progress_${++messageIdCounter.current}`,
-        role: "assistant",
-        content,
-        timestamp: new Date(),
-      };
-      setChatMessages((prev) => [...prev, msg]);
-    }
-  }, []);
 
   // Graph data calculation
   const { nodes, edges } = useMemo(() => {
@@ -428,172 +319,60 @@ export default function WorkspacePage({ params }: WorkspacePageProps) {
                   </div>
                 )}
               </div>
-            ) : (activeView === "tables" || activeView === "queries" || activeView === "connections") ? (
-              /* Analysis views - Tables, Queries, Connections */
-              <ResizablePanels
-                layout="horizontal"
-                defaultSizes={[25, 75]}
-                minSizes={[15, 50]}
-                autoSaveId="workspace-elements"
-              >
-                {/* Left: Workspace Tree */}
-                <div className="h-full bg-zinc-900 border-r border-zinc-800">
-                  <WorkspaceTree
-                    projectId={projectId}
-                    selectedElementId={selectedElementId}
-                    onSelectElement={handleSelectElement}
-                  />
-                </div>
-
-                {/* Right: Editor + Chat + Terminal */}
-                <div className="h-full flex flex-col">
-                  {/* Top: Editor + Chat */}
-                  <div className="flex-1 min-h-0">
-                    <ResizablePanels
-                      layout="horizontal"
-                      defaultSizes={[60, 40]}
-                      minSizes={[30, 25]}
-                      autoSaveId="workspace-editor-chat"
-                    >
-                      {/* Editor */}
-                      <div className="h-full bg-zinc-950 flex flex-col">
-                        <div className="flex-shrink-0 px-4 py-2 border-b border-zinc-800">
-                          <h3 className="text-sm font-medium text-zinc-400">
-                            {selectedNode ? selectedNode.name : "Selecione um elemento"}
-                          </h3>
-                        </div>
-                        <div className="flex-1">
-                          <MonacoEditor
-                            value={elementDetail?.code || "// Selecione um elemento para ver o código"}
-                            language="wlanguage"
-                            readOnly
-                          />
-                        </div>
-                      </div>
-
-                      {/* Chat - Input goes to Terminal PTY */}
-                      <div className="h-full bg-zinc-900 border-l border-zinc-800">
-                        <ChatDisplay
-                          messages={chatMessages}
-                          isProcessing={isWorking}
-                          title="Botfy WX"
-                          inputDisabled={!terminalRef.current?.isConnected()}
-                          onOptionSelect={async (option) => {
-                            const userMsg: ChatDisplayMessage = {
-                              id: `user_${++messageIdCounter.current}`,
-                              role: "user",
-                              content: option.label,
-                              timestamp: new Date(),
-                            };
-                            setChatMessages((prev) => [...prev, userMsg]);
-                            await simulateTyping(option.value);
-                          }}
-                          onMultipleOptionsSelect={async (options) => {
-                            const labels = options.map((o) => o.label).join(", ");
-                            const userMsg: ChatDisplayMessage = {
-                              id: `user_${++messageIdCounter.current}`,
-                              role: "user",
-                              content: labels,
-                              timestamp: new Date(),
-                            };
-                            setChatMessages((prev) => [...prev, userMsg]);
-                            const values = options.map((o) => o.value).join(", ");
-                            await simulateTyping(values);
-                          }}
-                          onQuestionsSubmit={async (toolUseId, answers) => {
-                            const answerSummary = Object.entries(answers)
-                              .map(([header, value]) => `${header}: ${value}`)
-                              .join(" | ");
-                            const userMsg: ChatDisplayMessage = {
-                              id: `user_${++messageIdCounter.current}`,
-                              role: "user",
-                              content: answerSummary,
-                              timestamp: new Date(),
-                            };
-                            setChatMessages((prev) => [...prev, userMsg]);
-                            const values = Object.values(answers);
-                            for (let i = 0; i < values.length; i++) {
-                              await simulateTyping(values[i]);
-                              if (i < values.length - 1) {
-                                await new Promise((resolve) => setTimeout(resolve, 1000));
-                              }
-                            }
-                          }}
-                          onSendMessage={async (message) => {
-                            const userMsg: ChatDisplayMessage = {
-                              id: `user_${++messageIdCounter.current}`,
-                              role: "user",
-                              content: message,
-                              timestamp: new Date(),
-                            };
-                            setChatMessages((prev) => [...prev, userMsg]);
-                            await simulateTyping(message);
-                          }}
-                          onSkillClick={async (skill) => {
-                            const command = skill.startsWith("/") ? skill : `/${skill}`;
-                            const userMsg: ChatDisplayMessage = {
-                              id: `user_${++messageIdCounter.current}`,
-                              role: "user",
-                              content: `Executando: \`${command}\``,
-                              timestamp: new Date(),
-                            };
-                            setChatMessages((prev) => [...prev, userMsg]);
-                            await simulateTyping(command);
-                          }}
-                        />
-                      </div>
-                    </ResizablePanels>
+            ) : activeView === "tables" ? (
+              /* Tables view - direct list without nested tree */
+              <div className="h-full p-6 overflow-y-auto">
+                <div className="max-w-4xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Table2 className="w-6 h-6 text-zinc-400" />
+                    <h2 className="text-xl font-semibold text-zinc-100">Tables</h2>
                   </div>
-
-                  {/* Bottom: Terminal - collapsible */}
-                  <div
-                    className={`
-                      flex-shrink-0 bg-zinc-950 border-t border-zinc-800 flex flex-col
-                      transition-all duration-200 ease-in-out
-                      ${isTerminalCollapsed ? "h-10" : "h-[35%] min-h-[200px]"}
-                    `}
-                  >
-                    <button
-                      onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
-                      className="flex-shrink-0 px-4 py-2 border-b border-zinc-800 flex items-center justify-between w-full hover:bg-zinc-800/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <TerminalIcon className="w-4 h-4 text-zinc-500" />
-                        <h3 className="text-sm font-medium text-zinc-400">Terminal</h3>
-                        {project?.workspace_path && (
-                          <span className="text-xs text-zinc-600 font-mono">
-                            {project.workspace_path.replace(/^.*\/workspaces\//, "")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-zinc-500">
-                        {isTerminalCollapsed ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
-                      </div>
-                    </button>
-                    <div
-                      className={`
-                        flex-1 min-h-0 overflow-hidden border-t border-zinc-800
-                        ${isTerminalCollapsed ? "h-0 opacity-0" : ""}
-                      `}
-                    >
-                      {project?.workspace_path && (
-                        <InteractiveTerminal
-                          ref={terminalRef}
-                          kbId={projectId}
-                          className="h-full"
-                          onError={(msg) => console.error("Terminal error:", msg)}
-                          onAskUserQuestion={handleAskUserQuestion}
-                          onProgress={handleProgress}
-                        />
-                      )}
-                    </div>
+                  <p className="text-sm text-zinc-500 mb-4">
+                    Database tables from the WinDev Analysis (.wda) file.
+                  </p>
+                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
+                    <Table2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                    <p className="text-zinc-400">Table schema viewer coming soon</p>
+                    <p className="text-xs text-zinc-600 mt-2">Use the Dependency Graph to explore table relationships</p>
                   </div>
                 </div>
-              </ResizablePanels>
+              </div>
+            ) : activeView === "queries" ? (
+              /* Queries view - direct list without nested tree */
+              <div className="h-full p-6 overflow-y-auto">
+                <div className="max-w-4xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Database className="w-6 h-6 text-zinc-400" />
+                    <h2 className="text-xl font-semibold text-zinc-100">Queries</h2>
+                  </div>
+                  <p className="text-sm text-zinc-500 mb-4">
+                    SQL queries defined in the WinDev project (.WDR files).
+                  </p>
+                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
+                    <Database className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                    <p className="text-zinc-400">Query browser coming soon</p>
+                    <p className="text-xs text-zinc-600 mt-2">View and analyze embedded SQL queries</p>
+                  </div>
+                </div>
+              </div>
+            ) : activeView === "connections" ? (
+              /* Connections view - direct list without nested tree */
+              <div className="h-full p-6 overflow-y-auto">
+                <div className="max-w-4xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Link2 className="w-6 h-6 text-zinc-400" />
+                    <h2 className="text-xl font-semibold text-zinc-100">Connections</h2>
+                  </div>
+                  <p className="text-sm text-zinc-500 mb-4">
+                    Database connections configured in the WinDev project.
+                  </p>
+                  <div className="bg-zinc-800/30 rounded-lg p-8 text-center">
+                    <Link2 className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                    <p className="text-zinc-400">Connection manager coming soon</p>
+                    <p className="text-xs text-zinc-600 mt-2">View configured database connections</p>
+                  </div>
+                </div>
+              </div>
             ) : activeView === "configuration" && selectedConfigId ? (
               /* Configuration view */
               <div className="h-full p-6 overflow-y-auto">
