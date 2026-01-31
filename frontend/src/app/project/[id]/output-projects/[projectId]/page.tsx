@@ -16,6 +16,8 @@ import {
   useOutputProject,
   useInitializeProject,
   useOutputProjectFiles,
+  useDevServerCheck,
+  useStartDevServer,
 } from "@/hooks/useOutputProjects";
 import { useMilestones } from "@/hooks/useMilestones";
 import { ResizablePanels } from "@/components/layout";
@@ -30,7 +32,7 @@ import {
 } from "@/components/milestone";
 import { ProjectDashboard, MilestoneDashboard } from "@/components/dashboard";
 import { useProjectDashboard, useMilestoneDashboard, parseDashboardNotification } from "@/hooks/useProjectDashboard";
-import { Loader2, Play, LayoutDashboard, ChevronUp, ChevronDown, Terminal as TerminalIcon } from "lucide-react";
+import { Loader2, Play, LayoutDashboard, ChevronUp, ChevronDown, Terminal as TerminalIcon, ExternalLink } from "lucide-react";
 
 interface OutputProjectPageProps {
   params: Promise<{ id: string; projectId: string }>;
@@ -62,6 +64,11 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
   // Terminal initialization happens automatically via /terminal WebSocket endpoint
   const { files: streamFiles, isComplete } = useInitializeProject(projectId);
   const { data: existingFilesData } = useOutputProjectFiles(projectId);
+
+  // Dev server hooks for Live View
+  const { data: devServerCheck } = useDevServerCheck(projectId);
+  const startDevServerMutation = useStartDevServer();
+  const [isStartingDevServer, setIsStartingDevServer] = useState(false);
 
   // Merge existing files with stream files (deduplicated)
   const files = useMemo(() => {
@@ -112,6 +119,26 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
     setShowDashboard(true);
     setSelectedMilestoneId(null);
   }, [setSelectedMilestoneId]);
+
+  // Live View handler - starts dev server and opens in new tab
+  const handleLiveView = useCallback(async () => {
+    if (isStartingDevServer) return;
+
+    setIsStartingDevServer(true);
+    try {
+      const result = await startDevServerMutation.mutateAsync(projectId);
+      if (result.success && result.url) {
+        // Open in new tab
+        window.open(result.url, "_blank");
+      } else {
+        console.error("Failed to start dev server:", result.message);
+      }
+    } catch (error) {
+      console.error("Error starting dev server:", error);
+    } finally {
+      setIsStartingDevServer(false);
+    }
+  }, [projectId, isStartingDevServer, startDevServerMutation]);
 
   // Milestone hooks
   // Note: useInitializeMilestone is no longer used - terminal handles initialization
@@ -494,6 +521,24 @@ export default function OutputProjectPage({ params }: OutputProjectPageProps) {
               </button>
             )}
           </div>
+
+          {/* Live View button - only shown if start-dev.sh exists */}
+          {devServerCheck?.has_start_script && (
+            <div className="px-3 py-2 border-b border-zinc-800">
+              <button
+                onClick={handleLiveView}
+                disabled={isStartingDevServer}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isStartingDevServer ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                Live View
+              </button>
+            </div>
+          )}
 
           {/* Dashboard button */}
           <div className="px-3 py-2 border-b border-zinc-800">

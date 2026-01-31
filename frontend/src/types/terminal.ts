@@ -251,6 +251,16 @@ export interface TerminalBannerMessage {
 }
 
 /**
+ * Assistant text message from Claude.
+ * Sent when Claude provides a regular text response.
+ */
+export interface TerminalAssistantTextMessage {
+  type: "assistant_text";
+  text: string;
+  timestamp?: string | null;
+}
+
+/**
  * Union of all messages that can be received from server.
  */
 export type IncomingTerminalMessage =
@@ -269,7 +279,8 @@ export type IncomingTerminalMessage =
   | TerminalTaskSpawnMessage
   | TerminalGlobMessage
   | TerminalGrepMessage
-  | TerminalBannerMessage;
+  | TerminalBannerMessage
+  | TerminalAssistantTextMessage;
 
 // =============================================================================
 // Connection State Types (for UI rendering)

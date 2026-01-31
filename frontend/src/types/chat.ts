@@ -9,7 +9,8 @@ export type MessageType =
   | "info"
   | "tool_result"
   | "error"
-  | "thinking";
+  | "thinking"
+  | "text";
 
 /** Opção para multi-question */
 export interface MessageOption {

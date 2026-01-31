@@ -380,6 +380,134 @@ async def list_output_project_files(id: str) -> FilesListResponse:
     return FilesListResponse(files=files, total=len(files))
 
 
+# === Dev Server Endpoints ===
+
+
+class DevServerCheckResponse(BaseModel):
+    """Resposta do check do dev server."""
+    has_start_script: bool
+    script_path: Optional[str] = None
+
+
+class DevServerStartResponse(BaseModel):
+    """Resposta do start do dev server."""
+    success: bool
+    url: Optional[str] = None
+    message: str
+
+
+@router.get("/{id}/dev-server/check", response_model=DevServerCheckResponse)
+async def check_dev_server(id: str) -> DevServerCheckResponse:
+    """
+    Verifica se o output project tem start-dev.sh.
+
+    Retorna True se o arquivo existe no workspace raiz.
+    """
+    try:
+        output_project_oid = PydanticObjectId(id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de output project invalido")
+
+    output_project = await OutputProject.get(output_project_oid)
+    if not output_project:
+        raise HTTPException(status_code=404, detail="Output project nao encontrado")
+
+    workspace = Path(output_project.workspace_path)
+    start_script = workspace / "start-dev.sh"
+
+    if start_script.exists() and start_script.is_file():
+        return DevServerCheckResponse(
+            has_start_script=True,
+            script_path=str(start_script),
+        )
+
+    return DevServerCheckResponse(has_start_script=False)
+
+
+@router.post("/{id}/dev-server/start", response_model=DevServerStartResponse)
+async def start_dev_server(id: str) -> DevServerStartResponse:
+    """
+    Executa start-dev.sh e retorna a URL do servidor.
+
+    O script deve:
+    1. Iniciar o servidor de desenvolvimento em background
+    2. Imprimir a URL na stdout (formato: http://localhost:PORT)
+
+    O endpoint detecta a URL na saida do script.
+    """
+    import subprocess
+    import re
+
+    try:
+        output_project_oid = PydanticObjectId(id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID de output project invalido")
+
+    output_project = await OutputProject.get(output_project_oid)
+    if not output_project:
+        raise HTTPException(status_code=404, detail="Output project nao encontrado")
+
+    workspace = Path(output_project.workspace_path)
+    start_script = workspace / "start-dev.sh"
+
+    if not start_script.exists():
+        return DevServerStartResponse(
+            success=False,
+            message="start-dev.sh nao encontrado no workspace"
+        )
+
+    try:
+        # Executa o script em background e captura output inicial
+        # O script deve iniciar o servidor e imprimir a URL
+        process = subprocess.Popen(
+            ["bash", str(start_script)],
+            cwd=str(workspace),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        # Aguarda um pouco para o servidor iniciar e captura output
+        try:
+            stdout, stderr = process.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            # Timeout esperado - servidor continua rodando em background
+            # Tenta ler o que ja foi produzido
+            stdout = ""
+            if process.stdout:
+                import select
+                if select.select([process.stdout], [], [], 0)[0]:
+                    stdout = process.stdout.read()
+
+        # Procura por URL no output
+        url_pattern = r'https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0):\d+'
+        combined_output = (stdout or "") + (stderr or "")
+        url_match = re.search(url_pattern, combined_output)
+
+        if url_match:
+            url = url_match.group(0)
+            # Normaliza 0.0.0.0 para localhost
+            url = url.replace("0.0.0.0", "localhost")
+            return DevServerStartResponse(
+                success=True,
+                url=url,
+                message="Dev server iniciado com sucesso"
+            )
+
+        # Se nao encontrou URL, assume porta padrao 3000
+        return DevServerStartResponse(
+            success=True,
+            url="http://localhost:3000",
+            message="Dev server iniciado (porta padrao assumida)"
+        )
+
+    except Exception as e:
+        return DevServerStartResponse(
+            success=False,
+            message=f"Erro ao executar start-dev.sh: {str(e)}"
+        )
+
+
 class PrepareInitializationResponse(BaseModel):
     """Resposta do endpoint de preparacao de inicializacao."""
     context_path: str

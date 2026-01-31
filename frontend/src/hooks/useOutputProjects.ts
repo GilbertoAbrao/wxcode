@@ -272,3 +272,71 @@ export function useInitializeProject(projectId: string) {
     isComplete,
   };
 }
+
+/**
+ * Dev server check response
+ */
+interface DevServerCheckResponse {
+  has_start_script: boolean;
+  script_path?: string;
+}
+
+/**
+ * Dev server start response
+ */
+interface DevServerStartResponse {
+  success: boolean;
+  url?: string;
+  message: string;
+}
+
+/**
+ * Check if output project has start-dev.sh
+ */
+async function checkDevServer(projectId: string): Promise<DevServerCheckResponse> {
+  const response = await fetch(`/api/output-projects/${projectId}/dev-server/check`);
+  if (!response.ok) {
+    throw new Error("Failed to check dev server");
+  }
+  return response.json();
+}
+
+/**
+ * Start the dev server
+ */
+async function startDevServer(projectId: string): Promise<DevServerStartResponse> {
+  const response = await fetch(`/api/output-projects/${projectId}/dev-server/start`, {
+    method: "POST",
+  });
+  if (!response.ok) {
+    throw new Error("Failed to start dev server");
+  }
+  return response.json();
+}
+
+/**
+ * Hook to check if dev server script exists
+ */
+export function useDevServerCheck(projectId: string) {
+  return useQuery({
+    queryKey: ["devServerCheck", projectId],
+    queryFn: () => checkDevServer(projectId),
+    enabled: !!projectId,
+    staleTime: 30000, // Cache for 30s
+  });
+}
+
+/**
+ * Hook to start dev server
+ */
+export function useStartDevServer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: startDevServer,
+    onSuccess: (_data, projectId) => {
+      // Invalidate the check query to refresh state
+      queryClient.invalidateQueries({ queryKey: ["devServerCheck", projectId] });
+    },
+  });
+}
