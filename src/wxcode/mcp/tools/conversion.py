@@ -25,7 +25,12 @@ from wxcode.mcp.instance import mcp
 from wxcode.models import Element, Project
 from wxcode.models.element import ConversionStatus
 from wxcode.models.milestone import Milestone, MilestoneStatus
-from wxcode.models.output_project import OutputProject, OutputProjectStatus
+from wxcode.models.output_project import (
+    OutputProject,
+    OutputProjectConnection,
+    OutputProjectStatus,
+)
+from wxcode.models.schema import DatabaseSchema
 
 
 async def _find_element(
@@ -800,6 +805,450 @@ async def create_milestone(
             "create_milestone failed: output_project_id=%s element=%s error=%s",
             output_project_id,
             element_name,
+            str(e),
+        )
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
+
+
+def _generate_connection_string(conn: dict[str, Any]) -> str:
+    """
+    Generate SQLAlchemy connection string based on database type.
+
+    Args:
+        conn: Connection dict with database_type, source, port, database, user
+
+    Returns:
+        SQLAlchemy connection string
+    """
+    db_type = conn.get("database_type", "").lower()
+    source = conn.get("source", "")
+    port = conn.get("port", "")
+    database = conn.get("database", "")
+    user = conn.get("user", "")
+
+    # Password placeholder - real password should come from env vars
+    password_placeholder = "{password}"
+
+    if db_type == "sqlserver":
+        port_str = f":{port}" if port else ":1433"
+        return (
+            f"mssql+pyodbc://{user}:{password_placeholder}@{source}{port_str}/{database}"
+            "?driver=ODBC+Driver+17+for+SQL+Server"
+        )
+    elif db_type == "mysql":
+        port_str = f":{port}" if port else ":3306"
+        return f"mysql+pymysql://{user}:{password_placeholder}@{source}{port_str}/{database}"
+    elif db_type in ("postgresql", "postgres"):
+        port_str = f":{port}" if port else ":5432"
+        return f"postgresql+asyncpg://{user}:{password_placeholder}@{source}{port_str}/{database}"
+    elif db_type == "sqlite":
+        return f"sqlite:///{source}"
+    else:
+        # Generic fallback
+        return f"{db_type}://{user}:{password_placeholder}@{source}:{port}/{database}"
+
+
+@mcp.tool
+async def list_connections_outputproject(
+    ctx: Context,
+    output_project_id: str,
+) -> dict[str, Any]:
+    """
+    List database connections configured for an OutputProject.
+
+    Returns all connections with their configuration details.
+    Use this to see current connections before adding or updating.
+
+    Args:
+        output_project_id: ID of the OutputProject
+
+    Returns:
+        List of connections with all configuration details
+    """
+    try:
+        # Find OutputProject
+        output_project = await OutputProject.get(output_project_id)
+        if not output_project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"OutputProject '{output_project_id}' not found",
+            }
+
+        # Build connections list
+        connections_data = []
+        for conn in output_project.connections or []:
+            connections_data.append({
+                "name": conn.name,
+                "type_code": conn.type_code,
+                "database_type": conn.database_type,
+                "driver_name": conn.driver_name,
+                "source": conn.source,
+                "port": conn.port,
+                "database": conn.database,
+                "user": conn.user,
+                "is_editable": conn.is_editable,
+                "is_dev_connection": conn.is_dev_connection,
+                "connection_string": conn.connection_string,
+                "source_connection_name": conn.source_connection_name,
+            })
+
+        return {
+            "error": False,
+            "output_project_id": output_project_id,
+            "output_project_name": output_project.name,
+            "total_connections": len(connections_data),
+            "connections": connections_data,
+        }
+
+    except Exception as e:
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
+
+
+@mcp.tool
+async def add_connection_outputproject(
+    ctx: Context,
+    output_project_id: str,
+    name: str,
+    database_type: str,
+    source: str,
+    database: str,
+    port: str | None = None,
+    user: str | None = None,
+    driver_name: str | None = None,
+    is_dev_connection: bool = False,
+    source_connection_name: str | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """
+    Add a database connection to an OutputProject.
+
+    Adds a single connection to the OutputProject's connections list.
+    The connection will be editable unless is_dev_connection=True.
+
+    This is a write operation that requires explicit confirm=True to execute.
+    Calling with confirm=False returns a preview of the change.
+
+    Args:
+        output_project_id: ID of the OutputProject
+        name: Connection name (e.g., "main", "dev_sqlite")
+        database_type: Type of database (sqlserver, mysql, postgresql, sqlite)
+        source: Database server/host or file path for SQLite
+        database: Database name
+        port: Database port (optional, uses default for type)
+        user: Database user (optional)
+        driver_name: Driver name (optional)
+        is_dev_connection: Mark as dev connection (not editable)
+        source_connection_name: Name of KB connection this was copied from
+        confirm: Set to True to execute (default: False for preview)
+
+    Returns:
+        Preview or execution result with connection details
+    """
+    try:
+        # Find OutputProject
+        output_project = await OutputProject.get(output_project_id)
+        if not output_project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"OutputProject '{output_project_id}' not found",
+            }
+
+        # Check for duplicate name
+        existing_names = [c.name for c in output_project.connections or []]
+        if name in existing_names:
+            return {
+                "error": True,
+                "code": "DUPLICATE_NAME",
+                "message": f"Connection with name '{name}' already exists",
+                "existing_connections": existing_names,
+            }
+
+        # Build connection dict for string generation
+        conn_dict = {
+            "database_type": database_type,
+            "source": source,
+            "port": port or "",
+            "database": database,
+            "user": user or "",
+        }
+
+        # Create connection object
+        new_connection = OutputProjectConnection(
+            name=name,
+            type_code=0,
+            database_type=database_type,
+            driver_name=driver_name or database_type.capitalize(),
+            source=source,
+            port=port or "",
+            database=database,
+            user=user,
+            is_editable=not is_dev_connection,
+            is_dev_connection=is_dev_connection,
+            connection_string=_generate_connection_string(conn_dict),
+            source_connection_name=source_connection_name,
+        )
+
+        # Preview mode
+        if not confirm:
+            return {
+                "error": False,
+                "requires_confirmation": True,
+                "preview": {
+                    "output_project_id": output_project_id,
+                    "output_project_name": output_project.name,
+                    "new_connection": {
+                        "name": new_connection.name,
+                        "database_type": new_connection.database_type,
+                        "source": new_connection.source,
+                        "port": new_connection.port,
+                        "database": new_connection.database,
+                        "user": new_connection.user,
+                        "is_editable": new_connection.is_editable,
+                        "is_dev_connection": new_connection.is_dev_connection,
+                        "connection_string": new_connection.connection_string,
+                    },
+                    "existing_connections_count": len(existing_names),
+                    "instruction": (
+                        "Call add_connection_outputproject again with confirm=True to execute"
+                    ),
+                },
+            }
+
+        # Execute mode - add connection
+        if output_project.connections is None:
+            output_project.connections = []
+        output_project.connections.append(new_connection)
+        output_project.updated_at = datetime.utcnow()
+        await output_project.save()
+
+        # Audit log
+        audit_logger.info(
+            "add_connection_outputproject executed: output_project_id=%s name=%s connection=%s",
+            output_project_id,
+            output_project.name,
+            name,
+        )
+
+        return {
+            "error": False,
+            "executed": True,
+            "data": {
+                "output_project_id": output_project_id,
+                "output_project_name": output_project.name,
+                "connection_added": {
+                    "name": new_connection.name,
+                    "database_type": new_connection.database_type,
+                    "connection_string": new_connection.connection_string,
+                },
+                "total_connections": len(output_project.connections),
+                "updated_at": output_project.updated_at.isoformat(),
+            },
+        }
+
+    except Exception as e:
+        audit_logger.error(
+            "add_connection_outputproject failed: output_project_id=%s error=%s",
+            output_project_id,
+            str(e),
+        )
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
+
+
+@mcp.tool
+async def update_connection_outputproject(
+    ctx: Context,
+    output_project_id: str,
+    connection_name: str,
+    source: str | None = None,
+    port: str | None = None,
+    database: str | None = None,
+    user: str | None = None,
+    driver_name: str | None = None,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """
+    Update an existing database connection in an OutputProject.
+
+    Only connections with is_editable=True can be updated.
+    Pass only the fields you want to change.
+
+    This is a write operation that requires explicit confirm=True to execute.
+    Calling with confirm=False returns a preview of the change.
+
+    Args:
+        output_project_id: ID of the OutputProject
+        connection_name: Name of the connection to update
+        source: New database server/host (optional)
+        port: New database port (optional)
+        database: New database name (optional)
+        user: New database user (optional)
+        driver_name: New driver name (optional)
+        confirm: Set to True to execute (default: False for preview)
+
+    Returns:
+        Preview or execution result with updated connection details
+    """
+    try:
+        # Find OutputProject
+        output_project = await OutputProject.get(output_project_id)
+        if not output_project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"OutputProject '{output_project_id}' not found",
+            }
+
+        # Find connection by name
+        connection = None
+        connection_index = -1
+        for idx, conn in enumerate(output_project.connections or []):
+            if conn.name == connection_name:
+                connection = conn
+                connection_index = idx
+                break
+
+        if connection is None:
+            existing_names = [c.name for c in output_project.connections or []]
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"Connection '{connection_name}' not found",
+                "existing_connections": existing_names,
+            }
+
+        # Check if editable
+        if not connection.is_editable:
+            return {
+                "error": True,
+                "code": "NOT_EDITABLE",
+                "message": f"Connection '{connection_name}' is not editable",
+                "is_dev_connection": connection.is_dev_connection,
+            }
+
+        # Build changes dict
+        changes = {}
+        if source is not None:
+            changes["source"] = source
+        if port is not None:
+            changes["port"] = port
+        if database is not None:
+            changes["database"] = database
+        if user is not None:
+            changes["user"] = user
+        if driver_name is not None:
+            changes["driver_name"] = driver_name
+
+        if not changes:
+            return {
+                "error": True,
+                "code": "NO_CHANGES",
+                "message": "No fields provided to update",
+            }
+
+        # Build preview of new values
+        new_values = {
+            "source": changes.get("source", connection.source),
+            "port": changes.get("port", connection.port),
+            "database": changes.get("database", connection.database),
+            "user": changes.get("user", connection.user),
+            "driver_name": changes.get("driver_name", connection.driver_name),
+            "database_type": connection.database_type,
+        }
+
+        # Generate new connection string
+        new_connection_string = _generate_connection_string(new_values)
+
+        # Preview mode
+        if not confirm:
+            return {
+                "error": False,
+                "requires_confirmation": True,
+                "preview": {
+                    "output_project_id": output_project_id,
+                    "output_project_name": output_project.name,
+                    "connection_name": connection_name,
+                    "changes": changes,
+                    "current_values": {
+                        "source": connection.source,
+                        "port": connection.port,
+                        "database": connection.database,
+                        "user": connection.user,
+                        "driver_name": connection.driver_name,
+                        "connection_string": connection.connection_string,
+                    },
+                    "new_values": {
+                        **new_values,
+                        "connection_string": new_connection_string,
+                    },
+                    "instruction": (
+                        "Call update_connection_outputproject again with confirm=True to execute"
+                    ),
+                },
+            }
+
+        # Execute mode - apply changes
+        if "source" in changes:
+            connection.source = changes["source"]
+        if "port" in changes:
+            connection.port = changes["port"]
+        if "database" in changes:
+            connection.database = changes["database"]
+        if "user" in changes:
+            connection.user = changes["user"]
+        if "driver_name" in changes:
+            connection.driver_name = changes["driver_name"]
+
+        # Update connection string
+        connection.connection_string = new_connection_string
+
+        # Update in list
+        output_project.connections[connection_index] = connection
+        output_project.updated_at = datetime.utcnow()
+        await output_project.save()
+
+        # Audit log
+        audit_logger.info(
+            "update_connection_outputproject executed: output_project_id=%s connection=%s changes=%s",
+            output_project_id,
+            connection_name,
+            list(changes.keys()),
+        )
+
+        return {
+            "error": False,
+            "executed": True,
+            "data": {
+                "output_project_id": output_project_id,
+                "output_project_name": output_project.name,
+                "connection_name": connection_name,
+                "changes_applied": list(changes.keys()),
+                "new_connection_string": new_connection_string,
+                "updated_at": output_project.updated_at.isoformat(),
+            },
+        }
+
+    except Exception as e:
+        audit_logger.error(
+            "update_connection_outputproject failed: output_project_id=%s connection=%s error=%s",
+            output_project_id,
+            connection_name,
             str(e),
         )
         return {

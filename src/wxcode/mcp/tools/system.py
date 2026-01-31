@@ -130,6 +130,7 @@ async def list_tools(
         "schema": {
             "description": "Database schema information",
             "tools": [
+                {"name": "list_kb_connections", "description": "List database connections from KB schema"},
                 {"name": "get_schema", "description": "Get complete database schema for a project"},
                 {"name": "get_table", "description": "Get detailed table information (columns, indexes)"},
             ],
@@ -153,6 +154,10 @@ async def list_tools(
                 {"name": "get_conversion_stats", "description": "Get conversion progress statistics"},
                 {"name": "mark_converted", "description": "Mark an element as converted"},
                 {"name": "mark_project_initialized", "description": "Mark output project as initialized"},
+                {"name": "create_milestone", "description": "Create a milestone for element conversion"},
+                {"name": "list_connections_outputproject", "description": "List connections of an OutputProject"},
+                {"name": "add_connection_outputproject", "description": "Add a connection to an OutputProject"},
+                {"name": "update_connection_outputproject", "description": "Update a connection in an OutputProject"},
             ],
         },
         "stack": {

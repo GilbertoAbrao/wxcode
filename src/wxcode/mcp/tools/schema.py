@@ -4,11 +4,80 @@ Provides tools to query the database schema extracted from WinDev Analysis
 files (.xdd). Essential for understanding data structures during conversion.
 """
 
+from typing import Any
+
 from fastmcp import Context
 
 from wxcode.mcp.instance import mcp
 from wxcode.models.project import Project
 from wxcode.models.schema import DatabaseSchema
+
+
+@mcp.tool
+async def list_kb_connections(
+    ctx: Context,
+    project_name: str,
+) -> dict[str, Any]:
+    """
+    List database connections from the KB (Knowledge Base) schema.
+
+    Returns all connections defined in the WinDev Analysis file.
+    Use this to see available connections before configuring OutputProject.
+
+    Args:
+        project_name: Name of the KB project
+
+    Returns:
+        List of connections with database type, source, port, etc.
+    """
+    try:
+        # Find project
+        project = await Project.find_one(Project.name == project_name)
+        if not project:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"Project '{project_name}' not found",
+            }
+
+        # Find schema for project
+        schema = await DatabaseSchema.find_one({"project_id": project.id})
+        if not schema:
+            return {
+                "error": True,
+                "code": "NOT_FOUND",
+                "message": f"No schema found for project '{project_name}'",
+                "suggestion": "Run 'wxcode parse-schema' to import the database schema",
+            }
+
+        # Build connections list
+        connections_data = []
+        for conn in schema.connections or []:
+            connections_data.append({
+                "name": conn.name,
+                "type_code": conn.type_code,
+                "database_type": conn.database_type,
+                "driver_name": conn.driver_name,
+                "source": conn.source,
+                "port": conn.port,
+                "database": conn.database,
+                "user": conn.user,
+            })
+
+        return {
+            "error": False,
+            "project": project_name,
+            "total_connections": len(connections_data),
+            "connections": connections_data,
+        }
+
+    except Exception as e:
+        return {
+            "error": True,
+            "code": "INTERNAL_ERROR",
+            "message": str(e),
+            "type": type(e).__name__,
+        }
 
 
 @mcp.tool
